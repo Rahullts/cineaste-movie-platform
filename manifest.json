@@ -1,0 +1,17 @@
+{
+  "name": "Cineaste",
+  "short_name": "Cineaste",
+  "description": "Your second brain for movies — capture films you discover anywhere, organize them into smart collections, and decide what to watch next.",
+  "icons": [
+    {
+      "src": "assets/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "https://eminent-cine-vault-flow.base44.app",
+  "display": "standalone",
+  "theme_color": "#0A0B0F",
+  "background_color": "#0A0B0F",
+  "scope": "https://eminent-cine-vault-flow.base44.app"
+}
