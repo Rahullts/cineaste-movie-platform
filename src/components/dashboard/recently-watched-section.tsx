@@ -51,6 +51,11 @@ export function RecentlyWatchedSection({
       .slice(0, 15);
   }, [movies]);
 
+  // In an adaptive dashboard, hide empty personal section
+  if (watchedMovies.length === 0) {
+    return null;
+  }
+
   return (
     <section
       id="section-recently-watched"
@@ -80,36 +85,20 @@ export function RecentlyWatchedSection({
         </Link>
       </div>
 
-      {/* Content Carousel or Empty State */}
-      {watchedMovies.length > 0 ? (
-        <PosterCarousel>
-          {watchedMovies.map((movie, idx) => (
-            <MoviePosterCard
-              key={movie.tmdb_id || movie.id}
-              movie={movie}
-              variant="carousel"
-              index={idx}
-              isWatched={true}
-              showActions={false}
-              onOpenDetail={onOpenDetail}
-            />
-          ))}
-        </PosterCarousel>
-      ) : (
-        <div className="rounded-2xl border border-dashed border-border p-8 sm:p-12 text-center flex flex-col items-center justify-center gap-3 bg-card/30">
-          <div className="w-10 h-10 rounded-full bg-primary/10 text-primary grid place-items-center">
-            <CheckCircle2 className="w-5 h-5" />
-          </div>
-          <div className="space-y-1 max-w-sm">
-            <p className="text-sm font-semibold text-foreground">
-              No watched movies logged yet
-            </p>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Mark films as watched to log your screening history, assign ratings, and unlock personalized recommendations.
-            </p>
-          </div>
-        </div>
-      )}
+      {/* Content Carousel */}
+      <PosterCarousel>
+        {watchedMovies.map((movie, idx) => (
+          <MoviePosterCard
+            key={movie.tmdb_id || movie.id}
+            movie={movie}
+            variant="carousel"
+            index={idx}
+            isWatched={true}
+            showActions={false}
+            onOpenDetail={onOpenDetail}
+          />
+        ))}
+      </PosterCarousel>
     </section>
   );
 }

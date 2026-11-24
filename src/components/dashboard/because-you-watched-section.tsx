@@ -110,6 +110,11 @@ export function BecauseYouWatchedSection({
     };
   }, [referenceMovie?.tmdb_id, referenceMovie?.id, referenceMovie?.title, movies]);
 
+  // In an adaptive dashboard, hide if no watched reference film or no recommendations
+  if (!referenceMovie || (!isLoading && recommendations.length === 0)) {
+    return null;
+  }
+
   return (
     <section
       id="section-because-you-watched"

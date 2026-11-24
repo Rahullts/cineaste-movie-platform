@@ -56,8 +56,9 @@ export function WatchNextHero({
   onRemoveFromWatchlist,
   onOpenQuickAdd,
 }: WatchNextHeroProps) {
-  // Use user's featured movie or default showcase (Fargo) to guarantee cinematic aesthetic
-  const activeMovie = movie || DEFAULT_HERO_MOVIE;
+  if (!movie) return null;
+
+  const activeMovie = movie;
 
   const [enriched, setEnriched] = React.useState<any>(null);
   const [fallbackIndex, setFallbackIndex] = React.useState(0);

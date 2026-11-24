@@ -35,6 +35,11 @@ export function RecentlyAddedSection({
       .slice(0, 15);
   }, [movies]);
 
+  // In an adaptive dashboard, hide empty personal section to prevent empty dashed boxes
+  if (addedMovies.length === 0) {
+    return null;
+  }
+
   return (
     <section
       id="section-recently-added"
@@ -64,46 +69,22 @@ export function RecentlyAddedSection({
         </Link>
       </div>
 
-      {/* Content Carousel or Empty State */}
-      {addedMovies.length > 0 ? (
-        <PosterCarousel>
-          {addedMovies.map((movie, idx) => (
-            <MoviePosterCard
-              key={movie.tmdb_id || movie.id}
-              movie={movie}
-              variant="carousel"
-              index={idx}
-              subLabel={movie.status === "watching" ? "Watching" : "In Library"}
-              onOpenDetail={onOpenDetail}
-              onToggleWatchlist={onToggleWatchlist}
-              onToggleWatched={onToggleWatched}
-              onToggleFavorite={onToggleFavorite}
-            />
-          ))}
-        </PosterCarousel>
-      ) : (
-        <div className="rounded-2xl border border-dashed border-border p-8 sm:p-12 text-center flex flex-col items-center justify-center gap-3 bg-card/30">
-          <div className="w-10 h-10 rounded-full bg-primary/10 text-primary grid place-items-center">
-            <Bookmark className="w-5 h-5" />
-          </div>
-          <div className="space-y-1 max-w-sm">
-            <p className="text-sm font-semibold text-foreground">
-              Your library is empty
-            </p>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Add your favorite films or movies you want to watch to build your personal cinema vault.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onOpenQuickAdd}
-            className="mt-1 h-9 px-4 rounded-full bg-[#00D878] hover:bg-[#00B855] text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-md shadow-[#00D878]/20 transition active:scale-95 cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5 stroke-[3]" />
-            <span>Add Your First Movie</span>
-          </button>
-        </div>
-      )}
+      {/* Content Carousel */}
+      <PosterCarousel>
+        {addedMovies.map((movie, idx) => (
+          <MoviePosterCard
+            key={movie.tmdb_id || movie.id}
+            movie={movie}
+            variant="carousel"
+            index={idx}
+            subLabel={movie.status === "watching" ? "Watching" : "In Library"}
+            onOpenDetail={onOpenDetail}
+            onToggleWatchlist={onToggleWatchlist}
+            onToggleWatched={onToggleWatched}
+            onToggleFavorite={onToggleFavorite}
+          />
+        ))}
+      </PosterCarousel>
     </section>
   );
 }
