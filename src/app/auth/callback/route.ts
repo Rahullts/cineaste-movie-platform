@@ -5,6 +5,13 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const next = searchParams.get("next") || "/dashboard";
+  const errorParam = searchParams.get("error_description") || searchParams.get("error");
+
+  if (errorParam) {
+    console.error("OAuth provider callback error:", errorParam);
+    const redirectUrl = next.startsWith("/") ? `${origin}${next}` : `${origin}/dashboard`;
+    return NextResponse.redirect(`${redirectUrl}?auth_error=${encodeURIComponent(errorParam)}`);
+  }
 
   if (code) {
     const supabase = await createClient();
