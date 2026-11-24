@@ -1,0 +1,144 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Light Theme (Secondary / System Light) */
+  --background: #F8F9FA;
+  --surface: #FFFFFF;
+  --card: #FFFFFF;
+  --card-foreground: #111827;
+  --popover: #FFFFFF;
+  --popover-foreground: #111827;
+  --primary: #00B855;
+  --primary-foreground: #FFFFFF;
+  --primary-hover: #009E47;
+  --primary-glow: rgba(0, 184, 85, 0.25);
+  --secondary: #F3F4F6;
+  --secondary-foreground: #1F2937;
+  --secondary-hover: #E5E7EB;
+  --muted: #F3F4F6;
+  --muted-foreground: #6B7280;
+  --accent: #F3F4F6;
+  --accent-foreground: #111827;
+  --gold: #D97706;
+  --border: #E5E7EB;
+  --input: #E5E7EB;
+  --ring: #00B855;
+  --foreground: #111827;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #111827;
+  --sidebar-muted: #6B7280;
+  --sidebar-border: #E5E7EB;
+  --sidebar-active: #00B855;
+  --sidebar-hover: #F3F4F6;
+  --radius: 0.85rem;
+}
+
+.dark {
+  /* Dark Cinema Theme (Primary Cineaste Identity - Uniform #0A0B0F Foundation) */
+  --background: #0A0B0F;
+  --surface: #0E0F15;
+  --card: #0E0F15;
+  --card-foreground: #F3F4F6;
+  --popover: #111219;
+  --popover-foreground: #F3F4F6;
+  --primary: #00D878;
+  --primary-foreground: #000000;
+  --primary-hover: #00BF6A;
+  --primary-glow: rgba(0, 216, 120, 0.25);
+  --secondary: #14151E;
+  --secondary-foreground: #F3F4F6;
+  --secondary-hover: #1C1E2B;
+  --muted: #14151E;
+  --muted-foreground: #9496A1;
+  --accent: #1C1E2B;
+  --accent-foreground: #F3F4F6;
+  --gold: #FBBF24;
+  --border: #1E1F2A;
+  --input: #1C1E2B;
+  --ring: #00D878;
+  --foreground: #F3F4F6;
+  --sidebar: #0A0B0F;
+  --sidebar-foreground: #F3F4F6;
+  --sidebar-muted: #9496A1;
+  --sidebar-border: #1E1F2A;
+  --sidebar-active: #00D878;
+  --sidebar-hover: #14151E;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Hide scrollbar for elements with no-scrollbar */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Custom Film Reel Scrollbars */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #1E1F2A transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #1E1F2A;
+  border-radius: 9999px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #2D2F3E;
+}
+
+/* Global dark scrollbar fallback for Windows/Linux browsers */
+* {
+  scrollbar-color: #1E1F2A #08090D;
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #08090D;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #1E1F2A;
+  border-radius: 9999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #2D2F3E;
+}
+
+/* Safe area padding for mobile navigation */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 1rem);
+}
