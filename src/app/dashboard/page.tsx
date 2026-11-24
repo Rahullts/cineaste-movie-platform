@@ -21,7 +21,7 @@ import type { Movie } from "@/types";
  * 
  * Collections are completely removed from the Dashboard.
  */
-export default function DashboardPage() {
+function DashboardContent() {
   const router = useRouter();
   const library = useLibrary();
   const { user } = useUser();
@@ -50,15 +50,15 @@ export default function DashboardPage() {
   const featuredMovie = React.useMemo(() => {
     if (!library.movies || library.movies.length === 0) return null;
 
-    const watching = library.movies.find((m) => m.status === "watching");
+    const watching = library.movies.find((m) => m?.status === "watching");
     if (watching) return watching;
 
     const favoriteWatchlist = library.movies.find(
-      (m) => m.status === "want" && m.is_favorite
+      (m) => m?.status === "want" && m?.is_favorite
     );
     if (favoriteWatchlist) return favoriteWatchlist;
 
-    const watchlist = library.movies.filter((m) => m.status === "want");
+    const watchlist = library.movies.filter((m) => m?.status === "want");
     if (watchlist.length > 0) return watchlist[0];
 
     return null;
@@ -136,5 +136,13 @@ export default function DashboardPage() {
         />
       </div>
     </AppShell>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <React.Suspense fallback={<div className="min-h-screen bg-[#0A0B0F]" />}>
+      <DashboardContent />
+    </React.Suspense>
   );
 }

@@ -278,31 +278,32 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   // Synchronize CSS custom properties and accessibility attributes with active user settings
   React.useEffect(() => {
-    if (typeof window === "undefined") return;
-    const accent = ACCENT_MAP[user.settings.accent] || ACCENT_MAP.emerald;
+    if (typeof window === "undefined" || !user?.settings) return;
+    const accentName = user.settings?.accent || "emerald";
+    const accent = ACCENT_MAP[accentName] || ACCENT_MAP.emerald;
     document.documentElement.style.setProperty("--primary", accent.primary);
     document.documentElement.style.setProperty("--ring", accent.primary);
     document.documentElement.style.setProperty("--primary-hover", accent.hover);
     document.documentElement.style.setProperty("--primary-glow", accent.glow);
 
-    if (user.settings.high_contrast) {
+    if (user.settings?.high_contrast) {
       document.documentElement.classList.add("high-contrast");
     } else {
       document.documentElement.classList.remove("high-contrast");
     }
 
-    if (user.settings.reduce_motion) {
+    if (user.settings?.reduce_motion) {
       document.documentElement.classList.add("reduce-motion");
     } else {
       document.documentElement.classList.remove("reduce-motion");
     }
 
-    if (user.settings.density === "compact") {
+    if (user.settings?.density === "compact") {
       document.documentElement.setAttribute("data-density", "compact");
     } else {
       document.documentElement.removeAttribute("data-density");
     }
-  }, [user.settings]);
+  }, [user?.settings]);
 
   const saveUserLocal = (updated: UserProfile) => {
     setUser(updated);
