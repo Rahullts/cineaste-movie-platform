@@ -131,7 +131,13 @@ export function AuthModal({
         });
 
         if (error) {
-          setFormErrorMsg(error.message);
+          if (error.message?.includes("email_not_confirmed") || (error as any).code === "email_not_confirmed") {
+            setFormErrorMsg(
+              "Email confirmation is pending. To log in instantly without waiting for an email, toggle off 'Confirm email' in Supabase > Authentication > Providers > Email."
+            );
+          } else {
+            setFormErrorMsg(error.message);
+          }
         } else {
           setSuccessMsg("Welcome back to your second brain for movies!");
           setTimeout(() => {
@@ -169,7 +175,13 @@ export function AuthModal({
         });
 
         if (error) {
-          setFormErrorMsg(error.message);
+          if (error.message?.includes("email_not_confirmed") || (error as any).code === "email_not_confirmed") {
+            setFormErrorMsg(
+              "Email confirmation is pending. To log in instantly without waiting for an email, toggle off 'Confirm email' in Supabase > Authentication > Providers > Email."
+            );
+          } else {
+            setFormErrorMsg(error.message);
+          }
         } else {
           setSuccessMsg(
             "Password reset instructions have been dispatched to your email."
@@ -207,7 +219,17 @@ export function AuthModal({
       });
 
       if (error) {
-        setFormErrorMsg(error.message);
+        if (
+          error.message?.includes("provider is not enabled") ||
+          error.message?.includes("Unsupported provider") ||
+          (error as any).code === "validation_failed"
+        ) {
+          setFormErrorMsg(
+            "Google provider is not enabled in your Supabase project. Use Email & Password below to sign in instantly, or enable Google under Supabase > Authentication > Providers."
+          );
+        } else {
+          setFormErrorMsg(error.message);
+        }
         setLoading(false);
       }
     } catch (err: any) {
