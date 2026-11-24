@@ -1,29 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { Sora, Inter, Cinzel } from "next/font/google";
 import { ThemeProvider } from "@/lib/theme-context";
 import { UserProvider } from "@/lib/user-context";
 import "./globals.css";
-
-const sora = Sora({
-  subsets: ["latin"],
-  variable: "--font-sora",
-  display: "swap",
-  weight: ["400", "600", "700", "800"],
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-  weight: ["400", "500", "600", "700"],
-});
-
-const cinzel = Cinzel({
-  subsets: ["latin"],
-  variable: "--font-cinzel",
-  display: "swap",
-  weight: ["500", "600", "700", "800", "900"],
-});
 
 export const metadata: Metadata = {
   title: "Cineaste — Your Second Brain for Movies",
@@ -48,8 +26,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`dark ${sora.variable} ${inter.variable} ${cinzel.variable}`} suppressHydrationWarning>
+    <html lang="en" className="dark" suppressHydrationWarning>
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&family=Sora:wght@400;600;700;800&display=swap"
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `
