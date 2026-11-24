@@ -284,28 +284,34 @@ export function useLibrary(): LibraryState {
   const loadData = React.useCallback(async () => {
     const supabase = getBrowserClient();
 
-    const loadLocalFallback = () => {
+    const loadLocalFallback = (uid: string | null = null) => {
       try {
-        const storedMovies = localStorage.getItem(WATCHLIST_STORAGE_KEY);
+        const movieKey = `${WATCHLIST_STORAGE_KEY}:${uid || "guest"}`;
+        const colKey = `${COLLECTIONS_STORAGE_KEY}:${uid || "guest"}`;
+        const actKey = `${ACTIVITIES_STORAGE_KEY}:${uid || "guest"}`;
+
+        const storedMovies = localStorage.getItem(movieKey) || (!uid ? localStorage.getItem(WATCHLIST_STORAGE_KEY) : null);
         if (storedMovies) {
           const parsed = JSON.parse(storedMovies);
-          setMovies(Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_LIBRARY_MOVIES);
+          setMovies(Array.isArray(parsed) ? parsed : (uid ? [] : DEFAULT_LIBRARY_MOVIES));
         } else {
-          setMovies(DEFAULT_LIBRARY_MOVIES);
-          localStorage.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify(DEFAULT_LIBRARY_MOVIES));
+          setMovies(uid ? [] : DEFAULT_LIBRARY_MOVIES);
+          if (!uid) {
+            localStorage.setItem(movieKey, JSON.stringify(DEFAULT_LIBRARY_MOVIES));
+          }
         }
-        const storedCols = localStorage.getItem(COLLECTIONS_STORAGE_KEY);
+        const storedCols = localStorage.getItem(colKey) || (!uid ? localStorage.getItem(COLLECTIONS_STORAGE_KEY) : null);
         if (storedCols) setCollections(JSON.parse(storedCols));
-        const storedActs = localStorage.getItem(ACTIVITIES_STORAGE_KEY);
+        const storedActs = localStorage.getItem(actKey) || (!uid ? localStorage.getItem(ACTIVITIES_STORAGE_KEY) : null);
         if (storedActs) setActivities(JSON.parse(storedActs));
       } catch {
-        setMovies(DEFAULT_LIBRARY_MOVIES);
+        setMovies(uid ? [] : DEFAULT_LIBRARY_MOVIES);
       }
       setIsLoaded(true);
     };
 
     if (!supabase || !isSupabaseConfigured) {
-      loadLocalFallback();
+      loadLocalFallback(null);
       return;
     }
 
@@ -316,7 +322,7 @@ export function useLibrary(): LibraryState {
 
       if (!session?.user) {
         setActiveUserId(null);
-        loadLocalFallback();
+        loadLocalFallback(null);
         return;
       }
 
@@ -330,47 +336,55 @@ export function useLibrary(): LibraryState {
         fetchUserActivities(supabase, uid),
       ]);
 
-      // Use cloud records if available, otherwise fallback per entity to localStorage
+      // Use cloud records if available, otherwise fallback per entity to user-scoped localStorage
       if (cloudMovies.length > 0) {
         setMovies(cloudMovies);
       } else {
-        const storedMovies = localStorage.getItem(WATCHLIST_STORAGE_KEY);
+        const userMovieKey = `${WATCHLIST_STORAGE_KEY}:${uid}`;
+        const storedMovies = localStorage.getItem(userMovieKey);
         if (storedMovies) {
           try {
             const parsed = JSON.parse(storedMovies);
-            setMovies(Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_LIBRARY_MOVIES);
+            setMovies(Array.isArray(parsed) ? parsed : []);
           } catch {
-            setMovies(DEFAULT_LIBRARY_MOVIES);
+            setMovies([]);
           }
         } else {
-          setMovies(DEFAULT_LIBRARY_MOVIES);
+          // New authenticated user starts with a clean, personal vault
+          setMovies([]);
         }
       }
 
       if (cloudCollections.length > 0) {
         setCollections(cloudCollections);
       } else {
-        const storedCols = localStorage.getItem(COLLECTIONS_STORAGE_KEY);
+        const userColKey = `${COLLECTIONS_STORAGE_KEY}:${uid}`;
+        const storedCols = localStorage.getItem(userColKey);
         if (storedCols) {
           try {
             setCollections(JSON.parse(storedCols));
           } catch {}
+        } else {
+          setCollections([]);
         }
       }
 
       if (cloudActivities.length > 0) {
         setActivities(cloudActivities);
       } else {
-        const storedActs = localStorage.getItem(ACTIVITIES_STORAGE_KEY);
+        const userActKey = `${ACTIVITIES_STORAGE_KEY}:${uid}`;
+        const storedActs = localStorage.getItem(userActKey);
         if (storedActs) {
           try {
             setActivities(JSON.parse(storedActs));
           } catch {}
+        } else {
+          setActivities([]);
         }
       }
     } catch (err) {
       console.warn("Could not load from Supabase; using local fallback:", err);
-      loadLocalFallback();
+      loadLocalFallback(null);
     } finally {
       setIsLoaded(true);
     }
@@ -414,15 +428,19 @@ export function useLibrary(): LibraryState {
     };
   }, [loadData]);
 
-  // Save to localStorage and notify UI listeners
+  // Save to user-scoped localStorage and notify UI listeners
   const notifyChanges = (type: "movies" | "collections" | "activities", data: any) => {
     try {
+      const movieKey = `${WATCHLIST_STORAGE_KEY}:${activeUserId || "guest"}`;
+      const colKey = `${COLLECTIONS_STORAGE_KEY}:${activeUserId || "guest"}`;
+      const actKey = `${ACTIVITIES_STORAGE_KEY}:${activeUserId || "guest"}`;
+
       if (type === "movies") {
-        localStorage.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify(data));
+        localStorage.setItem(movieKey, JSON.stringify(data));
       } else if (type === "collections") {
-        localStorage.setItem(COLLECTIONS_STORAGE_KEY, JSON.stringify(data));
+        localStorage.setItem(colKey, JSON.stringify(data));
       } else if (type === "activities") {
-        localStorage.setItem(ACTIVITIES_STORAGE_KEY, JSON.stringify(data));
+        localStorage.setItem(actKey, JSON.stringify(data));
       }
       window.dispatchEvent(
         new CustomEvent("cineaste:library-change", { detail: { type, data } })

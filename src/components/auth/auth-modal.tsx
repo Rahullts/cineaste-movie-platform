@@ -12,6 +12,7 @@ import {
   Eye,
   EyeOff,
   Loader2,
+  Info,
 } from "lucide-react";
 import { getBrowserClient, isSupabaseConfigured, getSupabaseConfig } from "@/lib/supabase/client";
 import { CineasteLogo } from "@/components/ui/cineaste-logo";
@@ -114,22 +115,9 @@ export function AuthModal({
 
     const supabase = getBrowserClient();
     if (!supabase || !isConfigured) {
-      // Graceful local authentication mode when cloud Supabase is not configured
-      setLoading(true);
-      setTimeout(() => {
-        setLoading(false);
-        setSuccessMsg(
-          mode === "signin"
-            ? "Welcome back to your Cineaste Vault!"
-            : mode === "signup"
-            ? "Your Cineaste Vault has been created!"
-            : "Password recovery instructions logged."
-        );
-        setTimeout(() => {
-          onSuccess?.();
-          onClose();
-        }, 600);
-      }, 400);
+      setFormErrorMsg(
+        "Cloud database is not connected yet. To enable real user accounts across mobile and desktop, add your Supabase URL and Anon Key to Render's Environment settings."
+      );
       return;
     }
 
@@ -201,15 +189,9 @@ export function AuthModal({
 
     const supabase = getBrowserClient();
     if (!supabase || !isConfigured) {
-      setLoading(true);
-      setTimeout(() => {
-        setLoading(false);
-        setSuccessMsg("Signed in with Google successfully!");
-        setTimeout(() => {
-          onSuccess?.();
-          onClose();
-        }, 600);
-      }, 400);
+      setFormErrorMsg(
+        "Google Authentication requires an active Supabase connection. Please add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to your Render environment."
+      );
       return;
     }
 
@@ -285,6 +267,16 @@ export function AuthModal({
         </div>
 
 
+
+        {/* Supabase Unconfigured Notice */}
+        {!isConfigured && (
+          <div className="mb-4 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-start gap-2.5">
+            <Info className="w-4 h-4 shrink-0 mt-0.5 text-amber-400" />
+            <span className="leading-relaxed">
+              <strong>Live Cloud Auth:</strong> Connect your free Supabase database in Render Environment Settings (<code>NEXT_PUBLIC_SUPABASE_URL</code> & <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>) to enable real user accounts across all devices.
+            </span>
+          </div>
+        )}
 
         {/* Global Error Banner */}
         {formErrorMsg && (
