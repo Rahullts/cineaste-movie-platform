@@ -15,7 +15,11 @@ export interface SupabaseConfigStatus {
  */
 export function getSupabaseConfig(): SupabaseConfigStatus {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || "";
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() || "";
+  const anonKey =
+    (
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    )?.trim() || "";
 
   const missing: ("NEXT_PUBLIC_SUPABASE_URL" | "NEXT_PUBLIC_SUPABASE_ANON_KEY")[] = [];
 
