@@ -3,7 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Star, Film } from "lucide-react";
+import { Star, Film, Eye } from "lucide-react";
 import {
   CinematicBookmarkIcon,
   CinematicHeartIcon,
@@ -25,6 +25,12 @@ export interface MoviePosterCardProps {
   isFavorite?: boolean;
   isWatched?: boolean;
   showActions?: boolean;
+  /** Refined Dashboard mode: strict portrait posters, Letterboxd hover dock, clean editorial metadata */
+  editorialDashboard?: boolean;
+  /** Strict rating source policy: show IMDb / Letterboxd only when genuinely provided (never TMDB vote_average) */
+  strictRatingSource?: boolean;
+  /** Show Watched / Rate trigger inside poster quick actions */
+  enableWatchedAction?: boolean;
   onOpenDetail?: (movie: Movie) => void;
   onToggleWatchlist?: (movie: Movie) => void;
   onToggleWatched?: (movie: Movie) => void;
@@ -35,17 +41,11 @@ export interface MoviePosterCardProps {
 
 /**
  * Cineaste Editorial Movie Poster Card
- * 
- * Features:
- * - Strict 2:3 portrait ratio with non-distorting artwork fit
- * - Multi-tier resilient URL fallback
- * - Small rating badge in the upper-left
- * - Subtle green watched-status indicator (#00D878)
- * - Two compact action icons in upper-right: Watchlist (bookmark) & Favorite (heart)
- * - Hover metadata reveal: shows genre and runtime only when real data exists
- * - Movie title & release year placed cleanly underneath
- * - Full separation between poster navigation and action-button clicks
- * - Seamless integration with global reactive library state
+ *
+ * Supports both default shared presentation (Discover Cinema / My Library)
+ * and refined Dashboard mode (strict 2:3 portrait posters, unobscured artwork,
+ * Letterboxd-inspired hover dock, IMDb/Letterboxd-accurate external scores,
+ * and distinct personal Cineaste rating display).
  */
 export function MoviePosterCard({
   movie,
@@ -54,11 +54,13 @@ export function MoviePosterCard({
   subLabel,
   watchedDate,
   personalRating,
-  recommendationReason,
   isWatchlist,
   isFavorite,
   isWatched,
   showActions = true,
+  editorialDashboard = false,
+  strictRatingSource = false,
+  enableWatchedAction = false,
   onOpenDetail,
   onToggleWatchlist,
   onToggleWatched,
@@ -81,8 +83,8 @@ export function MoviePosterCard({
     isWatchlist ??
     Boolean(
       (userMovie && (userMovie.status === "want" || userMovie.status === "watching")) ||
-      movie.status === "want" ||
-      movie.status === "watching"
+        movie.status === "want" ||
+        movie.status === "watching"
     );
 
   const activeFavorite =
@@ -93,28 +95,45 @@ export function MoviePosterCard({
     isWatched ??
     Boolean((userMovie && userMovie.status === "watched") || movie.status === "watched");
 
-  // Multi-tier URL cascade to guarantee image display across restricted networks
+  const resolvedPersonalRating = React.useMemo(() => {
+    if (typeof personalRating === "number" && personalRating > 0) return personalRating;
+    if (typeof userMovie?.rating === "number" && userMovie.rating > 0) return userMovie.rating;
+    if (typeof movie.rating === "number" && movie.rating > 0) return movie.rating;
+    return null;
+  }, [personalRating, userMovie?.rating, movie.rating]);
+
+  // Reset image fallback state when movie artwork path changes
+  React.useEffect(() => {
+    setFallbackIdx(0);
+    setHasExhaustedFallbacks(false);
+  }, [movie.poster_path, movie.backdrop_path, tmdbId]);
+
+  // Portrait-only URLs in Dashboard mode (never crop landscape backdrop inside 2:3 poster slot)
   const candidateUrls = React.useMemo(() => {
     const urls: string[] = [];
     if (movie.poster_path) {
       const cleanP = movie.poster_path.startsWith("/") ? movie.poster_path : `/${movie.poster_path}`;
-      // Request w780 for razor-sharp Retina/high-DPI display, with w500 and TMDB direct fallbacks
       urls.push(`/api/image?path=${encodeURIComponent(cleanP)}&w=780`);
       urls.push(`https://image.tmdb.org/t/p/w780${cleanP}`);
       urls.push(`/api/image?path=${encodeURIComponent(cleanP)}&w=500`);
       urls.push(`https://image.tmdb.org/t/p/w500${cleanP}`);
-      urls.push(`https://wsrv.nl/?url=${encodeURIComponent(`image.tmdb.org/t/p/w780${cleanP}`)}&output=webp&q=90`);
+      urls.push(
+        `https://wsrv.nl/?url=${encodeURIComponent(`image.tmdb.org/t/p/w780${cleanP}`)}&output=webp&q=90`
+      );
     }
-    if (movie.backdrop_path) {
-      const cleanB = movie.backdrop_path.startsWith("/") ? movie.backdrop_path : `/${movie.backdrop_path}`;
-      // TMDB backdrops support w780, w1280, and original
+    if (!editorialDashboard && movie.backdrop_path) {
+      const cleanB = movie.backdrop_path.startsWith("/")
+        ? movie.backdrop_path
+        : `/${movie.backdrop_path}`;
       urls.push(`/api/image?path=${encodeURIComponent(cleanB)}&w=780`);
       urls.push(`https://image.tmdb.org/t/p/w780${cleanB}`);
       urls.push(`/api/image?path=${encodeURIComponent(cleanB)}&w=1280`);
-      urls.push(`https://wsrv.nl/?url=${encodeURIComponent(`image.tmdb.org/t/p/w780${cleanB}`)}&output=webp&q=90`);
+      urls.push(
+        `https://wsrv.nl/?url=${encodeURIComponent(`image.tmdb.org/t/p/w780${cleanB}`)}&output=webp&q=90`
+      );
     }
     return urls;
-  }, [movie.poster_path, movie.backdrop_path]);
+  }, [movie.poster_path, movie.backdrop_path, editorialDashboard]);
 
   const posterUrl = !hasExhaustedFallbacks ? candidateUrls[fallbackIdx] || null : null;
 
@@ -126,10 +145,17 @@ export function MoviePosterCard({
     }
   };
 
-  const tmdbScore = movie.vote_average ? formatScore(movie.vote_average) : null;
+  // External Rating Source Accuracy
+  const rawImdb = (movie as any)?.imdb_rating;
+  const rawLetterboxd = (movie as any)?.letterboxd_rating;
+  const imdbScore = typeof rawImdb === "number" && rawImdb > 0 ? formatScore(rawImdb) : null;
+  const letterboxdScore =
+    typeof rawLetterboxd === "number" && rawLetterboxd > 0 ? formatScore(rawLetterboxd) : null;
+  const tmdbScore =
+    !strictRatingSource && movie.vote_average ? formatScore(movie.vote_average) : null;
+
   const releaseYear = formatYear(movie.release_date);
 
-  // Extract genre and runtime for hover metadata reveal
   const genreDisplay = React.useMemo(() => {
     if (Array.isArray(movie.genres) && movie.genres.length > 0) {
       const first = movie.genres[0];
@@ -147,16 +173,14 @@ export function MoviePosterCard({
 
   const hasHoverMetadata = Boolean(genreDisplay || runtimeDisplay);
 
-  // Card click: opens Movie Details
   const handleCardClick = () => {
     if (onOpenDetail) {
       onOpenDetail(movie);
     } else {
-      router.push(`/movie/${movie.tmdb_id || movie.id}`);
+      router.push(`/movie/${tmdbId}`);
     }
   };
 
-  // Action clicks: prevent bubbling and invoke callbacks or library mutations
   const handleWatchlistClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -166,6 +190,16 @@ export function MoviePosterCard({
       library.removeFromWatchlist(tmdbId);
     } else {
       library.addToWatchlist(movie);
+    }
+  };
+
+  const handleWatchedClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onToggleWatched) {
+      onToggleWatched(userMovie || movie);
+    } else {
+      library.markWatched(userMovie || movie);
     }
   };
 
@@ -182,24 +216,27 @@ export function MoviePosterCard({
   return (
     <article
       data-testid="movie-card"
-      data-movie-id={movie.tmdb_id || movie.id}
+      data-movie-id={tmdbId}
       onClick={handleCardClick}
       className={cn(
         "group relative flex flex-col select-none cursor-pointer",
         showActions ? "transition-all duration-300" : "",
         variant === "carousel"
-          ? "w-[155px] sm:w-[180px] md:w-[195px] shrink-0"
+          ? editorialDashboard
+            ? "w-[144px] sm:w-[164px] md:w-[176px] lg:w-[184px] xl:w-[196px] shrink-0"
+            : "w-[155px] sm:w-[180px] md:w-[195px] shrink-0"
           : "w-full",
         className
       )}
     >
       {/* =================================================================== */}
-      {/* 1. Poster Artwork Container (Strict 2:3 Aspect Ratio)              */}
+      {/* 1. Poster Artwork Container (Strict 2:3 Portrait Aspect Ratio)       */}
       {/* =================================================================== */}
       <div
         className={cn(
-          "relative aspect-[2/3] w-full rounded-2xl overflow-hidden bg-[#12131D] shadow-lg shadow-black/50 transition-all duration-300",
-          showActions && "group-hover:shadow-2xl group-hover:shadow-black/90 group-hover:-translate-y-1"
+          "relative aspect-[2/3] w-full rounded-2xl overflow-hidden bg-[#12131D] shadow-lg shadow-black/50 ring-1 ring-white/[0.06] transition-all duration-300",
+          showActions &&
+            "group-hover:shadow-2xl group-hover:shadow-black/85 group-hover:-translate-y-1 group-hover:ring-white/20"
         )}
       >
         {posterUrl ? (
@@ -209,7 +246,7 @@ export function MoviePosterCard({
             fill
             sizes={
               variant === "carousel"
-                ? "(max-width: 640px) 155px, 195px"
+                ? "(max-width: 640px) 144px, (max-width: 1024px) 176px, 196px"
                 : "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
             }
             className={cn(
@@ -220,19 +257,17 @@ export function MoviePosterCard({
             priority={index < 4}
           />
         ) : (
-          /* Movie-Specific Elegant Fallback (Never unrelated placeholder) */
+          /* Clean Poster-Formatted Fallback (never cropped landscape artwork) */
           <div className="w-full h-full flex flex-col items-center justify-between p-4 text-center bg-gradient-to-b from-[#181926] via-[#12131D] to-[#0A0B10]">
-            <div className="w-9 h-9 rounded-xl bg-white/5 grid place-items-center text-[#00D878]/70 mt-4">
-              <Film className="w-4 h-4" />
+            <div className="w-9 h-9 rounded-xl bg-white/5 grid place-items-center text-[#00D664]/70 mt-4">
+              <Film className="w-4 h-4 stroke-[1.8]" />
             </div>
             <div className="space-y-1 my-auto px-1">
-              <p className="font-heading font-bold text-xs sm:text-sm text-white line-clamp-3 leading-snug">
+              <p className="font-heading font-semibold text-xs sm:text-sm text-white line-clamp-3 leading-snug">
                 {movie.title}
               </p>
-              {releaseYear && (
-                <p className="text-[11px] font-mono text-[#9496A1]">
-                  {releaseYear}
-                </p>
+              {releaseYear && releaseYear !== "--" && (
+                <p className="text-[11px] tabular-nums text-[#9496A1]">{releaseYear}</p>
               )}
             </div>
             <div className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground/60 mb-2">
@@ -241,128 +276,320 @@ export function MoviePosterCard({
           </div>
         )}
 
-        {/* Subtle Ambient Contrast Gradients (Keeps artwork vivid) */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/25 pointer-events-none opacity-40 group-hover:opacity-50 transition-opacity" />
+        {/* Subtle bottom edge contrast scrim on hover */}
+        <div
+          className={cn(
+            "absolute inset-0 pointer-events-none transition-opacity duration-300",
+            editorialDashboard
+              ? "bg-gradient-to-t from-black/75 via-transparent to-black/15 opacity-0 group-hover:opacity-100"
+              : "bg-gradient-to-t from-black/70 via-transparent to-black/25 opacity-40 group-hover:opacity-50"
+          )}
+        />
 
         {/* ================================================================= */}
-        {/* Upper-Left: Rating & Watched Indicators                           */}
+        {/* Upper-Left: Supported External Rating Badge & Watched Status      */}
         {/* ================================================================= */}
         <div className="absolute top-2.5 left-2.5 z-10 flex items-center gap-1.5 pointer-events-none">
-          {tmdbScore && (
-            <span
-              data-testid="card-rating-badge"
-              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-mono font-bold bg-black/75 backdrop-blur-md text-[#FBBF24] shadow-md ring-1 ring-white/10"
-            >
-              <Star className="w-2.5 h-2.5 fill-[#FBBF24] stroke-none" />
-              <span>{tmdbScore}</span>
-            </span>
+          {strictRatingSource ? (
+            imdbScore ? (
+              <span
+                data-testid="card-rating-badge"
+                title="Verified IMDb Rating"
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-semibold tabular-nums bg-black/75 backdrop-blur-md text-[#FBBF24] shadow-md ring-1 ring-white/10"
+              >
+                <Star className="w-2.5 h-2.5 fill-[#FBBF24] stroke-none" />
+                <span>IMDb {imdbScore}</span>
+              </span>
+            ) : letterboxdScore ? (
+              <span
+                data-testid="card-rating-badge"
+                title="Verified Letterboxd Rating"
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-semibold tabular-nums bg-black/75 backdrop-blur-md text-white shadow-md ring-1 ring-white/10"
+              >
+                <span>LB {letterboxdScore}</span>
+              </span>
+            ) : null
+          ) : (
+            tmdbScore && (
+              <span
+                data-testid="card-rating-badge"
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-mono font-bold bg-black/75 backdrop-blur-md text-[#FBBF24] shadow-md ring-1 ring-white/10"
+              >
+                <Star className="w-2.5 h-2.5 fill-[#FBBF24] stroke-none" />
+                <span>{tmdbScore}</span>
+              </span>
+            )
           )}
 
           {isWatchedMovie && (
             <span
               data-testid="card-watched-badge"
               title="Watched"
-              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-[#00D878]/20 text-[#00D878] backdrop-blur-md ring-1 ring-[#00D878]/40 shadow-md"
+              className={cn(
+                "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold backdrop-blur-md shadow-md",
+                editorialDashboard
+                  ? "bg-black/70 text-[#00D664] ring-1 ring-[#00D664]/45"
+                  : "bg-[#00D878]/20 text-[#00D878] font-mono font-bold ring-1 ring-[#00D878]/40"
+              )}
             >
-              <CinematicWatchedCheckIcon size={10} className="stroke-[3]" />
+              <CinematicWatchedCheckIcon size={10} className="stroke-[2.8]" />
               <span className="hidden sm:inline text-[9px] uppercase tracking-wider">Watched</span>
             </span>
           )}
         </div>
 
         {/* ================================================================= */}
-        {/* Upper-Right: Exactly TWO Compact Action Icons (Watchlist, Favorite)*/}
+        {/* Actions Layout: Letterboxd Dock (Dashboard) vs Classic Corner     */}
         {/* ================================================================= */}
-        {showActions && (
+        {editorialDashboard ? (
+          <>
+            {/* Resting Watchlist Distinguishability Indicator (unobstructive top-right dot/badge) */}
+            {activeWatchlist && (
+              <button
+                type="button"
+                data-testid="card-watchlist-indicator"
+                onClick={handleWatchlistClick}
+                aria-label="In Watchlist — click to remove"
+                title="In Watchlist"
+                className="absolute top-2.5 right-2.5 z-20 w-7 h-7 rounded-full bg-[#00D664] text-black grid place-items-center shadow-lg shadow-black/50 ring-1 ring-black/10 transition-transform duration-200 hover:scale-110 active:scale-95 cursor-pointer"
+              >
+                <CinematicBookmarkIcon size={13} filled={true} className="text-black" />
+              </button>
+            )}
+
+            {/* Desktop Letterboxd-Inspired Bottom Hover Action Dock */}
+            {showActions && (
+              <div
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                className="hidden md:flex items-center gap-1.5 absolute bottom-3 left-1/2 -translate-x-1/2 z-20 px-2 py-1.5 rounded-full bg-[#0A0B0F]/85 backdrop-blur-xl border border-white/15 shadow-2xl opacity-0 translate-y-1.5 group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:translate-y-0 transition-all duration-200"
+              >
+                {enableWatchedAction && (
+                  <button
+                    type="button"
+                    data-testid="card-watched-btn"
+                    onClick={handleWatchedClick}
+                    aria-label={isWatchedMovie ? "Edit watched rating" : "Mark as Watched"}
+                    title={isWatchedMovie ? "Watched • Rate / Edit" : "Mark as Watched"}
+                    className={cn(
+                      "w-7 h-7 rounded-full grid place-items-center transition-all duration-150 hover:scale-110 active:scale-90 cursor-pointer",
+                      isWatchedMovie
+                        ? "bg-[#00D664] text-black"
+                        : "text-white/85 hover:text-[#00D664] hover:bg-white/10"
+                    )}
+                  >
+                    <Eye className="w-3.5 h-3.5 stroke-[2]" />
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  data-testid="card-watchlist-btn"
+                  onClick={handleWatchlistClick}
+                  aria-label={activeWatchlist ? "Remove from Watchlist" : "Add to Watchlist"}
+                  title={activeWatchlist ? "Remove from Watchlist" : "Add to Watchlist"}
+                  className={cn(
+                    "w-7 h-7 rounded-full grid place-items-center transition-all duration-150 hover:scale-110 active:scale-90 cursor-pointer",
+                    activeWatchlist
+                      ? "bg-[#00D664] text-black"
+                      : "text-white/85 hover:text-[#00D664] hover:bg-white/10"
+                  )}
+                >
+                  <CinematicBookmarkIcon size={14} filled={activeWatchlist} />
+                </button>
+
+                <button
+                  type="button"
+                  data-testid="card-favorite-btn"
+                  onClick={handleFavoriteClick}
+                  aria-label={activeFavorite ? "Remove from Favorites" : "Add to Favorites"}
+                  title={activeFavorite ? "Favorited" : "Add to Favorites"}
+                  className={cn(
+                    "w-7 h-7 rounded-full grid place-items-center transition-all duration-150 hover:scale-110 active:scale-90 cursor-pointer",
+                    activeFavorite
+                      ? "bg-rose-500 text-white"
+                      : "text-white/85 hover:text-rose-400 hover:bg-white/10"
+                  )}
+                >
+                  <CinematicHeartIcon size={14} filled={activeFavorite} />
+                </button>
+              </div>
+            )}
+          </>
+        ) : (
+          /* Preserved Classic Corner Controls for Discover Cinema & My Library */
+          <>
+            {showActions && (
+              <div
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                className={cn(
+                  "absolute top-2.5 right-2.5 flex items-center gap-1.5 z-20 transition-all duration-200",
+                  activeWatchlist || activeFavorite
+                    ? "opacity-100"
+                    : "opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                )}
+              >
+                <button
+                  type="button"
+                  data-testid="card-watchlist-btn"
+                  onClick={handleWatchlistClick}
+                  aria-label={activeWatchlist ? "Remove from Watchlist" : "Add to Watchlist"}
+                  title={activeWatchlist ? "In Watchlist" : "Add to Watchlist"}
+                  className={cn(
+                    "w-7 h-7 sm:w-8 sm:h-8 rounded-full grid place-items-center backdrop-blur-md shadow-md transition-all duration-200 hover:scale-110 active:scale-90 cursor-pointer",
+                    activeWatchlist
+                      ? "bg-[#00D878] text-black shadow-[#00D878]/30 ring-1 ring-[#00D878]"
+                      : "bg-black/60 hover:bg-black/85 text-white/80 hover:text-[#00D878] ring-1 ring-white/10 hover:ring-white/20"
+                  )}
+                >
+                  <CinematicBookmarkIcon
+                    size={14}
+                    filled={activeWatchlist}
+                    className={cn("transition-colors", activeWatchlist && "text-black")}
+                  />
+                </button>
+
+                <button
+                  type="button"
+                  data-testid="card-favorite-btn"
+                  onClick={handleFavoriteClick}
+                  aria-label={activeFavorite ? "Remove from Favorites" : "Add to Favorites"}
+                  title={activeFavorite ? "Favorited" : "Add to Favorites"}
+                  className={cn(
+                    "w-7 h-7 sm:w-8 sm:h-8 rounded-full grid place-items-center backdrop-blur-md shadow-md transition-all duration-200 hover:scale-110 active:scale-90 cursor-pointer",
+                    activeFavorite
+                      ? "bg-rose-500 text-white shadow-rose-500/30 ring-1 ring-rose-500"
+                      : "bg-black/60 hover:bg-black/85 text-white/80 hover:text-rose-400 ring-1 ring-white/10 hover:ring-white/20"
+                  )}
+                >
+                  <CinematicHeartIcon
+                    size={14}
+                    filled={activeFavorite}
+                    className={cn("transition-colors", activeFavorite && "text-white")}
+                  />
+                </button>
+              </div>
+            )}
+
+            {hasHoverMetadata && (
+              <div className="absolute inset-x-0 bottom-0 pt-6 pb-2 px-2.5 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none flex items-center justify-between text-[10px] font-mono font-medium text-white/90">
+                {genreDisplay && <span className="truncate max-w-[65%]">{genreDisplay}</span>}
+                {runtimeDisplay && <span className="shrink-0 text-white/70">{runtimeDisplay}</span>}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* =================================================================== */}
+      {/* 2. Movie Information Outside Artwork (Refined Typography)          */}
+      {/* =================================================================== */}
+      <div className="mt-2.5 px-0.5 space-y-0.5 cursor-pointer">
+        <h3
+          className={cn(
+            "font-heading text-foreground transition-colors line-clamp-1",
+            editorialDashboard
+              ? "font-medium text-[13px] sm:text-sm tracking-[-0.01em] leading-snug group-hover:text-[#00D664]"
+              : "font-semibold text-xs sm:text-sm group-hover:text-[#00D878]"
+          )}
+        >
+          {movie.title}
+        </h3>
+
+        <div
+          className={cn(
+            "flex items-center justify-between gap-2 text-muted-foreground",
+            editorialDashboard
+              ? "text-[11px] sm:text-xs font-sans tabular-nums"
+              : "text-[11px] font-mono"
+          )}
+        >
+          <span className="shrink-0">{releaseYear || "—"}</span>
+
+          <div className="flex items-center gap-1.5 min-w-0 truncate">
+            {/* Personal Cineaste Rating (Clearly separated from external ratings) */}
+            {resolvedPersonalRating !== null && (
+              <span
+                title="Your Personal Cineaste Rating"
+                className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-[#00D664] shrink-0"
+              >
+                <Star className="w-2.5 h-2.5 fill-[#00D664] stroke-none" />
+                <span>{resolvedPersonalRating.toFixed(1)}</span>
+              </span>
+            )}
+
+            {watchedDate ? (
+              <span className="text-[11px] text-muted-foreground truncate">
+                {watchedDate}
+              </span>
+            ) : subLabel ? (
+              <span className="text-[11px] text-muted-foreground truncate">{subLabel}</span>
+            ) : null}
+          </div>
+        </div>
+
+        {/* Accessible Touch Action Strip on Mobile (unobstructed poster artwork) */}
+        {editorialDashboard && showActions && (
           <div
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
             }}
-            className={cn(
-              "absolute top-2.5 right-2.5 flex items-center gap-1.5 z-20 transition-all duration-200",
-              activeWatchlist || activeFavorite
-                ? "opacity-100"
-                : "opacity-100 md:opacity-0 md:group-hover:opacity-100"
-            )}
+            className="flex md:hidden items-center justify-between gap-1.5 pt-1.5"
           >
-            {/* 1. Watchlist (Custom Bookmark) */}
+            {enableWatchedAction && (
+              <button
+                type="button"
+                data-testid="card-mobile-watched-btn"
+                onClick={handleWatchedClick}
+                aria-label={isWatchedMovie ? "Edit watched rating" : "Mark as Watched"}
+                className={cn(
+                  "flex-1 h-7 rounded-lg grid place-items-center transition active:scale-95 border",
+                  isWatchedMovie
+                    ? "bg-[#00D664]/15 border-[#00D664]/40 text-[#00D664]"
+                    : "bg-white/[0.04] border-white/[0.08] text-white/70"
+                )}
+              >
+                <Eye className="w-3.5 h-3.5 stroke-[1.8]" />
+              </button>
+            )}
+
             <button
               type="button"
-              data-testid="card-watchlist-btn"
+              data-testid="card-mobile-watchlist-btn"
               onClick={handleWatchlistClick}
               aria-label={activeWatchlist ? "Remove from Watchlist" : "Add to Watchlist"}
-              title={activeWatchlist ? "In Watchlist" : "Add to Watchlist"}
               className={cn(
-                "w-7 h-7 sm:w-8 sm:h-8 rounded-full grid place-items-center backdrop-blur-md shadow-md transition-all duration-200 hover:scale-110 active:scale-90 cursor-pointer",
+                "flex-1 h-7 rounded-lg grid place-items-center transition active:scale-95 border",
                 activeWatchlist
-                  ? "bg-[#00D878] text-black shadow-[#00D878]/30 ring-1 ring-[#00D878]"
-                  : "bg-black/60 hover:bg-black/85 text-white/80 hover:text-[#00D878] ring-1 ring-white/10 hover:ring-white/20"
+                  ? "bg-[#00D664]/15 border-[#00D664]/40 text-[#00D664]"
+                  : "bg-white/[0.04] border-white/[0.08] text-white/70"
               )}
             >
-              <CinematicBookmarkIcon
-                size={14}
-                filled={activeWatchlist}
-                className={cn("transition-colors", activeWatchlist && "text-black")}
-              />
+              <CinematicBookmarkIcon size={13} filled={activeWatchlist} />
             </button>
 
-            {/* 2. Favorite (Custom Heart) */}
             <button
               type="button"
-              data-testid="card-favorite-btn"
+              data-testid="card-mobile-favorite-btn"
               onClick={handleFavoriteClick}
               aria-label={activeFavorite ? "Remove from Favorites" : "Add to Favorites"}
-              title={activeFavorite ? "Favorited" : "Add to Favorites"}
               className={cn(
-                "w-7 h-7 sm:w-8 sm:h-8 rounded-full grid place-items-center backdrop-blur-md shadow-md transition-all duration-200 hover:scale-110 active:scale-90 cursor-pointer",
+                "flex-1 h-7 rounded-lg grid place-items-center transition active:scale-95 border",
                 activeFavorite
-                  ? "bg-rose-500 text-white shadow-rose-500/30 ring-1 ring-rose-500"
-                  : "bg-black/60 hover:bg-black/85 text-white/80 hover:text-rose-400 ring-1 ring-white/10 hover:ring-white/20"
+                  ? "bg-rose-500/15 border-rose-500/40 text-rose-400"
+                  : "bg-white/[0.04] border-white/[0.08] text-white/70"
               )}
             >
-              <CinematicHeartIcon
-                size={14}
-                filled={activeFavorite}
-                className={cn("transition-colors", activeFavorite && "text-white")}
-              />
+              <CinematicHeartIcon size={13} filled={activeFavorite} />
             </button>
           </div>
         )}
-
-        {/* ================================================================= */}
-        {/* Hover Metadata Reveal: Genre & Runtime (Only when data exists)    */}
-        {/* Keeps artwork completely visible while revealing key specifications */}
-        {/* ================================================================= */}
-        {hasHoverMetadata && (
-          <div className="absolute inset-x-0 bottom-0 pt-6 pb-2 px-2.5 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none flex items-center justify-between text-[10px] font-mono font-medium text-white/90">
-            {genreDisplay && <span className="truncate max-w-[65%]">{genreDisplay}</span>}
-            {runtimeDisplay && <span className="shrink-0 text-white/70">{runtimeDisplay}</span>}
-          </div>
-        )}
-      </div>
-
-      {/* =================================================================== */}
-      {/* 2. Movie Information (Cleanly positioned outside the poster)       */}
-      {/* =================================================================== */}
-      <div className="mt-2.5 px-0.5 space-y-0.5 cursor-pointer">
-        <h3 className="font-heading font-semibold text-xs sm:text-sm text-foreground group-hover:text-[#00D878] transition-colors line-clamp-1">
-          {movie.title}
-        </h3>
-
-        <div className="flex items-center justify-between text-[11px] text-muted-foreground font-mono">
-          <span>{releaseYear || "—"}</span>
-
-          {watchedDate ? (
-            <span className="text-[10px] text-[#00D878] truncate max-w-[100px]">
-              {watchedDate}
-            </span>
-          ) : subLabel ? (
-            <span className="text-[10px] text-muted-foreground truncate max-w-[100px]">
-              {subLabel}
-            </span>
-          ) : null}
-        </div>
       </div>
     </article>
   );

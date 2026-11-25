@@ -568,19 +568,28 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
                 </span>
               ) : null}
 
-              {(movie.vote_average || 0) > 0 && (
-                <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#FBBF24]/15 text-[#FBBF24] font-bold">
+              {typeof movie.imdb_rating === "number" && movie.imdb_rating > 0 && (
+                <div
+                  title="Verified IMDb Rating"
+                  className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#FBBF24]/15 text-[#FBBF24] font-semibold"
+                >
                   <Star className="w-3 h-3 fill-current" />
-                  <span>{formatScore(movie.vote_average)}</span>
-                  <span className="text-[10px] text-[#FBBF24]/70 font-sans uppercase font-normal ml-0.5">
-                    TMDB
-                  </span>
+                  <span>IMDb {formatScore(movie.imdb_rating)}</span>
+                </div>
+              )}
+
+              {typeof movie.letterboxd_rating === "number" && movie.letterboxd_rating > 0 && (
+                <div
+                  title="Verified Letterboxd Rating"
+                  className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/10 text-white font-semibold"
+                >
+                  <span>Letterboxd {formatScore(movie.letterboxd_rating)}</span>
                 </div>
               )}
             </div>
 
             {/* Movie Title */}
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black font-heading tracking-tight text-white leading-[1.08] mt-2.5 sm:mt-3">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-[3.35rem] font-bold font-heading tracking-[-0.025em] text-white leading-[1.08] mt-2.5 sm:mt-3">
               {movie.title}
             </h1>
 
@@ -747,7 +756,7 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
                     Personal Vault
                   </span>
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-black font-heading tracking-tight text-white uppercase mt-1">
+                <h2 className="text-xl sm:text-2xl font-semibold font-heading tracking-[-0.015em] text-white mt-1">
                   Your Cinema Log
                 </h2>
                 <p className="text-xs text-[#8B92A5] mt-1">
@@ -910,7 +919,7 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
                     </button>
                   )}
                 </div>
-                <h3 className="text-xl sm:text-2xl font-black font-heading tracking-tight text-white uppercase mt-1">
+                <h3 className="text-xl sm:text-2xl font-semibold font-heading tracking-[-0.015em] text-white mt-1">
                   Your Thoughts
                 </h3>
               </div>
@@ -966,7 +975,7 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
                 Synopsis
               </span>
             </div>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black font-heading tracking-tight text-white uppercase mt-1">
+            <h2 className="text-xl sm:text-2xl font-semibold font-heading tracking-[-0.015em] text-white mt-1">
               The Story
             </h2>
 
@@ -1017,8 +1026,8 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
                 Production & Specifications
               </span>
             </div>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black font-heading tracking-tight text-white uppercase mt-1">
-              Behind The Film
+            <h2 className="text-xl sm:text-2xl font-semibold font-heading tracking-[-0.015em] text-white mt-1">
+              Behind the Film
             </h2>
           </div>
 
@@ -1244,10 +1253,10 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
                 CREATIVE ENSEMBLE
               </p>
               <div className="flex items-baseline gap-3">
-                <h3 className="text-2xl sm:text-3xl font-heading font-black tracking-tight text-white uppercase">
+                <h3 className="text-xl sm:text-2xl font-heading font-semibold tracking-[-0.015em] text-white">
                   The People Behind the Film
                 </h3>
-                <span className="text-xs text-[#9496A1] font-mono">
+                <span className="text-xs text-[#9496A1] font-sans tabular-nums">
                   ({movie.cast?.length || castList.length} members)
                 </span>
               </div>
@@ -1339,7 +1348,7 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
               CURATED DISCOVERY
             </p>
             <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1 sm:gap-4">
-              <h3 className="text-2xl sm:text-3xl font-heading font-black tracking-tight text-white uppercase">
+              <h3 className="text-xl sm:text-2xl font-heading font-semibold tracking-[-0.015em] text-white">
                 Your Next Obsession
               </h3>
               <p className="text-xs sm:text-sm text-[#9496A1] italic font-serif">
@@ -1348,7 +1357,7 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-5">
             {recommendationsList.map((rec: any) => {
               const recPoster = rec.poster_path
                 ? getTmdbImageUrl(rec.poster_path, "w780")
@@ -1363,7 +1372,7 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
                   }}
                   className="group relative flex flex-col cursor-pointer select-none"
                 >
-                  <div className="relative aspect-[2/3] w-full rounded-2xl overflow-hidden bg-[#101118] shadow-xl shadow-black/60 group-hover:shadow-2xl group-hover:shadow-black/90 group-hover:-translate-y-1.5 transition-all duration-300">
+                  <div className="relative aspect-[2/3] w-full rounded-2xl overflow-hidden bg-[#101118] shadow-xl shadow-black/60 ring-1 ring-white/[0.06] group-hover:shadow-2xl group-hover:shadow-black/90 group-hover:-translate-y-1.5 transition-all duration-300">
                     {recPoster ? (
                       <Image
                         src={recPoster}
@@ -1377,19 +1386,23 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
                         <Film className="w-8 h-8 opacity-30" />
                       </div>
                     )}
-                    {(rec.vote_average || 0) > 0 && (
-                      <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-md text-[10px] font-mono font-bold text-[#FBBF24] flex items-center gap-1 shadow-md">
+                    {typeof rec.imdb_rating === "number" && rec.imdb_rating > 0 ? (
+                      <div className="absolute top-2.5 left-2.5 px-1.5 py-0.5 rounded-md bg-black/75 backdrop-blur-md text-[10px] font-semibold tabular-nums text-[#FBBF24] flex items-center gap-1 shadow-md ring-1 ring-white/10">
                         <Star className="w-2.5 h-2.5 fill-current" />
-                        <span>{formatScore(rec.vote_average)}</span>
+                        <span>IMDb {formatScore(rec.imdb_rating)}</span>
                       </div>
-                    )}
+                    ) : typeof rec.letterboxd_rating === "number" && rec.letterboxd_rating > 0 ? (
+                      <div className="absolute top-2.5 left-2.5 px-1.5 py-0.5 rounded-md bg-black/75 backdrop-blur-md text-[10px] font-semibold tabular-nums text-white shadow-md ring-1 ring-white/10">
+                        <span>LB {formatScore(rec.letterboxd_rating)}</span>
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className="pt-2.5 px-0.5">
-                    <p className="text-sm font-bold text-white truncate group-hover:text-[#00D878] transition-colors">
+                    <p className="font-heading text-sm font-medium tracking-[-0.01em] text-white truncate group-hover:text-[#00D664] transition-colors">
                       {rec.title}
                     </p>
-                    <p className="text-xs text-[#9496A1] font-mono mt-0.5">
+                    <p className="text-xs text-[#9496A1] tabular-nums mt-0.5">
                       {formatYear(rec.release_date)}
                     </p>
                   </div>

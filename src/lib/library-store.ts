@@ -274,7 +274,7 @@ export interface LibraryState {
 }
 
 export function useLibrary(): LibraryState {
-  const [movies, setMovies] = React.useState<Movie[]>(DEFAULT_LIBRARY_MOVIES);
+  const [movies, setMovies] = React.useState<Movie[]>([]);
   const [collections, setCollections] = React.useState<Collection[]>([]);
   const [activities, setActivities] = React.useState<TimelineActivity[]>([]);
   const [isLoaded, setIsLoaded] = React.useState(false);
@@ -391,19 +391,30 @@ export function useLibrary(): LibraryState {
   }, []);
 
   React.useEffect(() => {
-    // Immediately load local fallback so UI renders cached library without waiting for network
+    // Immediately load cached guest local fallback ONLY if no Supabase session token is present
     try {
-      const storedMovies = localStorage.getItem(WATCHLIST_STORAGE_KEY);
-      if (storedMovies) {
-        const parsed = JSON.parse(storedMovies);
-        setMovies(Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_LIBRARY_MOVIES);
-      } else {
-        setMovies(DEFAULT_LIBRARY_MOVIES);
+      const hasAuthSessionToken = Object.keys(localStorage).some(
+        (k) => k.startsWith("sb-") && k.endsWith("-auth-token")
+      );
+      if (!hasAuthSessionToken) {
+        const storedMovies =
+          localStorage.getItem(`${WATCHLIST_STORAGE_KEY}:guest`) ||
+          localStorage.getItem(WATCHLIST_STORAGE_KEY);
+        if (storedMovies) {
+          const parsed = JSON.parse(storedMovies);
+          if (Array.isArray(parsed)) {
+            setMovies(parsed);
+          }
+        }
+        const storedCols =
+          localStorage.getItem(`${COLLECTIONS_STORAGE_KEY}:guest`) ||
+          localStorage.getItem(COLLECTIONS_STORAGE_KEY);
+        if (storedCols) setCollections(JSON.parse(storedCols));
+        const storedActs =
+          localStorage.getItem(`${ACTIVITIES_STORAGE_KEY}:guest`) ||
+          localStorage.getItem(ACTIVITIES_STORAGE_KEY);
+        if (storedActs) setActivities(JSON.parse(storedActs));
       }
-      const storedCols = localStorage.getItem(COLLECTIONS_STORAGE_KEY);
-      if (storedCols) setCollections(JSON.parse(storedCols));
-      const storedActs = localStorage.getItem(ACTIVITIES_STORAGE_KEY);
-      if (storedActs) setActivities(JSON.parse(storedActs));
     } catch {}
 
     loadData();
@@ -490,16 +501,25 @@ export function useLibrary(): LibraryState {
   };
 
   const addToWatchlist = (movie: Movie) => {
-    const existing = movies.find((m) => m.tmdb_id === movie.tmdb_id);
+    const targetId = movie.tmdb_id || movie.id;
+    const existing = movies.find((m) => (m.tmdb_id || m.id) === targetId);
     let updated: Movie[];
     let targetMovie: Movie;
 
     if (existing) {
-      targetMovie = { ...existing, status: "want", updated_date: new Date().toISOString() };
-      updated = movies.map((m) => (m.tmdb_id === movie.tmdb_id ? targetMovie : m));
+      targetMovie = {
+        ...existing,
+        tmdb_id: existing.tmdb_id || targetId,
+        id: existing.id || targetId,
+        status: "want",
+        updated_date: new Date().toISOString(),
+      };
+      updated = movies.map((m) => ((m.tmdb_id || m.id) === targetId ? targetMovie : m));
     } else {
       targetMovie = {
         ...movie,
+        id: targetId,
+        tmdb_id: targetId,
         status: "want",
         created_date: new Date().toISOString(),
         updated_date: new Date().toISOString(),
@@ -512,7 +532,7 @@ export function useLibrary(): LibraryState {
 
     addActivity({
       type: "added",
-      tmdb_id: movie.tmdb_id,
+      tmdb_id: targetId,
       title: movie.title,
       poster_path: movie.poster_path,
     });
@@ -526,7 +546,7 @@ export function useLibrary(): LibraryState {
   };
 
   const removeFromWatchlist = (tmdbId: number) => {
-    const updated = movies.filter((m) => m.tmdb_id !== tmdbId && m.id !== tmdbId);
+    const updated = movies.filter((m) => (m.tmdb_id || m.id) !== tmdbId);
     setMovies(updated);
     notifyChanges("movies", updated);
 
@@ -539,7 +559,8 @@ export function useLibrary(): LibraryState {
   };
 
   const markWatched = (movie: Movie, rating?: number, review?: string) => {
-    const existing = movies.find((m) => m.tmdb_id === movie.tmdb_id);
+    const targetId = movie.tmdb_id || movie.id;
+    const existing = movies.find((m) => (m.tmdb_id || m.id) === targetId);
     const dateStr = new Date().toISOString().split("T")[0];
     let updated: Movie[];
     let targetMovie: Movie;
@@ -547,16 +568,20 @@ export function useLibrary(): LibraryState {
     if (existing) {
       targetMovie = {
         ...existing,
+        tmdb_id: existing.tmdb_id || targetId,
+        id: existing.id || targetId,
         status: "watched",
         watched_date: dateStr,
-        rating: rating ?? existing.rating,
-        review: review ?? existing.review,
+        rating: rating !== undefined ? rating : existing.rating,
+        review: review !== undefined ? review : existing.review,
         updated_date: new Date().toISOString(),
       };
-      updated = movies.map((m) => (m.tmdb_id === movie.tmdb_id ? targetMovie : m));
+      updated = movies.map((m) => ((m.tmdb_id || m.id) === targetId ? targetMovie : m));
     } else {
       targetMovie = {
         ...movie,
+        id: targetId,
+        tmdb_id: targetId,
         status: "watched",
         watched_date: dateStr,
         rating,
@@ -572,7 +597,7 @@ export function useLibrary(): LibraryState {
 
     addActivity({
       type: "watched",
-      tmdb_id: movie.tmdb_id,
+      tmdb_id: targetId,
       title: movie.title,
       poster_path: movie.poster_path,
       rating,
@@ -588,7 +613,8 @@ export function useLibrary(): LibraryState {
   };
 
   const toggleFavorite = (movie: Movie) => {
-    const existing = movies.find((m) => m.tmdb_id === movie.tmdb_id);
+    const targetId = movie.tmdb_id || movie.id;
+    const existing = movies.find((m) => (m.tmdb_id || m.id) === targetId);
     let isNowFavorite = true;
     let updated: Movie[];
     let targetMovie: Movie;
@@ -597,13 +623,17 @@ export function useLibrary(): LibraryState {
       isNowFavorite = !existing.is_favorite;
       targetMovie = {
         ...existing,
+        tmdb_id: existing.tmdb_id || targetId,
+        id: existing.id || targetId,
         is_favorite: isNowFavorite,
         updated_date: new Date().toISOString(),
       };
-      updated = movies.map((m) => (m.tmdb_id === movie.tmdb_id ? targetMovie : m));
+      updated = movies.map((m) => ((m.tmdb_id || m.id) === targetId ? targetMovie : m));
     } else {
       targetMovie = {
         ...movie,
+        id: targetId,
+        tmdb_id: targetId,
         is_favorite: true,
         created_date: new Date().toISOString(),
         updated_date: new Date().toISOString(),
@@ -625,7 +655,7 @@ export function useLibrary(): LibraryState {
   const updateStatus = (tmdbId: number, status: Movie["status"]) => {
     let targetMovie: Movie | null = null;
     const updated = movies.map((m) => {
-      if (m.tmdb_id === tmdbId) {
+      if ((m.tmdb_id || m.id) === tmdbId) {
         targetMovie = {
           ...m,
           status,
@@ -654,7 +684,7 @@ export function useLibrary(): LibraryState {
   const updateRating = (tmdbId: number, rating?: number, review?: string) => {
     let targetMovie: Movie | null = null;
     const updated = movies.map((m) => {
-      if (m.tmdb_id === tmdbId) {
+      if ((m.tmdb_id || m.id) === tmdbId) {
         targetMovie = {
           ...m,
           rating: rating !== undefined ? rating : m.rating,

@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import {
   Sparkles,
-  TrendingUp,
   Award,
   Compass,
   ArrowRight,
@@ -13,6 +12,7 @@ import {
 import { MoviePosterCard } from "@/components/movie-poster-card";
 import { PosterCarousel } from "@/components/dashboard/poster-carousel";
 import { tmdbFetch } from "@/lib/tmdb-service";
+import { cn } from "@/lib/utils";
 import type { Movie } from "@/types";
 
 interface YourNextGreatWatchSectionProps {
@@ -27,7 +27,7 @@ type CategoryKey = "trending" | "acclaimed" | "gems" | "popular";
 interface CategoryConfig {
   key: CategoryKey;
   label: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
   payload: Record<string, any>;
   viewAllHref: string;
 }
@@ -37,28 +37,28 @@ const CATEGORIES: CategoryConfig[] = [
     key: "trending",
     label: "Trending Now",
     icon: Flame,
-    payload: { action: "trending", time_window: "week" },
+    payload: { action: "trending", window: "week", page: 1 },
     viewAllHref: "/discover?filter=trending",
   },
   {
     key: "acclaimed",
     label: "Critically Acclaimed",
     icon: Award,
-    payload: { action: "top_rated" },
+    payload: { action: "discover", sort_by: "vote_average.desc", min_votes: 1500, page: 1 },
     viewAllHref: "/discover?sort=vote_average.desc",
   },
   {
     key: "gems",
     label: "Hidden Gems",
     icon: Compass,
-    payload: { action: "ai_search", query: "festival indie gems mystery drama" },
+    payload: { action: "discover", sort_by: "vote_average.desc", min_votes: 400, max_votes: 1600, page: 1 },
     viewAllHref: "/discover",
   },
   {
     key: "popular",
-    label: "Popular in Cinema",
+    label: "Popular Picks",
     icon: Sparkles,
-    payload: { action: "popular" },
+    payload: { action: "discover", sort_by: "popularity.desc", page: 1 },
     viewAllHref: "/discover?sort=popularity.desc",
   },
 ];
@@ -71,7 +71,6 @@ export function YourNextGreatWatchSection({
 }: YourNextGreatWatchSectionProps) {
   const [activeCategory, setActiveCategory] = React.useState<CategoryKey>("trending");
 
-  // In-memory cache per category to provide instantaneous tab switching
   const [cache, setCache] = React.useState<Record<CategoryKey, Movie[]>>({
     trending: [],
     acclaimed: [],
@@ -89,7 +88,7 @@ export function YourNextGreatWatchSection({
   const activeMovies = cache[activeCategory] || [];
   const isLoading = loadingMap[activeCategory];
 
-  // Fetch movies for category if not already in cache
+  // Fetch active category movies if not cached
   React.useEffect(() => {
     let cancelled = false;
 
@@ -100,9 +99,8 @@ export function YourNextGreatWatchSection({
     tmdbFetch(activeConfig.payload)
       .then((res) => {
         if (!cancelled && res.results && res.results.length > 0) {
-          const valid = res.results.filter(
-            (m) => Boolean(m.poster_path || m.backdrop_path)
-          );
+          // Strict portrait poster filter so 2:3 cards never show cropped landscape backdrops
+          const valid = res.results.filter((m) => Boolean(m.poster_path));
           setCache((prev) => ({ ...prev, [activeCategory]: valid.slice(0, 16) }));
         }
       })
@@ -118,7 +116,7 @@ export function YourNextGreatWatchSection({
     };
   }, [activeCategory, activeConfig]);
 
-  // Pre-fetch other categories in background after initial render
+  // Background pre-fetch of remaining tabs for instant switching
   React.useEffect(() => {
     const prefetch = async () => {
       for (const cat of CATEGORIES) {
@@ -126,9 +124,7 @@ export function YourNextGreatWatchSection({
           try {
             const res = await tmdbFetch(cat.payload);
             if (res.results && res.results.length > 0) {
-              const valid = res.results.filter(
-                (m) => Boolean(m.poster_path || m.backdrop_path)
-              );
+              const valid = res.results.filter((m) => Boolean(m.poster_path));
               setCache((prev) => ({
                 ...prev,
                 [cat.key]: prev[cat.key].length > 0 ? prev[cat.key] : valid.slice(0, 16),
@@ -146,33 +142,33 @@ export function YourNextGreatWatchSection({
     <section
       id="section-next-great-watch"
       aria-label="Your Next Great Watch"
-      className="space-y-4 sm:space-y-5 w-full select-none"
+      className="space-y-3.5 sm:space-y-4 w-full select-none"
     >
-      {/* ── Section Header with Category Tabs ── */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4">
+      {/* Unified Editorial Section Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 sm:gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <Sparkles className="w-5 h-5 text-[#00D664] shrink-0" />
-            <h2 className="font-heading text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white uppercase">
+            <Sparkles className="w-[18px] h-[18px] text-[#00D664] shrink-0" strokeWidth={1.9} />
+            <h2 className="font-heading text-lg sm:text-xl md:text-[1.375rem] font-semibold tracking-[-0.015em] leading-snug text-foreground">
               Your Next Great Watch
             </h2>
           </div>
-          <p className="text-xs sm:text-sm text-[#A0A2B0] mt-1">
+          <p className="text-xs sm:text-[13px] text-muted-foreground font-normal mt-0.5">
             Handpicked films worth adding to your cinema journey.
           </p>
         </div>
 
         <Link
           href={activeConfig.viewAllHref}
-          className="text-xs text-[#A0A2B0] hover:text-[#00D664] font-medium transition inline-flex items-center gap-1 group self-start sm:self-auto shrink-0"
+          className="text-xs text-muted-foreground hover:text-[#00D664] font-medium transition inline-flex items-center gap-1.5 group self-start sm:self-auto shrink-0"
         >
           <span>View Catalog</span>
-          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+          <ArrowRight className="w-3.5 h-3.5 stroke-[1.9] group-hover:translate-x-0.5 transition-transform" />
         </Link>
       </div>
 
-      {/* ── Compact Category Switcher Tabs ── */}
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+      {/* Category Switcher Tabs */}
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
         {CATEGORIES.map((cat) => {
           const isActive = cat.key === activeCategory;
           const Icon = cat.icon;
@@ -181,29 +177,33 @@ export function YourNextGreatWatchSection({
               key={cat.key}
               type="button"
               onClick={() => setActiveCategory(cat.key)}
-              className={
+              className={cn(
+                "h-8 sm:h-9 px-3.5 sm:px-4 rounded-full text-xs tracking-[-0.01em] inline-flex items-center gap-2 transition shrink-0 cursor-pointer border",
                 isActive
-                  ? "h-8 sm:h-9 px-3.5 sm:px-4 rounded-full bg-[#00D664]/15 border border-[#00D664]/40 text-[#00D664] font-heading font-bold text-xs uppercase tracking-wider inline-flex items-center gap-2 transition shadow-sm shrink-0 cursor-pointer"
-                  : "h-8 sm:h-9 px-3.5 sm:px-4 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white font-heading font-medium text-xs tracking-wider inline-flex items-center gap-2 transition shrink-0 cursor-pointer"
-              }
+                  ? "bg-[#00D664]/15 border-[#00D664]/40 text-[#00D664] font-semibold shadow-sm"
+                  : "bg-white/[0.04] hover:bg-white/[0.08] border-white/10 text-white/75 hover:text-white font-medium"
+              )}
             >
-              <Icon className={isActive ? "w-3.5 h-3.5 text-[#00D664]" : "w-3.5 h-3.5 text-white/50"} />
+              <Icon
+                className={cn("w-3.5 h-3.5", isActive ? "text-[#00D664]" : "text-white/55")}
+                strokeWidth={1.85}
+              />
               <span>{cat.label}</span>
             </button>
           );
         })}
       </div>
 
-      {/* ── Visual Poster Carousel or Smooth Skeleton Loaders ── */}
+      {/* Poster Carousel or Matched Skeletons */}
       {isLoading && activeMovies.length === 0 ? (
-        <div className="flex items-start gap-3.5 sm:gap-4 md:gap-5 overflow-hidden py-1">
-          {Array.from({ length: 6 }).map((_, i) => (
+        <div className="flex items-start gap-3 sm:gap-4 lg:gap-5 overflow-hidden py-1">
+          {Array.from({ length: 7 }).map((_, i) => (
             <div
               key={i}
-              className="w-[140px] sm:w-[160px] md:w-[185px] shrink-0 space-y-2.5 animate-pulse"
+              className="w-[144px] sm:w-[164px] md:w-[176px] lg:w-[184px] xl:w-[196px] shrink-0 space-y-2.5 animate-pulse"
             >
               <div className="w-full aspect-[2/3] rounded-2xl bg-white/5 border border-white/5" />
-              <div className="h-3 w-4/5 rounded bg-white/5" />
+              <div className="h-3.5 w-4/5 rounded bg-white/5" />
               <div className="h-2.5 w-1/2 rounded bg-white/5" />
             </div>
           ))}
@@ -216,6 +216,9 @@ export function YourNextGreatWatchSection({
               movie={movie}
               variant="carousel"
               index={idx}
+              editorialDashboard={true}
+              strictRatingSource={true}
+              enableWatchedAction={true}
               onOpenDetail={onOpenDetail}
               onToggleWatchlist={onToggleWatchlist}
               onToggleWatched={onToggleWatched}

@@ -17,6 +17,8 @@ export interface Movie {
   runtime?: number;
   vote_average?: number;
   vote_count?: number;
+  imdb_rating?: number;
+  letterboxd_rating?: number;
   director?: string;
   genres?: Genre[];
   genre_ids?: number[];

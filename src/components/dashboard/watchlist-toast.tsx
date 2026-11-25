@@ -23,7 +23,7 @@ export function WatchlistToast({ message, onDismiss }: WatchlistToastProps) {
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-3 duration-200 select-none pointer-events-auto"
+      className="fixed bottom-20 sm:bottom-24 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-3 duration-200 select-none pointer-events-auto"
     >
       <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-[#0E0F16]/95 border border-[#00D664]/40 shadow-2xl shadow-black backdrop-blur-xl text-white text-xs font-medium">
         <span className="w-5 h-5 rounded-full bg-[#00D664]/20 text-[#00D664] grid place-items-center shrink-0">
