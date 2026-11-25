@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Star, Heart, Bookmark, Plus, ChevronLeft, ChevronRight, Flame, ArrowRight } from "lucide-react";
+import { Star, Heart, Bookmark, Plus, ChevronLeft, ChevronRight, TrendingUp, ArrowRight } from "lucide-react";
 import { formatScore, formatYear } from "@/lib/utils";
 import { getTmdbImageUrl } from "@/lib/image-util";
 import { TMDB_GENRES } from "@/lib/constants/tmdb-genres";
@@ -54,7 +54,7 @@ export function TrendingRail({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="w-5 h-5 rounded-full bg-[#00D878] grid place-items-center text-black shadow-sm shrink-0">
-            <Flame className="w-3.5 h-3.5 fill-black text-black" />
+            <TrendingUp className="w-3.5 h-3.5 text-black" />
           </div>
           <div>
             <h2 className="font-heading text-lg sm:text-xl font-bold tracking-tight text-[#F3F4F6]">

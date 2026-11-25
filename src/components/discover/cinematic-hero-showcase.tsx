@@ -10,10 +10,10 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
-  Flame,
-  Gem,
+  TrendingUp,
+  Award,
   Calendar,
-  Sparkles,
+  Film,
 } from "lucide-react";
 import { formatScore, formatYear } from "@/lib/utils";
 import { getTmdbImageUrl } from "@/lib/image-util";
@@ -40,19 +40,19 @@ const DESTINATIONS: DestinationItem[] = [
     id: "section-trending",
     label: "Trending Now",
     subtitle: "What's popular now",
-    icon: Flame,
+    icon: TrendingUp,
   },
   {
     id: "section-new-notable",
     label: "New & Notable",
     subtitle: "Recent notable releases",
-    icon: Sparkles,
+    icon: Film,
   },
   {
     id: "section-hidden-gems",
     label: "Hidden Gems",
     subtitle: "Underrated cinema",
-    icon: Gem,
+    icon: Award,
   },
   {
     id: "section-critically-acclaimed",

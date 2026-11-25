@@ -116,7 +116,7 @@ export function WatchlistListView({
                 <h3 className="text-sm sm:text-base font-semibold text-foreground group-hover/row:text-[#00D878] transition-colors truncate">
                   {movie.title}
                 </h3>
-                <span className="text-xs text-muted-foreground font-mono">
+                <span className="text-xs sm:text-[13px] font-medium text-foreground/80 tabular-nums">
                   {formatYear(movie.release_date)}
                 </span>
                 {movie.runtime ? (

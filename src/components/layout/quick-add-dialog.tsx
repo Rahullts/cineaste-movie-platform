@@ -4,17 +4,17 @@ import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  Sparkles,
   Search,
-  Plus,
   Check,
   Eye,
+  Heart,
   Star,
   Bookmark,
   X,
   Loader2,
   Film,
   ArrowRight,
+  Clapperboard,
 } from "lucide-react";
 import { tmdbFetch } from "@/lib/tmdb-service";
 import { useLibrary } from "@/lib/library-store";
@@ -28,10 +28,18 @@ export interface QuickAddDialogProps {
   onOpenCommandPalette?: () => void;
 }
 
+const POPULAR_PICKS = [
+  "Dune: Part Two",
+  "Oppenheimer",
+  "Interstellar",
+  "Fargo",
+  "Inception",
+  "Past Lives",
+];
+
 export function QuickAddDialog({
   isOpen,
   onClose,
-  onOpenCommandPalette,
 }: QuickAddDialogProps) {
   const library = useLibrary();
   const [searchValue, setSearchValue] = React.useState("");
@@ -39,18 +47,27 @@ export function QuickAddDialog({
   const [isSearching, setIsSearching] = React.useState(false);
   const [feedbackMsg, setFeedbackMsg] = React.useState<string | null>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const dialogRef = React.useRef<HTMLDialogElement>(null);
   const timerRef = React.useRef<NodeJS.Timeout | null>(null);
 
-  // Watchlist lookup map for instant status tracking
   const watchlistMap = React.useMemo(
-    () => Object.fromEntries(library.movies.map((m) => [m.tmdb_id, m])),
+    () => Object.fromEntries(library.movies.map((m) => [m.tmdb_id || m.id, m])),
     [library.movies]
   );
 
   React.useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
     if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 60);
+      if (!dialog.open) {
+        try {
+          dialog.showModal();
+        } catch {}
+      }
+      setTimeout(() => inputRef.current?.focus(), 40);
     } else {
+      if (dialog.open) dialog.close();
       setSearchValue("");
       setSearchResults([]);
       setFeedbackMsg(null);
@@ -58,14 +75,42 @@ export function QuickAddDialog({
   }, [isOpen]);
 
   React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
-        e.preventDefault();
-        onClose();
-      }
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    const handleCancel = (e: Event) => {
+      e.preventDefault();
+      onClose();
     };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    const handleClose = () => {
+      if (isOpen) onClose();
+    };
+    let pressedOutside = false;
+    const isOutside = (e: PointerEvent) => {
+      const r = dialog.getBoundingClientRect();
+      return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+    };
+    const handlePointerDown = (e: PointerEvent) => {
+      pressedOutside = isOutside(e);
+    };
+    const handlePointerUp = (e: PointerEvent) => {
+      if (pressedOutside && isOutside(e)) onClose();
+      pressedOutside = false;
+    };
+
+    dialog.addEventListener("cancel", handleCancel);
+    dialog.addEventListener("close", handleClose);
+    if (!("closedBy" in HTMLDialogElement.prototype)) {
+      dialog.addEventListener("pointerdown", handlePointerDown);
+      dialog.addEventListener("pointerup", handlePointerUp);
+    }
+
+    return () => {
+      dialog.removeEventListener("cancel", handleCancel);
+      dialog.removeEventListener("close", handleClose);
+      dialog.removeEventListener("pointerdown", handlePointerDown);
+      dialog.removeEventListener("pointerup", handlePointerUp);
+    };
   }, [isOpen, onClose]);
 
   // Live debounced search against TMDB
@@ -98,307 +143,297 @@ export function QuickAddDialog({
 
   const showFeedback = (msg: string) => {
     setFeedbackMsg(msg);
-    setTimeout(() => setFeedbackMsg(null), 3000);
+    setTimeout(() => setFeedbackMsg(null), 2800);
   };
 
   const handleAddWatchlist = (movie: Movie) => {
-    const isSaved = Boolean(watchlistMap[movie.tmdb_id]);
-    if (isSaved) {
-      library.removeFromWatchlist(watchlistMap[movie.tmdb_id]?.id || movie.tmdb_id);
-      showFeedback(`Removed "${movie.title}" from your library`);
+    const id = movie.tmdb_id || movie.id;
+    const existing = watchlistMap[id];
+    if (existing && (existing.status === "want" || existing.status === "watching")) {
+      library.removeFromWatchlist(id);
+      showFeedback(`Removed "${movie.title}" from your Watchlist`);
     } else {
       library.addToWatchlist(movie);
-      showFeedback(`Added "${movie.title}" to your Watchlist!`);
+      showFeedback(`Added "${movie.title}" to Watchlist`);
     }
   };
 
   const handleMarkWatched = (movie: Movie) => {
-    const existing = watchlistMap[movie.tmdb_id];
+    const id = movie.tmdb_id || movie.id;
+    const existing = watchlistMap[id];
     if (existing?.status === "watched") {
-      library.updateStatus(movie.tmdb_id, "want");
-      showFeedback(`Marked "${movie.title}" as to watch`);
+      library.updateStatus(id, "want");
+      showFeedback(`Removed "${movie.title}" from Watched`);
     } else {
-      library.markWatched(movie, 8); // Default favorable rating
-      showFeedback(`Marked "${movie.title}" as Watched!`);
+      library.markWatched(movie);
+      showFeedback(`Marked "${movie.title}" as Watched`);
     }
   };
 
   const handleToggleFavorite = (movie: Movie) => {
+    const id = movie.tmdb_id || movie.id;
+    const wasFav = watchlistMap[id]?.is_favorite;
     library.toggleFavorite(movie);
-    const wasFav = watchlistMap[movie.tmdb_id]?.is_favorite;
-    showFeedback(wasFav ? `Removed "${movie.title}" from Favorites` : `Favorited "${movie.title}"!`);
+    showFeedback(wasFav ? `Removed "${movie.title}" from Favorites` : `Added "${movie.title}" to Favorites`);
   };
 
   if (!isOpen) return null;
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="Quick Add Movie to Library"
-      className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-20 px-3 sm:px-4 bg-black/80 backdrop-blur-md animate-fadeIn"
-      onClick={onClose}
+    <dialog
+      ref={dialogRef}
+      aria-labelledby="quick-add-title"
+      {...({ closedby: "any" } as any)}
+      data-testid="quick-add-dialog"
+      className="mx-auto mt-14 sm:mt-20 mb-auto w-[calc(100%-1.5rem)] max-w-2xl rounded-3xl bg-[#0D0F16] text-white p-0 shadow-[0_32px_90px_rgba(0,0,0,0.85)] backdrop:bg-black/75 backdrop:backdrop-blur-md overflow-hidden border-0 flex flex-col max-h-[82vh]"
     >
-      <div
-        className="w-full max-w-2xl overflow-hidden rounded-3xl bg-[#101118] border border-[#1E1F2A] shadow-2xl shadow-black/80 animate-slideDown flex flex-col max-h-[85vh]"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="px-5 py-4 flex items-center justify-between border-b border-[#1E1F2A] bg-[#0D0E14] shrink-0">
-          <div className="flex items-center gap-3">
-            <span className="w-8 h-8 rounded-full bg-[#00D664]/15 border border-[#00D664]/30 grid place-items-center shrink-0 text-[#00D664]">
-              <Sparkles className="w-4 h-4" />
-            </span>
-            <div>
-              <p className="font-heading text-sm font-bold text-white flex items-center gap-2">
-                <span>Quick Add to Vault</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#00D664]/10 text-[#00D664] border border-[#00D664]/30 font-mono">
-                  Live TMDB
-                </span>
-              </p>
-              <p className="text-xs text-[#9496A1]">
-                Search any film to instantly add to Watchlist, Watched, or Favorites
-              </p>
-            </div>
+      {/* Header */}
+      <div className="px-6 py-4 flex items-center justify-between border-b border-white/10 bg-[#0B0D14] shrink-0">
+        <div className="flex items-center gap-3">
+          <span className="w-9 h-9 rounded-full bg-[#161924] grid place-items-center shrink-0 text-[#00D878]">
+            <Clapperboard className="w-4 h-4" />
+          </span>
+          <div>
+            <h1 id="quick-add-title" className="font-heading text-base font-semibold text-white leading-tight">
+              Add Film to Library
+            </h1>
+            <p className="text-xs text-[#9CA3B8]">
+              Search films to update Watchlist, Watched log, or Favorites
+            </p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 rounded-full text-[#9496A1] hover:text-white hover:bg-white/10 transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
         </div>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close quick add"
+          className="w-8 h-8 rounded-full bg-white/[0.06] text-[#9CA3B8] hover:text-white hover:bg-white/[0.12] grid place-items-center transition-colors cursor-pointer"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
 
-        {/* Search Bar Input */}
-        <div className="p-4 border-b border-[#1E1F2A] bg-[#101118] shrink-0">
-          <div className="flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-[#0A0B0F] border border-[#1E1F2A] focus-within:border-[#00D664]/60 focus-within:ring-2 focus-within:ring-[#00D664]/15 transition">
-            {isSearching ? (
-              <Loader2 className="w-4 h-4 text-[#00D664] animate-spin shrink-0" />
-            ) : (
-              <Search className="w-4 h-4 text-[#9496A1] shrink-0" />
-            )}
-            <input
-              ref={inputRef}
-              type="text"
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              placeholder="Search by title (e.g. Dune, Interstellar, RRR, Oppenheimer)..."
-              className="flex-1 bg-transparent text-sm text-white placeholder:text-[#9496A1] focus:outline-none"
-            />
-            {searchValue && (
-              <button
-                type="button"
-                onClick={() => setSearchValue("")}
-                className="text-xs text-[#9496A1] hover:text-white"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-            <kbd className="hidden sm:inline text-[10px] text-[#9496A1] border border-[#1E1F2A] bg-[#181820] rounded px-1.5 py-0.5 font-mono">
-              ESC
-            </kbd>
-          </div>
-
-          {/* Feedback banner */}
-          {feedbackMsg && (
-            <div className="mt-2.5 px-3 py-1.5 rounded-xl bg-[#00D664]/15 border border-[#00D664]/30 text-xs text-[#00D664] flex items-center gap-2 animate-fadeIn">
-              <Check className="w-3.5 h-3.5 shrink-0" />
-              <span>{feedbackMsg}</span>
-            </div>
+      {/* Search Input Bar */}
+      <div className="p-4 sm:px-6 border-b border-white/10 bg-[#0D0F16] shrink-0">
+        <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-[#161923] focus-within:ring-2 focus-within:ring-[#00D878]/50 transition">
+          {isSearching ? (
+            <Loader2 className="w-4 h-4 text-[#00D878] animate-spin shrink-0" />
+          ) : (
+            <Search className="w-4 h-4 text-[#8D93A8] shrink-0" />
           )}
+          <input
+            ref={inputRef}
+            type="text"
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            placeholder="Search by film title (e.g. Dune, Oppenheimer, Fargo)..."
+            className="flex-1 bg-transparent text-sm text-white placeholder:text-[#6B7186] focus:outline-none"
+          />
+          {searchValue && (
+            <button
+              type="button"
+              onClick={() => setSearchValue("")}
+              aria-label="Clear search"
+              className="p-1 text-[#8D93A8] hover:text-white cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+          <kbd className="hidden sm:inline text-[11px] text-[#8D93A8] bg-[#0D0F16] rounded-md px-2 py-0.5 font-sans font-medium">
+            Esc
+          </kbd>
         </div>
 
-        {/* Content Body: Live Search Results or Vault Shortcuts */}
-        <div className="flex-1 overflow-y-auto no-scrollbar p-3 sm:p-4 space-y-2">
-          {searchValue.trim() ? (
-            /* Search Results Mode */
-            searchResults.length > 0 ? (
-              <div className="space-y-2">
-                <p className="px-2 text-[11px] font-semibold text-[#9496A1] uppercase tracking-wider">
-                  Found {searchResults.length} films
-                </p>
-                {searchResults.map((movie) => {
-                  const watchlistItem = watchlistMap[movie.tmdb_id];
-                  const isSaved = Boolean(watchlistItem);
-                  const isWatched = watchlistItem?.status === "watched";
-                  const isFavorite = Boolean(watchlistItem?.is_favorite);
+        {feedbackMsg && (
+          <div className="mt-2.5 px-3.5 py-2 rounded-xl bg-[#00D878]/12 text-xs text-[#4ADE80] font-medium flex items-center gap-2 animate-fadeIn">
+            <Check className="w-3.5 h-3.5 shrink-0" />
+            <span>{feedbackMsg}</span>
+          </div>
+        )}
+      </div>
 
-                  const posterUrl = getTmdbImageUrl(movie.poster_path, "w185");
+      {/* Body: Results or Popular Picks */}
+      <div className="flex-1 overflow-y-auto no-scrollbar p-4 sm:p-6 space-y-3">
+        {searchValue.trim() ? (
+          searchResults.length > 0 ? (
+            <div className="space-y-2">
+              <p className="px-1 text-xs font-medium text-[#9CA3B8]">
+                {searchResults.length} matching titles
+              </p>
+              {searchResults.map((movie) => {
+                const mId = movie.tmdb_id || movie.id;
+                const watchlistItem = watchlistMap[mId];
+                const isSaved = Boolean(
+                  watchlistItem &&
+                    (watchlistItem.status === "want" || watchlistItem.status === "watching")
+                );
+                const isWatched = watchlistItem?.status === "watched";
+                const isFavorite = Boolean(watchlistItem?.is_favorite);
+                const posterUrl = getTmdbImageUrl(movie.poster_path, "w185");
 
-                  return (
-                    <div
-                      key={movie.tmdb_id}
-                      className="p-3 rounded-2xl border border-[#1E1F2A] bg-[#0A0B0F]/60 hover:bg-[#141520] hover:border-[#00D664]/40 transition flex items-center gap-3.5 group/item"
+                return (
+                  <div
+                    key={mId}
+                    className="p-3 rounded-2xl bg-[#141722] hover:bg-[#191D2B] transition flex items-center gap-3.5 group/item"
+                  >
+                    <Link
+                      href={`/movie/${mId}`}
+                      onClick={onClose}
+                      className="w-12 h-[72px] rounded-xl overflow-hidden bg-[#1D2030] shrink-0 relative block"
                     >
-                      {/* Movie Poster */}
+                      {posterUrl ? (
+                        <Image
+                          src={posterUrl}
+                          alt={movie.title}
+                          fill
+                          sizes="56px"
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-[#8D93A8]">
+                          <Film className="w-5 h-5" />
+                        </div>
+                      )}
+                    </Link>
+
+                    <div className="min-w-0 flex-1">
                       <Link
-                        href={`/movie/${movie.tmdb_id || movie.id}`}
+                        href={`/movie/${mId}`}
                         onClick={onClose}
-                        className="w-12 h-18 sm:w-14 sm:h-20 rounded-xl overflow-hidden bg-[#181820] shrink-0 border border-white/10 relative block hover:border-[#00D664]/60 transition"
+                        className="font-heading text-sm font-semibold text-white group-hover/item:text-[#00D878] transition-colors truncate block"
                       >
-                        {posterUrl ? (
-                          <Image
-                            src={posterUrl}
-                            alt={movie.title}
-                            fill
-                            sizes="60px"
-                            className="object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-[#9496A1]">
-                            <Film className="w-5 h-5" />
-                          </div>
-                        )}
+                        {movie.title}
                       </Link>
 
-                      {/* Movie Info */}
-                      <div className="min-w-0 flex-1">
-                        <Link
-                          href={`/movie/${movie.tmdb_id}`}
-                          onClick={onClose}
-                          className="font-heading text-sm font-bold text-white group-hover/item:text-[#00D664] transition-colors truncate block"
-                        >
-                          {movie.title}
-                        </Link>
-
-                        <div className="flex items-center gap-2 text-xs text-[#9496A1] mt-1">
-                          {movie.vote_average !== undefined && movie.vote_average > 0 && (
-                            <>
-                              <span
-                                title="TMDB Community Score"
-                                className="inline-flex items-center gap-1 font-semibold text-white"
-                              >
-                                <Star className="w-3 h-3 fill-[#FBBF24] text-[#FBBF24]" />
-                                <span className="text-[10px] text-[#9496A1]">TMDB</span>
-                                <span>{formatScore(movie.vote_average)}</span>
-                              </span>
-                              <span>•</span>
-                            </>
-                          )}
-                          <span>{formatYear(movie.release_date)}</span>
-                          {isWatched && (
-                            <span className="px-1.5 py-0.2 rounded bg-[#00D664]/15 text-[#00D664] text-[10px] font-medium border border-[#00D664]/30">
-                              Watched
+                      <div className="flex items-center gap-2 text-xs text-[#C7CCDA] mt-1 font-medium tabular-nums">
+                        {movie.vote_average !== undefined && movie.vote_average > 0 && (
+                          <>
+                            <span
+                              title="TMDB Community Score"
+                              className="inline-flex items-center gap-1 text-[#FBBF24]"
+                            >
+                              <Star className="w-3 h-3 fill-[#FBBF24] text-[#FBBF24]" />
+                              <span className="text-[11px] text-[#9CA3B8] font-medium">TMDB</span>
+                              <span>{formatScore(movie.vote_average)}</span>
                             </span>
-                          )}
-                        </div>
-
-                        {movie.overview && (
-                          <p className="text-xs text-[#9496A1] line-clamp-1 mt-1">
-                            {movie.overview}
-                          </p>
+                            <span className="text-white/25" aria-hidden="true">•</span>
+                          </>
+                        )}
+                        <span>{formatYear(movie.release_date)}</span>
+                        {isWatched && (
+                          <span className="px-2 py-0.5 rounded-full bg-[#00D878]/15 text-[#00D878] text-[11px] font-medium">
+                            Watched
+                          </span>
                         )}
                       </div>
 
-                      {/* Action Buttons (Reference 2 style) */}
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        {/* Watchlist toggle */}
-                        <button
-                          type="button"
-                          onClick={() => handleAddWatchlist(movie)}
-                          title={isSaved ? "In Watchlist (click to remove)" : "Add to Watchlist"}
-                          className={`h-8 sm:h-9 px-3 rounded-full text-xs font-semibold inline-flex items-center gap-1.5 transition ${
-                            isSaved
-                              ? "bg-[#00D664] text-black shadow-md shadow-[#00D664]/20"
-                              : "bg-[#1E1F2A] text-white hover:bg-[#00D664] hover:text-black border border-white/10"
-                          }`}
-                        >
-                          {isSaved ? (
-                            <>
-                              <Check className="w-3.5 h-3.5 stroke-[2.5]" />
-                              <span className="hidden sm:inline">Saved</span>
-                            </>
-                          ) : (
-                            <>
-                              <Bookmark className="w-3.5 h-3.5" />
-                              <span className="hidden sm:inline">Watchlist</span>
-                            </>
-                          )}
-                        </button>
-
-                        {/* Watched toggle */}
-                        <button
-                          type="button"
-                          onClick={() => handleMarkWatched(movie)}
-                          title={isWatched ? "Marked as Watched" : "Mark as Watched"}
-                          className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full grid place-items-center transition border ${
-                            isWatched
-                              ? "bg-[#00D664]/20 border-[#00D664] text-[#00D664]"
-                              : "bg-[#1E1F2A] border-white/10 text-[#9496A1] hover:text-white hover:border-[#00D664]/50"
-                          }`}
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </button>
-
-                        {/* Favorite toggle */}
-                        <button
-                          type="button"
-                          onClick={() => handleToggleFavorite(movie)}
-                          title={isFavorite ? "Favorited" : "Add to Favorites"}
-                          className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full grid place-items-center transition border ${
-                            isFavorite
-                              ? "bg-[#FBBF24]/20 border-[#FBBF24] text-[#FBBF24]"
-                              : "bg-[#1E1F2A] border-white/10 text-[#9496A1] hover:text-[#FBBF24] hover:border-[#FBBF24]/50"
-                          }`}
-                        >
-                          <Star className={`w-3.5 h-3.5 ${isFavorite ? "fill-current" : ""}`} />
-                        </button>
-                      </div>
+                      {movie.overview && (
+                        <p className="text-xs text-[#8D93A8] line-clamp-1 mt-1">
+                          {movie.overview}
+                        </p>
+                      )}
                     </div>
-                  );
-                })}
-              </div>
-            ) : !isSearching ? (
-              <div className="py-12 text-center space-y-2">
-                <p className="text-sm font-semibold text-white">No movies found for &quot;{searchValue}&quot;</p>
-                <p className="text-xs text-[#9496A1]">
-                  Try searching for another film title or explore curated discovery.
-                </p>
-              </div>
-            ) : null
-          ) : (
-            /* Empty Search Initial Screen: Shortcuts & Quick Add Recommendations */
-            <div className="space-y-4 py-2">
-              <div className="p-4 rounded-2xl border border-[#1E1F2A] bg-gradient-to-br from-[#101118] to-[#0A0B0F] space-y-2">
-                <p className="text-xs font-bold text-[#00D664] uppercase tracking-wider">
-                  Quick Start Suggestions
-                </p>
-                <p className="text-xs text-[#9496A1]">
-                  Type a title above to search all global cinema via TMDB, or try these quick options:
-                </p>
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {["Dune: Part Two", "Oppenheimer", "Interstellar", "RRR", "Kalki 2898 AD", "Inception"].map((film) => (
-                    <button
-                      key={film}
-                      type="button"
-                      onClick={() => setSearchValue(film)}
-                      className="px-3 py-1.5 rounded-full border border-white/10 bg-white/5 text-xs text-white hover:border-[#00D664]/50 hover:bg-[#00D664]/10 transition"
-                    >
-                      + {film}
-                    </button>
-                  ))}
-                </div>
-              </div>
 
-              {/* Direct Link to Discover */}
-              <div className="flex items-center justify-between px-2 pt-1">
-                <span className="text-xs text-[#9496A1]">
-                  Looking for deep discovery?
-                </span>
-                <Link
-                  href="/discover"
-                  onClick={onClose}
-                  className="text-xs font-semibold text-[#00D664] hover:underline inline-flex items-center gap-1"
-                >
-                  <span>Go to Discover</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
+                    {/* Separated Dark Borderless Circular Actions */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleAddWatchlist(movie)}
+                        title={isSaved ? "Remove from Watchlist" : "Add to Watchlist"}
+                        className={`h-9 px-3 rounded-full text-xs font-semibold inline-flex items-center gap-1.5 transition cursor-pointer ${
+                          isSaved
+                            ? "bg-[#00D878] text-black"
+                            : "bg-[#202433] text-white hover:bg-[#2A2F42]"
+                        }`}
+                      >
+                        {isSaved ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 stroke-[2.4]" />
+                            <span className="hidden sm:inline">In Watchlist</span>
+                          </>
+                        ) : (
+                          <>
+                            <Bookmark className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">Watchlist</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleMarkWatched(movie)}
+                        title={isWatched ? "Remove from Watched" : "Mark as Watched"}
+                        aria-label={isWatched ? "Remove from Watched" : "Mark as Watched"}
+                        className={`w-9 h-9 rounded-full grid place-items-center transition cursor-pointer ${
+                          isWatched
+                            ? "bg-[#00D878] text-black"
+                            : "bg-[#202433] text-[#C7CCDA] hover:text-white hover:bg-[#2A2F42]"
+                        }`}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleToggleFavorite(movie)}
+                        title={isFavorite ? "Remove from Favorites" : "Add to Favorites"}
+                        aria-label={isFavorite ? "Remove from Favorites" : "Add to Favorites"}
+                        className={`w-9 h-9 rounded-full grid place-items-center transition cursor-pointer ${
+                          isFavorite
+                            ? "bg-rose-500 text-white"
+                            : "bg-[#202433] text-[#C7CCDA] hover:text-rose-400 hover:bg-[#2A2F42]"
+                        }`}
+                      >
+                        <Heart className={`w-4 h-4 ${isFavorite ? "fill-current" : ""}`} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : !isSearching ? (
+            <div className="py-10 text-center space-y-1.5">
+              <p className="text-sm font-semibold text-white">No films found for &ldquo;{searchValue}&rdquo;</p>
+              <p className="text-xs text-[#9CA3B8]">
+                Check your spelling or browse Discover Cinema for curated selections.
+              </p>
+            </div>
+          ) : null
+        ) : (
+          <div className="space-y-5 py-1">
+            <div className="space-y-2.5">
+              <p className="text-xs font-semibold text-[#C7CCDA]">
+                Popular Titles to Try
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {POPULAR_PICKS.map((film) => (
+                  <button
+                    key={film}
+                    type="button"
+                    onClick={() => setSearchValue(film)}
+                    className="px-3.5 py-2 rounded-full bg-[#161923] hover:bg-[#00D878]/15 text-xs font-medium text-[#E2E6F0] hover:text-[#00D878] transition cursor-pointer"
+                  >
+                    + {film}
+                  </button>
+                ))}
               </div>
             </div>
-          )}
-        </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-white/10">
+              <span className="text-xs text-[#8D93A8]">
+                Browse genres, moods, and global trends
+              </span>
+              <Link
+                href="/discover"
+                onClick={onClose}
+                className="text-xs font-semibold text-[#00D878] hover:underline inline-flex items-center gap-1.5"
+              >
+                <span>Open Discover Catalog</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
+    </dialog>
   );
 }

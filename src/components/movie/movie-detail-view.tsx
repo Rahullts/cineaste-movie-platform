@@ -527,24 +527,21 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
             <div className="w-full h-full bg-gradient-to-br from-[#14151F] via-[#0A0B0F] to-black" />
           )}
 
-          {/* Controlled Scrims: guarantee crisp WCAG contrast over bright backdrops while keeping artwork rich */}
-          <div className="absolute inset-0 bg-black/35 pointer-events-none" />
-          {/* Top: strong dark gradient behind fixed TopNav & Back button */}
-          <div className="absolute top-0 inset-x-0 h-32 sm:h-40 bg-gradient-to-b from-black/85 via-black/45 to-transparent pointer-events-none" />
-          {/* Left-to-right & full-width lower vignette behind title, tagline, genres & actions */}
-          <div className="absolute inset-y-0 left-0 w-full md:w-3/4 bg-gradient-to-r from-[#0A0B0F]/95 via-[#0A0B0F]/70 to-transparent pointer-events-none" />
-          <div className="absolute inset-x-0 bottom-0 h-4/5 bg-gradient-to-t from-[#0A0B0F] via-[#0A0B0F]/80 to-transparent pointer-events-none" />
+          {/* Crisp Targeted Vignette ONLY behind typography — keep artwork & poster vivid, never dull */}
+          <div className="absolute top-0 inset-x-0 h-28 bg-gradient-to-b from-[#0A0B0F]/75 via-[#0A0B0F]/25 to-transparent pointer-events-none" />
+          <div className="absolute inset-y-0 left-0 w-full md:w-3/4 bg-gradient-to-r from-[#0A0B0F]/88 via-[#0A0B0F]/55 to-transparent pointer-events-none" />
+          <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-[#0A0B0F] via-[#0A0B0F]/65 to-transparent pointer-events-none" />
         </div>
 
         {/* Hero Content Composition with Independent Back Control Row Above Poster */}
         <div className="relative z-10 w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-12 pb-6 sm:pb-8 pt-20 sm:pt-22 flex flex-col gap-5 sm:gap-6">
-          {/* Independent Back Navigation Control — positioned cleanly above the poster so zero overlap ever occurs */}
+          {/* Independent Back Navigation Control — borderless dark circle pill above poster */}
           <div className="flex items-center">
             <button
               type="button"
               onClick={handleBack}
               aria-label="Back to previous page"
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/75 hover:bg-black/95 border border-white/15 text-[#F3F4F6] hover:text-white backdrop-blur-md text-xs sm:text-sm font-medium transition-all shadow-xl group cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#151722]/85 hover:bg-[#222536] text-[#F3F4F6] hover:text-white backdrop-blur-md text-xs sm:text-sm font-medium transition-all shadow-lg group cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4 text-[#00D878] group-hover:-translate-x-0.5 transition-transform" />
               <span>Back</span>
@@ -552,10 +549,10 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
           </div>
 
           <div className="flex flex-col md:flex-row items-center md:items-end gap-6 sm:gap-8 lg:gap-10">
-          {/* Left Poster (Exact 2:3 aspect ratio, refined rounded corners, no distortion) */}
+          {/* Left Poster (Borderless, vivid 2:3 artwork, zero outline) */}
           <div
             data-testid="movie-detail-poster"
-            className="relative w-44 sm:w-56 md:w-64 lg:w-72 shrink-0 aspect-[2/3] rounded-2xl overflow-hidden bg-[#14151F] shadow-2xl shadow-black/90 group select-none"
+            className="relative w-44 sm:w-56 md:w-64 lg:w-72 shrink-0 aspect-[2/3] rounded-2xl overflow-hidden bg-[#14151F] shadow-2xl shadow-black/90 group select-none focus:outline-none"
           >
             {posterUrl ? (
               <Image
@@ -564,7 +561,7 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
                 fill
                 priority
                 sizes="(max-width: 640px) 176px, (max-width: 768px) 224px, 288px"
-                className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                className="object-cover group-hover:scale-[1.03] transition-transform duration-500 ease-out"
               />
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center text-[#9496A1] bg-[#14151F]">
@@ -578,64 +575,92 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
 
           {/* Right Information & Action Area */}
           <div className="flex-1 min-w-0 w-full flex flex-col justify-end text-center md:text-left">
-            {/* Metadata Badges Strip */}
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 sm:gap-2.5 text-xs font-mono">
+            {/* Highlighted Year, Runtime & Rating Badges Strip */}
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 sm:gap-2.5 text-xs sm:text-[13px] font-medium tabular-nums">
               {movie.certification && (
-                <span className="px-2 py-0.5 rounded-md bg-white/10 font-bold text-white uppercase tracking-wider text-[11px]">
+                <span className="px-2.5 py-1 rounded-full bg-white/15 font-semibold text-white uppercase tracking-wider text-xs">
                   {movie.certification}
                 </span>
               )}
 
               {movie.release_date && (
-                <span className="text-[#9496A1] font-medium flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5" />
+                <span
+                  data-testid="detail-highlight-year"
+                  className="px-3 py-1 rounded-full bg-white/15 text-white font-semibold inline-flex items-center gap-1.5 backdrop-blur-md"
+                >
+                  <Calendar className="w-3.5 h-3.5 text-[#00D878]" />
                   <span>{formatYear(movie.release_date)}</span>
                 </span>
               )}
 
               {movie.runtime ? (
-                <span className="text-[#9496A1] font-medium flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" />
+                <span
+                  data-testid="detail-highlight-runtime"
+                  className="px-3 py-1 rounded-full bg-white/15 text-white font-semibold inline-flex items-center gap-1.5 backdrop-blur-md"
+                >
+                  <Clock className="w-3.5 h-3.5 text-[#00D878]" />
                   <span>{formatRuntime(movie.runtime)}</span>
                 </span>
               ) : null}
 
               {typeof movie.imdb_rating === "number" && movie.imdb_rating > 0 && (
-                <div
+                <span
+                  data-testid="detail-highlight-imdb"
                   title="Verified IMDb Rating"
-                  className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#FBBF24]/15 text-[#FBBF24] font-semibold"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FBBF24]/25 text-[#FCD34D] font-semibold backdrop-blur-md"
                 >
-                  <Star className="w-3 h-3 fill-current" />
+                  <Star className="w-3.5 h-3.5 fill-current" />
                   <span>IMDb {formatScore(movie.imdb_rating)}</span>
-                </div>
+                </span>
               )}
 
               {typeof movie.letterboxd_rating === "number" && movie.letterboxd_rating > 0 && (
-                <div
+                <span
                   title="Verified Letterboxd Rating"
-                  className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/10 text-white font-semibold"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-white font-semibold backdrop-blur-md"
                 >
                   <span>Letterboxd {formatScore(movie.letterboxd_rating)}</span>
-                </div>
+                </span>
+              )}
+
+              {typeof movie.vote_average === "number" && movie.vote_average > 0 && (
+                <span
+                  data-testid="detail-highlight-tmdb"
+                  title="TMDB Community Score"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FBBF24]/20 text-[#FCD34D] font-semibold backdrop-blur-md"
+                >
+                  <Star className="w-3.5 h-3.5 fill-current" />
+                  <span>TMDB {formatScore(movie.vote_average)}</span>
+                </span>
+              )}
+
+              {personalRating > 0 && (
+                <span
+                  title="Your Personal Cineaste Rating"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#00D878]/20 text-[#4ADE80] font-semibold backdrop-blur-md"
+                >
+                  <Star className="w-3.5 h-3.5 fill-current" />
+                  <span>Personal {personalRating.toFixed(1)}/10</span>
+                </span>
               )}
             </div>
 
             {/* Movie Title */}
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-[3.35rem] font-bold font-heading tracking-[-0.025em] text-white leading-[1.08] mt-2.5 sm:mt-3">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-[3.25rem] font-bold font-heading tracking-[-0.02em] text-white leading-[1.08] mt-3 sm:mt-3.5">
               {movie.title}
             </h1>
 
             {/* Tagline */}
             {movie.tagline && (
-              <p className="text-sm sm:text-base lg:text-lg text-[#9496A1] italic mt-1.5 font-normal line-clamp-2">
+              <p className="text-base sm:text-lg lg:text-xl font-serif italic text-white/85 mt-1.5 font-normal line-clamp-2">
                 &ldquo;{movie.tagline}&rdquo;
               </p>
             )}
 
-            {/* Director Credit & Genre Badges */}
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-2 mt-3 text-xs sm:text-sm">
+            {/* Director Credit & Prominently Highlighted Genre Chips */}
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-2.5 mt-3.5 text-xs sm:text-sm">
               {directorName && (
-                <p className="text-[#D1D5DB] font-medium">
+                <p className="text-[#E2E6F0] font-medium">
                   Directed by{" "}
                   <span className="text-[#00D878] font-semibold">
                     {directorName}
@@ -644,14 +669,16 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
               )}
 
               {genreList.length > 0 && (
-                <div className="flex flex-wrap items-center gap-1.5">
+                <div data-testid="detail-highlight-genres" className="flex flex-wrap items-center justify-center md:justify-start gap-2">
                   {genreList.map((g) => (
-                    <span
+                    <button
                       key={g}
-                      className="px-2.5 py-0.5 rounded-full bg-white/5 text-xs text-[#9496A1] font-medium"
+                      type="button"
+                      onClick={() => router.push(`/discover?q=${encodeURIComponent(g)}`)}
+                      className="px-3.5 py-1 rounded-full bg-[#00D878]/20 hover:bg-[#00D878]/30 text-xs sm:text-[13px] text-[#4ADE80] font-semibold tracking-wide transition cursor-pointer shadow-sm"
                     >
                       {g}
-                    </span>
+                    </button>
                   ))}
                 </div>
               )}
@@ -1405,7 +1432,7 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
                   }}
                   className="group relative flex flex-col cursor-pointer select-none"
                 >
-                  <div className="relative aspect-[2/3] w-full rounded-2xl overflow-hidden bg-[#101118] shadow-xl shadow-black/60 ring-1 ring-white/[0.06] group-hover:shadow-2xl group-hover:shadow-black/90 group-hover:-translate-y-1.5 transition-all duration-300">
+                  <div className="relative aspect-[2/3] w-full rounded-2xl overflow-hidden bg-[#101118] shadow-xl shadow-black/60 group-hover:shadow-2xl group-hover:shadow-black/90 group-hover:-translate-y-1.5 transition-all duration-300">
                     {recPoster ? (
                       <Image
                         src={recPoster}
@@ -1420,22 +1447,22 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
                       </div>
                     )}
                     {typeof rec.imdb_rating === "number" && rec.imdb_rating > 0 ? (
-                      <div className="absolute top-2.5 left-2.5 px-1.5 py-0.5 rounded-md bg-black/75 backdrop-blur-md text-[10px] font-semibold tabular-nums text-[#FBBF24] flex items-center gap-1 shadow-md ring-1 ring-white/10">
+                      <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-md text-[11px] font-semibold tabular-nums text-[#FBBF24] flex items-center gap-1 shadow-md">
                         <Star className="w-2.5 h-2.5 fill-current" />
                         <span>IMDb {formatScore(rec.imdb_rating)}</span>
                       </div>
                     ) : typeof rec.letterboxd_rating === "number" && rec.letterboxd_rating > 0 ? (
-                      <div className="absolute top-2.5 left-2.5 px-1.5 py-0.5 rounded-md bg-black/75 backdrop-blur-md text-[10px] font-semibold tabular-nums text-white shadow-md ring-1 ring-white/10">
+                      <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-md text-[11px] font-semibold tabular-nums text-white shadow-md">
                         <span>LB {formatScore(rec.letterboxd_rating)}</span>
                       </div>
                     ) : null}
                   </div>
 
-                  <div className="pt-2.5 px-0.5">
-                    <p className="font-heading text-sm font-medium tracking-[-0.01em] text-white truncate group-hover:text-[#00D664] transition-colors">
+                  <div className="pt-2.5 px-0.5 space-y-0.5">
+                    <p className="font-heading text-sm font-semibold tracking-[-0.01em] text-white truncate group-hover:text-[#00D664] transition-colors">
                       {rec.title}
                     </p>
-                    <p className="text-xs text-[#9496A1] tabular-nums mt-0.5">
+                    <p className="text-xs sm:text-[13px] font-medium text-[#D0D4E0] tabular-nums">
                       {formatYear(rec.release_date)}
                     </p>
                   </div>

@@ -79,7 +79,7 @@ export function WatchlistCompactView({
             </button>
 
             {/* Release Year */}
-            <span className="text-xs text-muted-foreground font-mono shrink-0">
+            <span className="text-xs sm:text-[13px] font-medium text-foreground/80 tabular-nums shrink-0">
               {formatYear(movie.release_date)}
             </span>
 

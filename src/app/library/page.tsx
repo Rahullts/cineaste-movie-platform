@@ -481,6 +481,7 @@ function LibraryContent() {
                     variant="grid"
                     index={idx}
                     subLabel="Watching"
+                    enableWatchedAction={true}
                     onOpenDetail={() => handleOpenMovieDetail(movie)}
                     onToggleWatched={() => handleToggleWatched(movie)}
                     onToggleFavorite={() => library.toggleFavorite(movie)}
@@ -667,6 +668,7 @@ function LibraryContent() {
                             : "In Watchlist"
                     }
                     onOpenDetail={() => handleOpenMovieDetail(movie)}
+                    enableWatchedAction={true}
                     onToggleWatched={() => handleToggleWatched(movie)}
                     onToggleFavorite={() => library.toggleFavorite(movie)}
                     onRemove={(id) => library.removeFromWatchlist(id)}
@@ -732,6 +734,7 @@ function LibraryContent() {
                     isWatched={true}
                     watchedDate={formatWatchedDate(movie.watched_date || movie.watched_at)}
                     personalRating={typeof movie.rating === "number" ? movie.rating : undefined}
+                    enableWatchedAction={true}
                     onOpenDetail={() => handleOpenMovieDetail(movie)}
                     onToggleWatched={() => handleToggleWatched(movie)}
                     onToggleFavorite={() => library.toggleFavorite(movie)}

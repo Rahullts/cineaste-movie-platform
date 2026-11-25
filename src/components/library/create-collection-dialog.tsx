@@ -9,7 +9,6 @@ import {
   Film,
   Search,
   Check,
-  Sparkles,
 } from "lucide-react";
 import { getTmdbImageUrl } from "@/lib/image-util";
 import type { Movie, Collection } from "@/types";

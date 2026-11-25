@@ -14,7 +14,6 @@ import {
   FolderPlus,
   Compass,
   ArrowUpDown,
-  Sparkles,
 } from "lucide-react";
 import { getTmdbImageUrl } from "@/lib/image-util";
 import type { Movie } from "@/types";

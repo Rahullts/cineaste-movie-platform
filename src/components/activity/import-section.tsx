@@ -10,7 +10,6 @@ import {
   AlertCircle,
   Loader2,
   Film,
-  Sparkles,
   Download,
   Check,
   X,
@@ -520,7 +519,7 @@ export function ImportSection({
                   {summary.updated}
                 </p>
               </div>
-              <Sparkles className="w-5 h-5 text-indigo-400" />
+              <CheckCircle2 className="w-5 h-5 text-indigo-400" />
             </div>
 
             <div className="p-4 rounded-2xl border border-[#1E1F2A] bg-[#101118] shadow-md flex items-center justify-between">

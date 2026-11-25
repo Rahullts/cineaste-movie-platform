@@ -14,6 +14,8 @@ import {
   ShieldCheck,
   Settings,
   LogOut,
+  LogIn,
+  UserPlus,
   Mic,
   X,
   Check,
@@ -77,8 +79,9 @@ export function TopNav({
   const [isThemeMenuOpen, setIsThemeMenuOpen] = React.useState(false);
   const themeMenuRef = React.useRef<HTMLDivElement>(null);
 
-  // Account dropdown state
+  // Account dropdown & guest login side panel state
   const [isAccountMenuOpen, setIsAccountMenuOpen] = React.useState(false);
+  const [isGuestLoginDrawerOpen, setIsGuestLoginDrawerOpen] = React.useState(false);
   const accountMenuRef = React.useRef<HTMLDivElement>(null);
   const searchContainerRef = React.useRef<HTMLDivElement>(null);
 
@@ -103,6 +106,7 @@ export function TopNav({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setIsAccountMenuOpen(false);
+        setIsGuestLoginDrawerOpen(false);
         setIsThemeMenuOpen(false);
         setIsSearchOpen(false);
       }
@@ -231,17 +235,18 @@ export function TopNav({
     .toUpperCase();
 
   const actionButtonIdleClass = useLightHeaderChrome
-    ? "bg-black/[0.06] hover:bg-black/[0.12] text-slate-800 hover:text-slate-950 border border-black/10"
-    : "bg-black/45 hover:bg-white/15 text-white/90 hover:text-white border border-white/10";
+    ? "bg-slate-900/[0.06] hover:bg-slate-900/[0.12] text-slate-800 hover:text-slate-950"
+    : "bg-[#151722]/85 hover:bg-[#222536] text-white/90 hover:text-white shadow-sm shadow-black/40";
 
   return (
+    <>
     <header
       className={cn(
         "sticky top-0 z-40 h-16 flex items-center justify-between gap-4 px-4 sm:px-6 lg:px-8 select-none pointer-events-none transition-all duration-200",
         scrolled
           ? isLightMode
-            ? "bg-[#F8F9FA]/90 backdrop-blur-xl border-b border-black/10 shadow-[0_6px_24px_rgba(0,0,0,0.06)]"
-            : "bg-[#0A0B0F]/85 backdrop-blur-xl border-b border-white/10 shadow-[0_8px_28px_rgba(0,0,0,0.45)]"
+            ? "bg-[#F8F9FA]/90 backdrop-blur-xl shadow-[0_6px_24px_rgba(0,0,0,0.06)]"
+            : "bg-[#0A0B0F]/85 backdrop-blur-xl shadow-[0_8px_28px_rgba(0,0,0,0.45)]"
           : isFullBleed
             ? "bg-gradient-to-b from-black/70 via-black/35 to-transparent"
             : "bg-background/80 backdrop-blur-md"
@@ -254,7 +259,7 @@ export function TopNav({
         className="shrink-0 flex items-center group cursor-pointer pointer-events-auto"
       >
         <CineasteLogo
-          size={32}
+          size={34}
           showWordmark={true}
           forceLightWordmark={isFullBleed && !scrolled}
         />
@@ -466,24 +471,25 @@ export function TopNav({
         </div>
 
         {/* ================================================================= */}
-        {/* 4. User Profile Control (Floating circular, icon-only)             */}
+        {/* 4. User Profile Control (Opens Login Side Panel when Guest)       */}
         {/* ================================================================= */}
         <div className="relative" ref={accountMenuRef}>
           <button
             type="button"
+            data-testid="topnav-profile-btn"
             onClick={() => {
               if (!isAuthenticated) {
-                openAuthModal("signin");
+                setIsGuestLoginDrawerOpen(true);
               } else {
                 setIsAccountMenuOpen((prev) => !prev);
               }
             }}
             aria-label="User Account"
-            title={isAuthenticated ? user.display_name : "Sign In / Guest"}
+            title={isAuthenticated ? user.display_name : "Account"}
             className={cn(
               "h-9 w-9 rounded-full grid place-items-center overflow-hidden transition active:scale-95 cursor-pointer backdrop-blur-md group",
-              isAccountMenuOpen
-                ? "bg-[#00D878]/20 text-[#00D878] shadow-[0_0_12px_rgba(0,216,120,0.25)] border border-[#00D878]/35"
+              isAccountMenuOpen || isGuestLoginDrawerOpen
+                ? "bg-[#00D878]/20 text-[#00D878]"
                 : actionButtonIdleClass
             )}
           >
@@ -495,7 +501,7 @@ export function TopNav({
                 className="w-full h-full object-cover"
               />
             ) : isAuthenticated ? (
-              <span className="text-xs font-bold text-[#00D878]">
+              <span className="text-xs font-semibold text-white">
                 {userInitials}
               </span>
             ) : (
@@ -503,15 +509,15 @@ export function TopNav({
             )}
           </button>
 
-          {/* Account Popover Menu */}
+          {/* Account Popover Menu (Authenticated Users) */}
           {isAuthenticated && isAccountMenuOpen && (
             <div className="absolute right-0 mt-2.5 w-60 rounded-2xl border border-border bg-card/95 backdrop-blur-2xl shadow-2xl p-1 z-50 animate-in fade-in slide-in-from-top-2 text-xs">
               <div className="px-3 py-2.5 border-b border-border">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="font-heading font-bold text-sm text-foreground truncate">
+                  <p className="font-heading font-semibold text-sm text-foreground truncate">
                     {user.display_name}
                   </p>
-                  <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#00D878]/15 text-[#00D878] border border-[#00D878]/30">
+                  <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#00D878]/15 text-[#00D878]">
                     {planInfo.name}
                   </span>
                 </div>
@@ -578,5 +584,80 @@ export function TopNav({
         </div>
       </div>
     </header>
+
+    {/* ===================================================================== */}
+    {/* GUEST LOGIN SIDE PANEL (Shows strictly Log In & Sign Up options)      */}
+    {/* ===================================================================== */}
+    {!isAuthenticated && isGuestLoginDrawerOpen && (
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Account Access"
+        data-testid="guest-account-panel"
+        onClick={() => setIsGuestLoginDrawerOpen(false)}
+        className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-end animate-fadeIn"
+      >
+        <aside
+          onClick={(e) => e.stopPropagation()}
+          className="h-full w-full max-w-[320px] bg-card/95 backdrop-blur-2xl shadow-2xl border-l border-border p-6 flex flex-col justify-between"
+        >
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <CineasteLogo size={28} showWordmark={true} />
+              <button
+                type="button"
+                onClick={() => setIsGuestLoginDrawerOpen(false)}
+                aria-label="Close account panel"
+                className="w-8 h-8 rounded-full bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground grid place-items-center transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-1.5">
+              <h2 className="font-heading text-lg font-semibold text-foreground">
+                Cineaste Account
+              </h2>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Sign in or create a free account to sync your cinema library across devices.
+              </p>
+            </div>
+
+            <div className="space-y-2.5 pt-1">
+              <button
+                type="button"
+                data-testid="sidepanel-login-btn"
+                onClick={() => {
+                  setIsGuestLoginDrawerOpen(false);
+                  openAuthModal("signin");
+                }}
+                className="w-full h-11 rounded-xl bg-[#00D878] hover:bg-[#00BF6A] text-black font-heading font-semibold text-sm flex items-center justify-center gap-2 transition active:scale-[0.99] cursor-pointer shadow-md shadow-[#00D878]/15"
+              >
+                <LogIn className="w-4 h-4" />
+                <span>Log In</span>
+              </button>
+
+              <button
+                type="button"
+                data-testid="sidepanel-signup-btn"
+                onClick={() => {
+                  setIsGuestLoginDrawerOpen(false);
+                  openAuthModal("signup");
+                }}
+                className="w-full h-11 rounded-xl bg-muted/70 hover:bg-muted text-foreground font-heading font-semibold text-sm flex items-center justify-center gap-2 transition active:scale-[0.99] cursor-pointer"
+              >
+                <UserPlus className="w-4 h-4" />
+                <span>Sign Up</span>
+              </button>
+            </div>
+          </div>
+
+          <p className="text-[11px] text-muted-foreground/75">
+            Cineaste Personal Cinema
+          </p>
+        </aside>
+      </div>
+    )}
+    </>
   );
 }

@@ -10,7 +10,6 @@ import {
   FolderHeart,
   Film,
   Calendar,
-  Sparkles,
   Search,
   ExternalLink,
   ChevronLeft,

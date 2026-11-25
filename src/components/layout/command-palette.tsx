@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import {
   Search,
   Clock,
-  Sparkles,
+  SlidersHorizontal,
   ArrowRight,
   Bookmark,
   Film,
@@ -210,8 +210,8 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
               {/* AI Vibes */}
               <div className="space-y-1.5">
                 <p className="px-2 py-1 text-xs text-muted-foreground uppercase tracking-wide flex items-center gap-1.5 font-semibold">
-                  <Sparkles className="w-3.5 h-3.5 text-primary" />
-                  <span>AI vibes</span>
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-primary" />
+                  <span>Mood &amp; vibe presets</span>
                 </p>
                 <div className="flex flex-wrap gap-1.5 px-2">
                   {AI_VIBES_PROMPTS.map((vibe) => (

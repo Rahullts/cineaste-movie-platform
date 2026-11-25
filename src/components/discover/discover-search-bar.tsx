@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Search, X, Mic, Sparkles, Clock, TrendingUp } from "lucide-react";
+import { Search, X, Mic, SlidersHorizontal, Clock, TrendingUp } from "lucide-react";
 
 const RECENT_SEARCHES_KEY = "cineaste_recent_searches";
 
@@ -202,9 +202,9 @@ export function DiscoverSearchBar({
                 ? "bg-[#00D878]/15 text-[#00D878]"
                 : "text-[#9496A1] hover:bg-[#181820] hover:text-[#F3F4F6]"
             }`}
-            aria-label="AI assistant"
+            aria-label="Mood & Vibe Tuner"
           >
-            <Sparkles className="w-4 h-4" />
+            <SlidersHorizontal className="w-4 h-4" />
           </button>
         </div>
       </form>
@@ -212,12 +212,12 @@ export function DiscoverSearchBar({
       {/* Suggestion Dropdown (when focused and empty) */}
       {showDropdown && (
         <div className="absolute top-full mt-2 left-0 right-0 rounded-2xl border border-[#1E1F2A] bg-[#101118]/95 backdrop-blur-xl shadow-2xl p-3 z-40 max-h-[60vh] overflow-y-auto no-scrollbar">
-          {/* AI Suggestions */}
+          {/* Mood Suggestions */}
           {aiMode && suggestions.length > 0 && (
             <div className="mb-3">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-[#00D878] mb-1.5 px-1">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>AI suggestions</span>
+                <SlidersHorizontal className="w-3.5 h-3.5" />
+                <span>Curated suggestions</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {suggestions.map((item) => (

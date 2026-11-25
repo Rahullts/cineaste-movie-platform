@@ -8,7 +8,6 @@ import {
   Check,
   FolderPlus,
   FolderHeart,
-  Sparkles,
 } from "lucide-react";
 import { getTmdbImageUrl } from "@/lib/image-util";
 import type { Movie, Collection } from "@/types";

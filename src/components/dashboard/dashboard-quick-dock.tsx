@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Plus, Sparkles, Search, Bookmark, Eye, Film } from "lucide-react";
+import { Plus, Search, Bookmark, Eye, Film } from "lucide-react";
 
 interface DashboardQuickDockProps {
   watchlistCount: number;

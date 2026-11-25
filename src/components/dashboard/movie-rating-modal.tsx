@@ -12,6 +12,7 @@ interface MovieRatingModalProps {
   onClose: () => void;
   onSaveRating: (movie: Movie, rating?: number, review?: string) => void;
   onSkipRating: (movie: Movie) => void;
+  onUnmarkWatched?: (movie: Movie) => void;
 }
 
 export function MovieRatingModal({
@@ -20,6 +21,7 @@ export function MovieRatingModal({
   onClose,
   onSaveRating,
   onSkipRating,
+  onUnmarkWatched,
 }: MovieRatingModalProps) {
   const [personalRating, setPersonalRating] = React.useState<number>(8);
   const [review, setReview] = React.useState<string>("");
@@ -165,10 +167,20 @@ export function MovieRatingModal({
           <button
             type="button"
             onClick={() => onSkipRating(movie)}
-            className="w-full h-10 rounded-full bg-white/[0.05] hover:bg-white/10 text-[#9496A1] hover:text-white font-medium text-xs transition cursor-pointer"
+            className="w-full h-10 rounded-full bg-white/[0.06] hover:bg-white/10 text-[#C7CCDA] hover:text-white font-medium text-xs transition cursor-pointer"
           >
             Mark Watched Without Rating
           </button>
+
+          {movie.status === "watched" && onUnmarkWatched && (
+            <button
+              type="button"
+              onClick={() => onUnmarkWatched(movie)}
+              className="w-full h-10 rounded-full bg-rose-500/12 hover:bg-rose-500/20 text-rose-400 font-medium text-xs transition cursor-pointer"
+            >
+              Remove from Watched
+            </button>
+          )}
         </div>
       </div>
     </div>

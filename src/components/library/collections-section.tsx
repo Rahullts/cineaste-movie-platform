@@ -9,7 +9,6 @@ import {
   SlidersHorizontal,
   Calendar,
   Film,
-  Sparkles,
   Edit2,
   Trash2,
   ChevronRight,

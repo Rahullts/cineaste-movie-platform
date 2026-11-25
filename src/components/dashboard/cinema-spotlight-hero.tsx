@@ -18,6 +18,8 @@ import type { Movie } from "@/types";
 export interface CinemaSpotlightHeroProps {
   movie: Movie | null;
   mode?: "spotlight" | "watchlist" | "watched";
+  greeting?: string;
+  userName?: string | null;
   isWatchlist?: boolean;
   isWatched?: boolean;
   isFavorite?: boolean;
@@ -44,6 +46,8 @@ function buildImageCandidates(path?: string | null, widths: string[] = ["w780", 
 export function CinemaSpotlightHero({
   movie,
   mode = "spotlight",
+  greeting,
+  userName,
   isWatchlist = false,
   isWatched = false,
   isFavorite = false,
@@ -212,37 +216,50 @@ export function CinemaSpotlightHero({
       <div className="absolute top-0 inset-x-0 h-28 z-10 bg-gradient-to-b from-black/80 via-black/30 to-transparent pointer-events-none" />
 
       {/* Balanced Desktop Two-Column Hero Content */}
-      <div className="relative z-20 w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-12 pt-20 sm:pt-24 pb-6 sm:pb-8 lg:pb-9 flex flex-col lg:flex-row lg:items-end justify-between gap-6 lg:gap-12">
+      <div className="relative z-20 w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-12 pt-18 sm:pt-22 pb-6 sm:pb-8 lg:pb-9 flex flex-col lg:flex-row lg:items-end justify-between gap-6 lg:gap-12">
         {/* Left Column: Refined Editorial Movie Information */}
         <div className="flex-1 min-w-0 max-w-2xl space-y-3 sm:space-y-3.5">
+          {/* Personalized Greeting directly under Brand Logo */}
+          {greeting && (
+            <p
+              data-testid="dashboard-greeting"
+              className="text-sm sm:text-[15px] font-medium text-white/85 tracking-tight"
+            >
+              {greeting},{" "}
+              <span className="text-[#00D664] font-semibold">
+                {userName || "Cinephile"}
+              </span>
+            </p>
+          )}
+
           {/* Subtle Label Pill */}
           <div className="inline-flex items-center gap-2">
-            <span className="inline-flex items-center gap-2 text-[10px] sm:text-[11px] font-mono font-semibold tracking-[0.2em] uppercase text-[#00D664] bg-white/[0.06] border border-white/10 px-3 py-1 rounded-full backdrop-blur-md">
+            <span className="inline-flex items-center gap-2 text-[11px] font-semibold tracking-[0.16em] uppercase text-[#00D664] bg-black/45 px-3 py-1 rounded-full backdrop-blur-md">
               <span className="w-1.5 h-1.5 rounded-full bg-[#00D664]" />
               <span>{spotlightLabel}</span>
             </span>
 
             {isWatchlist && mode !== "watchlist" && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-medium tracking-wide text-[#00D664] bg-[#00D664]/10 border border-[#00D664]/25 px-2.5 py-0.5 rounded-full">
+              <span className="inline-flex items-center gap-1 text-[11px] font-medium tracking-wide text-[#00D664] bg-[#00D664]/15 px-2.5 py-0.5 rounded-full">
                 In Watchlist
               </span>
             )}
           </div>
 
-          {/* Featured Movie Title: clean modern editorial sans */}
-          <h1 className="font-heading font-bold text-3xl sm:text-4xl lg:text-[2.75rem] xl:text-[3.25rem] text-white tracking-[-0.025em] leading-[1.08] text-balance drop-shadow-sm">
+          {/* Featured Movie Title: refined editorial typography */}
+          <h1 className="font-heading font-bold text-3xl sm:text-4xl lg:text-[2.75rem] xl:text-[3.25rem] text-white tracking-[-0.02em] leading-[1.08] text-balance drop-shadow-sm">
             {title}
           </h1>
 
           {/* Optional Tagline */}
           {tagline && (
-            <p className="text-xs sm:text-sm italic text-white/75 font-normal leading-snug line-clamp-1">
+            <p className="font-serif italic text-base sm:text-lg text-white/85 font-normal leading-snug line-clamp-1">
               &ldquo;{tagline}&rdquo;
             </p>
           )}
 
           {/* Compact Metadata Strip — grouped to avoid dangling trailing bullets when wrapping on mobile */}
-          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-xs sm:text-[13px] text-[#B0B3C2]">
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-[13px] sm:text-sm text-[#D0D4E0]">
             {imdbRating && (
               <span
                 title="Verified IMDb Rating"
@@ -319,7 +336,7 @@ export function CinemaSpotlightHero({
               className={cn(
                 "h-10 sm:h-11 px-5 sm:px-6 rounded-full text-[13px] sm:text-sm font-semibold tracking-[-0.01em] inline-flex items-center gap-2 transition active:scale-[0.98] cursor-pointer",
                 isWatchlist
-                  ? "bg-white/10 hover:bg-white/15 border border-[#00D664]/45 text-[#00D664]"
+                  ? "bg-white/15 hover:bg-white/20 text-[#00D664]"
                   : "bg-[#00D664] hover:bg-[#00BF59] text-black shadow-lg shadow-[#00D664]/20 hover:shadow-[#00D664]/35"
               )}
             >
@@ -340,27 +357,27 @@ export function CinemaSpotlightHero({
             <button
               type="button"
               onClick={() => onOpenDetail(activeMovie)}
-              className="h-10 sm:h-11 px-5 rounded-full bg-white/[0.09] hover:bg-white/[0.15] border border-white/15 text-white font-medium text-[13px] sm:text-sm inline-flex items-center gap-2 transition active:scale-[0.98] cursor-pointer backdrop-blur-md"
+              className="h-10 sm:h-11 px-5 rounded-full bg-[#151722]/85 hover:bg-[#222536] text-white font-medium text-[13px] sm:text-sm inline-flex items-center gap-2 transition active:scale-[0.98] cursor-pointer backdrop-blur-md"
             >
               <Info className="w-4 h-4 stroke-[1.8]" />
               <span>Explore Movie</span>
             </button>
 
-            {/* Compact Circular Actions (Letterboxd / Base44 proportions) */}
+            {/* Compact Dark Borderless Circular Actions */}
             {onMarkWatchedRequest && (
               <button
                 type="button"
                 onClick={() => onMarkWatchedRequest(activeMovie)}
-                aria-label={isWatched ? "Update Watched Rating" : "Mark as Watched"}
-                title={isWatched ? "Watched • Edit Rating" : "Mark as Watched"}
+                aria-label={isWatched ? "Remove from Watched" : "Mark as Watched"}
+                title={isWatched ? "Watched • Click to Unwatch" : "Mark as Watched"}
                 className={cn(
-                  "h-10 w-10 sm:h-11 sm:w-11 rounded-full grid place-items-center transition active:scale-95 cursor-pointer backdrop-blur-md border",
+                  "h-10 w-10 sm:h-11 sm:w-11 rounded-full grid place-items-center transition active:scale-95 cursor-pointer backdrop-blur-md",
                   isWatched
-                    ? "bg-[#00D664]/15 border-[#00D664]/40 text-[#00D664]"
-                    : "bg-white/[0.08] hover:bg-white/[0.15] border-white/10 text-white/80 hover:text-white"
+                    ? "bg-[#00D664] text-black"
+                    : "bg-[#151722]/85 hover:bg-[#222536] text-white/90 hover:text-white"
                 )}
               >
-                <Eye className="w-4 h-4 stroke-[1.8]" />
+                <Eye className="w-4 h-4 stroke-[1.9]" />
               </button>
             )}
 
@@ -369,15 +386,15 @@ export function CinemaSpotlightHero({
                 type="button"
                 onClick={() => onToggleFavorite(activeMovie)}
                 aria-label={isFavorite ? "Remove from Favorites" : "Add to Favorites"}
-                title={isFavorite ? "Favorited" : "Favorite"}
+                title={isFavorite ? "Favorited • Click to Remove" : "Favorite"}
                 className={cn(
-                  "h-10 w-10 sm:h-11 sm:w-11 rounded-full grid place-items-center transition active:scale-95 cursor-pointer backdrop-blur-md border",
+                  "h-10 w-10 sm:h-11 sm:w-11 rounded-full grid place-items-center transition active:scale-95 cursor-pointer backdrop-blur-md",
                   isFavorite
-                    ? "bg-rose-500/20 border-rose-500/40 text-rose-400"
-                    : "bg-white/[0.08] hover:bg-white/[0.15] border-white/10 text-white/80 hover:text-rose-400"
+                    ? "bg-rose-500 text-white"
+                    : "bg-[#151722]/85 hover:bg-[#222536] text-white/90 hover:text-rose-400"
                 )}
               >
-                <Heart className={cn("w-4 h-4 stroke-[1.8]", isFavorite && "fill-current")} />
+                <Heart className={cn("w-4 h-4 stroke-[1.9]", isFavorite && "fill-current")} />
               </button>
             )}
 
@@ -385,7 +402,7 @@ export function CinemaSpotlightHero({
             <button
               type="button"
               onClick={handleScrollDown}
-              className="hidden sm:inline-flex items-center gap-1.5 ml-1 px-2 py-2 text-xs font-medium text-white/65 hover:text-[#00D664] transition cursor-pointer"
+              className="hidden sm:inline-flex items-center gap-1.5 ml-1 px-2 py-2 text-xs font-medium text-white/75 hover:text-[#00D664] transition cursor-pointer"
             >
               <span>Discover More</span>
               <ChevronDown className="w-3.5 h-3.5 stroke-[2]" />
@@ -393,14 +410,14 @@ export function CinemaSpotlightHero({
           </div>
         </div>
 
-        {/* Right Column (Desktop): Proportionally Framed Vertical Poster for the SAME Film */}
+        {/* Right Column (Desktop): Proportionally Framed Borderless Vertical Poster for the SAME Film */}
         {activePosterUrl && (
           <div className="hidden lg:block shrink-0 pb-1">
             <button
               type="button"
               onClick={() => onOpenDetail(activeMovie)}
               aria-label={`Open ${title} details`}
-              className="group relative block w-[180px] xl:w-[210px] aspect-[2/3] rounded-2xl overflow-hidden bg-[#12131D] shadow-2xl shadow-black/90 ring-1 ring-white/15 hover:ring-[#00D664]/50 transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+              className="group relative block w-[180px] xl:w-[210px] aspect-[2/3] rounded-2xl overflow-hidden bg-[#12131D] shadow-2xl shadow-black/90 transition-all duration-300 hover:-translate-y-1 cursor-pointer focus:outline-none focus-visible:outline-none"
             >
               <img
                 src={activePosterUrl}

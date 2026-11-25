@@ -3,11 +3,12 @@
 import * as React from "react";
 import Link from "next/link";
 import {
-  Sparkles,
+  Clapperboard,
+  Film,
   Award,
   Compass,
   ArrowRight,
-  Flame,
+  TrendingUp,
   ChevronRight,
 } from "lucide-react";
 import { MoviePosterCard } from "@/components/movie-poster-card";
@@ -37,7 +38,7 @@ const CATEGORIES: CategoryConfig[] = [
   {
     key: "trending",
     label: "Trending Now",
-    icon: Flame,
+    icon: TrendingUp,
     payload: { action: "trending", window: "week", page: 1 },
     viewAllHref: "/discover?filter=trending",
   },
@@ -58,7 +59,7 @@ const CATEGORIES: CategoryConfig[] = [
   {
     key: "popular",
     label: "Popular Picks",
-    icon: Sparkles,
+    icon: Film,
     payload: { action: "discover", sort_by: "popularity.desc", page: 1 },
     viewAllHref: "/discover?sort=popularity.desc",
   },
@@ -163,7 +164,7 @@ export function YourNextGreatWatchSection({
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 sm:gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <Sparkles className="w-[18px] h-[18px] text-[#00D664] shrink-0" strokeWidth={1.9} />
+            <Clapperboard className="w-[18px] h-[18px] text-[#00D664] shrink-0" strokeWidth={1.9} />
             <h2 className="font-heading text-lg sm:text-xl md:text-[1.375rem] font-semibold tracking-[-0.015em] leading-snug text-foreground">
               Your Next Great Watch
             </h2>
@@ -175,7 +176,7 @@ export function YourNextGreatWatchSection({
 
         <Link
           href={activeConfig.viewAllHref}
-          className="text-xs text-muted-foreground hover:text-[#00D664] font-medium transition inline-flex items-center gap-1.5 group self-start sm:self-auto shrink-0"
+          className="text-[13px] text-foreground/80 hover:text-[#00D664] font-semibold transition inline-flex items-center gap-1.5 group self-start sm:self-auto shrink-0"
         >
           <span>View Catalog</span>
           <ArrowRight className="w-3.5 h-3.5 stroke-[1.9] group-hover:translate-x-0.5 transition-transform" />

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Sparkles, Flame, Compass, Calendar, Users } from "lucide-react";
+import { Clapperboard, TrendingUp, Compass, Calendar, Users } from "lucide-react";
 
 interface NavItem {
   id: string;
@@ -10,8 +10,8 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: "section-featured", label: "Featured", icon: Sparkles },
-  { id: "section-trending", label: "Trending Today", icon: Flame },
+  { id: "section-featured", label: "Featured", icon: Clapperboard },
+  { id: "section-trending", label: "Trending Today", icon: TrendingUp },
   { id: "section-hidden-gems", label: "Hidden Gems", icon: Compass },
   { id: "section-coming-soon", label: "Coming Soon", icon: Calendar },
   { id: "section-people", label: "People to Watch", icon: Users },

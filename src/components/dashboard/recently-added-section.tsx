@@ -61,7 +61,7 @@ export function RecentlyAddedSection({
 
         <Link
           href="/library?tab=all-films"
-          className="text-xs text-muted-foreground hover:text-[#00D664] font-medium transition inline-flex items-center gap-1.5 group shrink-0"
+          className="text-[13px] text-foreground/80 hover:text-[#00D664] font-semibold transition inline-flex items-center gap-1.5 group shrink-0"
         >
           <span>View All Films</span>
           <ArrowRight className="w-3.5 h-3.5 stroke-[1.9] group-hover:translate-x-0.5 transition-transform" />

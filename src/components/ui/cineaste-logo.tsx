@@ -11,100 +11,87 @@ export interface CineasteLogoProps extends React.SVGProps<SVGSVGElement> {
 }
 
 /**
- * Cineaste Distinctive Brandmark
- * 
- * Concept:
- * An iconic geometric monogram merging a cinematic camera aperture iris
- * with an anamorphic film frame and the letter 'C'.
- * 
- * Features:
- * - Geometric interlocking shutter blades forming a bold 'C'.
- * - Vibrant Cineaste Green (#00D664) focal core.
- * - Precision film corner notches.
- * - Perfectly legible from 16px to 256px.
- * - High-contrast rendering in both dark and light themes.
+ * Cineaste Cinema Monogram
+ *
+ * Sculptural 35mm film-reel 'C' arch fused with a precision cinema aperture
+ * lens and twin film sprocket perforations — distinctly motion-picture craft.
  */
 export function CineasteLogo({
-  size = 32,
+  size = 34,
   className,
   showWordmark = false,
   forceLightWordmark = false,
   ...props
 }: CineasteLogoProps) {
+  const uid = React.useId().replace(/:/g, "");
+  const gradArc = `c-arc-${uid}`;
+  const gradLens = `c-lens-${uid}`;
+
   return (
-    <div className={cn("inline-flex items-center gap-2.5 shrink-0 select-none", className)}>
+    <div className={cn("inline-flex items-center gap-3 shrink-0 select-none", className)}>
       <svg
         width={size}
         height={size}
-        viewBox="0 0 32 32"
+        viewBox="0 0 36 36"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className="shrink-0 transition-transform duration-200 group-hover:scale-105"
-        aria-label="Cineaste Brandmark"
+        aria-label="Cineaste Cinema Brandmark"
         {...props}
       >
         <defs>
-          {/* Signature Cineaste Green Gradient */}
-          <linearGradient id="c-green-glow" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#00FF77" />
+          <linearGradient id={gradArc} x1="4" y1="4" x2="31" y2="32" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#12F084" />
             <stop offset="100%" stopColor="#00B855" />
           </linearGradient>
-
-          {/* Deep Titanium Body Gradient */}
-          <linearGradient id="c-frame-bg" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#1E202B" />
-            <stop offset="100%" stopColor="#0C0D12" />
-          </linearGradient>
-
-          {/* Blade Shadow Filter */}
-          <filter id="c-blade-shadow" x="-10%" y="-10%" width="120%" height="120%">
-            <feDropShadow dx="0" dy="1" stdDeviation="1" floodColor="#000" floodOpacity="0.4" />
-          </filter>
+          <radialGradient id={gradLens} cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#1B212E" />
+            <stop offset="100%" stopColor="#090B10" />
+          </radialGradient>
         </defs>
 
-        {/* 1. Precision Squircle Frame (Film Cell Aspect) */}
-        <rect
-          x="1.5"
-          y="1.5"
-          width="29"
-          height="29"
-          rx="8"
-          fill="url(#c-frame-bg)"
-          stroke="#00D664"
-          strokeWidth="1.2"
-          strokeOpacity="0.35"
+        {/* Outer circular film reel ring (no square microchip borders) */}
+        <circle
+          cx="18"
+          cy="18"
+          r="16"
+          fill={`url(#${gradLens})`}
         />
 
-        {/* 2. Film Perforation / Corner Registration Dots */}
-        <circle cx="5" cy="5" r="1" fill="#00D664" fillOpacity="0.5" />
-        <circle cx="27" cy="5" r="1" fill="#00D664" fillOpacity="0.5" />
-        <circle cx="5" cy="27" r="1" fill="#00D664" fillOpacity="0.5" />
-        <circle cx="27" cy="27" r="1" fill="#00D664" fillOpacity="0.5" />
-
-        {/* 3. The Aperture Monogram 'C' (Continuous Cinematic Blade Arc) */}
-        <path
-          d="M22.5 10.8C20.9 8.5 18.2 7 15.2 7C10.2 7 6.2 11 6.2 16C6.2 21 10.2 25 15.2 25C18.2 25 20.9 23.5 22.5 21.2L18.8 19C17.9 20.3 16.5 21.2 14.8 21.2C12 21.2 9.8 18.9 9.8 16C9.8 13.1 12 10.8 14.8 10.8C16.5 10.8 17.9 11.7 18.8 13L22.5 10.8Z"
-          fill="url(#c-green-glow)"
-          filter="url(#c-blade-shadow)"
+        {/* Delicate 35mm cinema track arc */}
+        <circle
+          cx="18"
+          cy="18"
+          r="13.5"
+          stroke="#FFFFFF"
+          strokeOpacity="0.1"
+          strokeWidth="1"
+          strokeDasharray="2 3"
         />
 
-        {/* 4. Secondary Iris Aperture Blade (Top Right Shutter) */}
+        {/* Sculpted Film-Arc 'C' Ribbon */}
         <path
-          d="M20 7.8L15 15.8L17.5 15.8L23 9Z"
+          d="M25.6 10.6C23.7 8.4 21 7.2 17.8 7.2C11.8 7.2 7.2 11.9 7.2 18C7.2 24.1 11.8 28.8 17.8 28.8C21 28.8 23.7 27.6 25.6 25.4L22.3 22.3C21.1 23.6 19.6 24.3 17.8 24.3C14.3 24.3 11.7 21.6 11.7 18C11.7 14.4 14.3 11.7 17.8 11.7C19.6 11.7 21.1 12.4 22.3 13.7L25.6 10.6Z"
+          fill={`url(#${gradArc})`}
+        />
+
+        {/* Precision Film Projector Aperture Frame & Light Beam inside the 'C' */}
+        <path
+          d="M15.8 15.1C15.8 14.6 16.35 14.3 16.78 14.56L21.9 17.46C22.32 17.7 22.32 18.3 21.9 18.54L16.78 21.44C16.35 21.7 15.8 21.4 15.8 20.9V15.1Z"
           fill="#FFFFFF"
-          fillOpacity="0.9"
+          fillOpacity="0.92"
         />
 
-        {/* 5. Central Anamorphic Focal Point */}
-        <circle cx="15.2" cy="16" r="2.2" fill="#0C0D12" stroke="#00D664" strokeWidth="1.2" />
-        <circle cx="15.2" cy="16" r="0.8" fill="#00D664" />
+        {/* Subtle sprocket accent nodes on open reel edge */}
+        <circle cx="28.2" cy="14.2" r="1.15" fill="#12F084" fillOpacity="0.85" />
+        <circle cx="28.2" cy="21.8" r="1.15" fill="#12F084" fillOpacity="0.85" />
       </svg>
 
       {showWordmark && (
         <div className="flex flex-col min-w-0">
           <span
             className={cn(
-              "font-heading text-sm font-black tracking-widest truncate leading-none",
+              "font-serif text-[17px] sm:text-[18px] font-semibold tracking-[0.18em] truncate leading-none",
               forceLightWordmark ? "text-white" : "text-foreground"
             )}
           >
@@ -112,11 +99,11 @@ export function CineasteLogo({
           </span>
           <span
             className={cn(
-              "text-[8px] uppercase tracking-wider font-semibold mt-0.5 truncate hidden sm:block",
+              "text-[9.5px] uppercase tracking-[0.22em] font-medium mt-1 truncate hidden sm:block leading-none",
               forceLightWordmark ? "text-white/75" : "text-muted-foreground"
             )}
           >
-            CINEMA, CURATED.
+            CURATED CINEMA
           </span>
         </div>
       )}

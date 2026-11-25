@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Compass, TrendingUp, Sparkles, Bookmark, Eye, Film } from "lucide-react";
+import { Compass, TrendingUp, Clapperboard, Bookmark, Eye, Film } from "lucide-react";
 import { tmdbFetch } from "@/lib/tmdb-service";
 
 interface CinematicWelcomeHeroProps {
@@ -100,8 +100,8 @@ export function CinematicWelcomeHero({
       <div className="relative z-20 w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-12 pb-10 sm:pb-14 pt-28 sm:pt-36">
         <div className="max-w-3xl space-y-4 sm:space-y-5">
           {/* Badge & Greeting */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00D664]/10 border border-[#00D664]/30 text-[#00D664] text-[11px] font-mono uppercase tracking-widest shadow-sm">
-            <Sparkles className="w-3.5 h-3.5 shrink-0" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00D664]/10 border border-[#00D664]/30 text-[#00D664] text-[11px] font-medium tracking-wider shadow-sm">
+            <Clapperboard className="w-3.5 h-3.5 shrink-0" />
             <span>
               {greeting}, {displayName} &bull; Personal Cinema Vault
             </span>

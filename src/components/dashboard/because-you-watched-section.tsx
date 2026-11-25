@@ -149,7 +149,7 @@ export function BecauseYouWatchedSection({
 
         <Link
           href="/discover"
-          className="text-xs text-muted-foreground hover:text-[#00D664] font-medium transition inline-flex items-center gap-1.5 group shrink-0"
+          className="text-[13px] text-foreground/80 hover:text-[#00D664] font-semibold transition inline-flex items-center gap-1.5 group shrink-0"
         >
           <span>Explore Discover</span>
           <Compass className="w-3.5 h-3.5 stroke-[1.9] group-hover:rotate-45 transition-transform" />

@@ -7,7 +7,6 @@ import {
   Mic,
   X,
   Star,
-  Bookmark,
   Check,
   Heart,
   Plus,
@@ -15,20 +14,20 @@ import {
   Film,
   ChevronLeft,
   ChevronRight,
-  Flame,
+  TrendingUp,
   ArrowRight,
   Compass,
   Trophy,
-  Rocket,
-  Zap,
-  Eye,
+  Orbit,
+  Activity,
   SlidersHorizontal,
-  Info,
-  Clock,
-  Gem,
+  Layers,
+  Ticket,
+  Sun,
+  Moon,
+  Award,
   Clapperboard,
   Calendar,
-  Sparkles,
   RotateCcw,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
@@ -124,11 +123,11 @@ const FALLBACK_TRENDING: Movie[] = [
   },
 ];
 
-// Interactive Category Curations with TMDB Mappings
+// Interactive Category Curations with TMDB Mappings (unified cinema icons — zero emojis or elemental AI symbols)
 interface CategoryDef {
   id: string;
   label: string;
-  icon: string;
+  icon: React.ComponentType<{ className?: string }>;
   description: string;
   genres?: string;
   sortBy?: string;
@@ -140,13 +139,13 @@ const CINEPHILE_CATEGORIES: CategoryDef[] = [
   {
     id: "all",
     label: "All Curations",
-    icon: "🎬",
+    icon: Clapperboard,
     description: "Curated multi-genre discovery feed handpicked for you.",
   },
   {
     id: "adrenaline",
     label: "The Adrenaline Rush",
-    icon: "⚡",
+    icon: Activity,
     genres: "28,53",
     sortBy: "popularity.desc",
     description: "High-octane action, pulse-pounding chases, and edge-of-your-seat thrillers.",
@@ -154,7 +153,7 @@ const CINEPHILE_CATEGORIES: CategoryDef[] = [
   {
     id: "sci_fi",
     label: "Sci-Fi & Fantasy",
-    icon: "🚀",
+    icon: Orbit,
     genres: "878,14",
     sortBy: "popularity.desc",
     description: "Mind-bending speculative worlds, futuristic visions, and mythic sagas.",
@@ -162,7 +161,7 @@ const CINEPHILE_CATEGORIES: CategoryDef[] = [
   {
     id: "critically_acclaimed",
     label: "Critically Acclaimed",
-    icon: "🏆",
+    icon: Trophy,
     sortBy: "vote_average.desc",
     minVotes: 1500,
     description: "Academy Award laureates, Cannes festival winners, and cinematic masterpieces.",
@@ -170,7 +169,7 @@ const CINEPHILE_CATEGORIES: CategoryDef[] = [
   {
     id: "mind_bending",
     label: "Mind-Bending Noir",
-    icon: "🌀",
+    icon: Layers,
     genres: "9648,878",
     sortBy: "popularity.desc",
     description: "Psychological labyrinths, cerebral twists, and atmospheric detective noir.",
@@ -178,7 +177,7 @@ const CINEPHILE_CATEGORIES: CategoryDef[] = [
   {
     id: "hidden_gems",
     label: "Hidden Gems",
-    icon: "💎",
+    icon: Compass,
     sortBy: "vote_average.desc",
     minVotes: 150,
     maxVotes: 1200,
@@ -187,14 +186,14 @@ const CINEPHILE_CATEGORIES: CategoryDef[] = [
   {
     id: "blockbusters",
     label: "Blockbusters & Hits",
-    icon: "🍿",
+    icon: Ticket,
     sortBy: "popularity.desc",
     description: "Massive crowd-pleasers, box office sensations, and cinema spectacles.",
   },
   {
     id: "cozy",
     label: "Cozy & Heartwarming",
-    icon: "☕",
+    icon: Sun,
     genres: "35,10751,10749",
     sortBy: "popularity.desc",
     description: "Uplifting stories, feel-good comedies, and warm cinema for the soul.",
@@ -202,7 +201,7 @@ const CINEPHILE_CATEGORIES: CategoryDef[] = [
   {
     id: "horror",
     label: "Late-Night Thrills",
-    icon: "🩸",
+    icon: Moon,
     genres: "27,53",
     sortBy: "popularity.desc",
     description: "Dark suspense, midnight dread, and intense psychological terror.",
@@ -246,15 +245,15 @@ function ModernTrendingSection({
       <div className="flex items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <Flame className="w-6 h-6 text-[#F59E0B] shrink-0" />
-            <h2 className="font-heading text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-foreground flex items-center gap-2 flex-wrap">
+            <TrendingUp className="w-5 h-5 text-[#00D878] shrink-0" />
+            <h2 className="font-heading text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2.5 flex-wrap">
               <span>Trending Now</span>
-              <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#00D878] bg-[#00D878]/10 border border-[#00D878]/30 px-2.5 py-0.5 rounded-full">
+              <span className="text-xs font-medium text-[#00D878] bg-[#00D878]/12 px-2.5 py-0.5 rounded-full">
                 This Week
               </span>
             </h2>
           </div>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1 font-medium pl-8">
+          <p className="text-xs sm:text-[13px] text-muted-foreground mt-0.5 pl-7.5">
             What cinephiles and viewers across the globe are watching right now.
           </p>
         </div>
@@ -265,7 +264,7 @@ function ModernTrendingSection({
             type="button"
             onClick={() => scroll("left")}
             aria-label="Previous trending films"
-            className="w-8 h-8 rounded-full bg-card hover:bg-muted border border-border text-foreground grid place-items-center transition active:scale-95 cursor-pointer shadow-sm"
+            className="w-8 h-8 rounded-full bg-secondary hover:bg-accent text-foreground grid place-items-center transition active:scale-95 cursor-pointer"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -273,7 +272,7 @@ function ModernTrendingSection({
             type="button"
             onClick={() => scroll("right")}
             aria-label="Next trending films"
-            className="w-8 h-8 rounded-full bg-card hover:bg-muted border border-border text-foreground grid place-items-center transition active:scale-95 cursor-pointer shadow-sm"
+            className="w-8 h-8 rounded-full bg-secondary hover:bg-accent text-foreground grid place-items-center transition active:scale-95 cursor-pointer"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -282,33 +281,32 @@ function ModernTrendingSection({
 
       {/* Trending Grid: #1 Spotlight Banner (Left) + Ranked Carousel Rail (Right) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-stretch">
-        {/* ── #1 SPOTLIGHT CARD (Spans 5 Columns on Desktop) ── */}
+        {/* ── #1 SPOTLIGHT CARD (Borderless, Clean Typography) ── */}
         <div
           onClick={() => onOpenDetail(heroMovie)}
-          className="lg:col-span-5 relative min-h-[380px] sm:min-h-[440px] rounded-3xl overflow-hidden cursor-pointer group shadow-2xl bg-[#0E0F16] border border-white/10 flex flex-col justify-between p-6 sm:p-8 select-none transition-all duration-300 hover:border-[#00D878]/40 hover:shadow-[#00D878]/10"
+          className="lg:col-span-5 relative min-h-[380px] sm:min-h-[430px] rounded-3xl overflow-hidden cursor-pointer group shadow-2xl bg-[#0E0F16] flex flex-col justify-between p-6 sm:p-8 select-none transition-all duration-300 hover:shadow-[#00D878]/10"
         >
           {/* Backdrop Image */}
           {heroMovie.backdrop_path && (
             <img
               src={`/api/image?path=${encodeURIComponent(heroMovie.backdrop_path)}&w=1280`}
               alt={heroMovie.title}
-              className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105 brightness-[0.82]"
+              className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105 brightness-[0.88]"
               loading="eager"
             />
           )}
 
           {/* Gradients */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0A0B0F] via-[#0A0B0F]/65 to-transparent pointer-events-none" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0A0B0F]/90 via-transparent to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0A0B0F] via-[#0A0B0F]/60 to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0A0B0F]/85 via-transparent to-transparent pointer-events-none" />
 
-          {/* Top Pill Badges */}
+          {/* Top Pill Badge + Separated Dark Borderless Circles */}
           <div className="relative z-10 flex items-center justify-between gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F59E0B]/20 border border-[#F59E0B]/40 text-[#FBBF24] text-xs font-mono font-bold uppercase tracking-wider backdrop-blur-md shadow-lg">
-              <Flame className="w-3.5 h-3.5 fill-[#FBBF24]" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/70 text-[#FBBF24] text-xs font-semibold tracking-wide backdrop-blur-md shadow-md">
+              <TrendingUp className="w-3.5 h-3.5" />
               <span>#1 Global Spotlight</span>
             </span>
 
-            {/* Quick Actions */}
             <div
               className="flex items-center gap-2"
               onClick={(e) => {
@@ -319,25 +317,27 @@ function ModernTrendingSection({
                 type="button"
                 onClick={() => onToggleWatchlist(heroMovie)}
                 title={isHeroSaved ? "In Watchlist" : "Add to Watchlist"}
+                aria-label={isHeroSaved ? "In Watchlist" : "Add to Watchlist"}
                 className={cn(
-                  "w-8 h-8 rounded-full grid place-items-center backdrop-blur-md border transition active:scale-95 cursor-pointer shadow-md",
+                  "w-8 h-8 rounded-full grid place-items-center backdrop-blur-md transition active:scale-95 cursor-pointer shadow-md",
                   isHeroSaved
-                    ? "bg-[#00D878] text-black border-[#00D878]"
-                    : "bg-black/60 hover:bg-black/80 text-white border-white/20 hover:border-[#00D878]/60"
+                    ? "bg-[#00D878] text-black"
+                    : "bg-black/75 hover:bg-black/95 text-white"
                 )}
               >
-                {isHeroSaved ? <Check className="w-4 h-4 stroke-[3]" /> : <Plus className="w-4 h-4" />}
+                {isHeroSaved ? <Check className="w-4 h-4 stroke-[2.5]" /> : <Plus className="w-4 h-4" />}
               </button>
 
               <button
                 type="button"
                 onClick={() => onToggleFavorite(heroMovie)}
                 title={isHeroFav ? "Favorited" : "Add to Favorites"}
+                aria-label={isHeroFav ? "Favorited" : "Add to Favorites"}
                 className={cn(
-                  "w-8 h-8 rounded-full grid place-items-center backdrop-blur-md border transition active:scale-95 cursor-pointer shadow-md",
+                  "w-8 h-8 rounded-full grid place-items-center backdrop-blur-md transition active:scale-95 cursor-pointer shadow-md",
                   isHeroFav
-                    ? "bg-rose-500 text-white border-rose-500"
-                    : "bg-black/60 hover:bg-black/80 text-white border-white/20 hover:border-rose-400"
+                    ? "bg-rose-500 text-white"
+                    : "bg-black/75 hover:bg-black/95 text-white"
                 )}
               >
                 <Heart className={cn("w-4 h-4", isHeroFav && "fill-current")} />
@@ -347,25 +347,25 @@ function ModernTrendingSection({
 
           {/* Bottom Information */}
           <div className="relative z-10 space-y-3 pt-12">
-            <div className="flex flex-wrap items-center gap-2 text-xs font-mono font-semibold text-white/90">
+            <div className="flex flex-wrap items-center gap-2 text-xs sm:text-[13px] font-medium text-white/95 tabular-nums">
               {(heroMovie.vote_average || 0) > 0 && (
                 <>
                   <span
                     title="TMDB Community Score"
-                    className="inline-flex items-center gap-1 text-[#FBBF24]"
+                    className="inline-flex items-center gap-1 text-[#FBBF24] font-semibold"
                   >
                     <Star className="w-3.5 h-3.5 fill-[#FBBF24]" />
-                    <span className="text-[10px] text-white/75 uppercase">TMDB</span>
+                    <span className="text-[11px] text-white/80 uppercase">TMDB</span>
                     {formatScore(heroMovie.vote_average)}
                   </span>
-                  <span>•</span>
+                  <span aria-hidden="true">•</span>
                 </>
               )}
               <span>{formatYear(heroMovie.release_date) || "TBA"}</span>
               {Array.isArray(heroMovie.genres) && heroMovie.genres[0] && (
                 <>
-                  <span>•</span>
-                  <span className="text-[#00D878]">
+                  <span aria-hidden="true">•</span>
+                  <span className="text-[#00D878] font-semibold">
                     {typeof heroMovie.genres[0] === "string"
                       ? heroMovie.genres[0]
                       : (heroMovie.genres[0] as any)?.name}
@@ -374,7 +374,7 @@ function ModernTrendingSection({
               )}
             </div>
 
-            <h3 className="font-heading font-black text-2xl sm:text-3xl text-white tracking-tight leading-tight group-hover:text-[#00D878] transition-colors">
+            <h3 className="font-heading font-bold text-2xl sm:text-3xl text-white tracking-tight leading-tight group-hover:text-[#00D878] transition-colors">
               {heroMovie.title}
             </h3>
 
@@ -413,7 +413,7 @@ function ModernTrendingSection({
                 <div
                   key={movie.tmdb_id || movie.id}
                   onClick={() => onOpenDetail(movie)}
-                  className="group relative flex-shrink-0 w-44 sm:w-52 h-[380px] sm:h-[440px] rounded-3xl overflow-hidden cursor-pointer select-none bg-[#0E0F16] border border-white/10 hover:border-[#00D878]/50 shadow-xl transition-all duration-300 snap-start flex flex-col justify-between p-4"
+                  className="group relative flex-shrink-0 w-44 sm:w-52 h-[380px] sm:h-[430px] rounded-3xl overflow-hidden cursor-pointer select-none bg-[#0E0F16] shadow-xl transition-all duration-300 snap-start flex flex-col justify-between p-4 focus:outline-none"
                 >
                   {/* Poster Art */}
                   {movie.poster_path && (
@@ -427,12 +427,12 @@ function ModernTrendingSection({
                   )}
 
                   {/* Gradient Scrims */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none" />
-                  <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/80 to-transparent pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-transparent pointer-events-none" />
+                  <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />
 
-                  {/* Top: Rank Badge + Hover Quick Actions */}
+                  {/* Top: Rank Badge + Separated Dark Borderless Hover Actions */}
                   <div className="relative z-10 flex items-center justify-between gap-1">
-                    <span className="w-8 h-8 rounded-full bg-black/80 backdrop-blur-md border border-white/20 text-white font-mono font-black text-xs grid place-items-center shadow-lg group-hover:border-[#00D878]/60 group-hover:text-[#00D878] transition-colors">
+                    <span className="w-8 h-8 rounded-full bg-black/75 backdrop-blur-md text-white font-semibold text-xs grid place-items-center shadow-lg group-hover:text-[#00D878] transition-colors">
                       #{rank}
                     </span>
 
@@ -449,17 +449,18 @@ function ModernTrendingSection({
                         type="button"
                         onClick={() => onToggleWatchlist(movie)}
                         title={isSaved ? "In Watchlist" : "Add to Watchlist"}
+                        aria-label={isSaved ? "In Watchlist" : "Add to Watchlist"}
                         className={cn(
-                          "w-7 h-7 rounded-full grid place-items-center backdrop-blur-md border transition active:scale-90 cursor-pointer shadow-md",
+                          "w-8 h-8 rounded-full grid place-items-center backdrop-blur-md transition active:scale-90 cursor-pointer shadow-md",
                           isSaved
-                            ? "bg-[#00D878] text-black border-[#00D878]"
-                            : "bg-black/60 hover:bg-black/80 text-white/90 border-white/20 hover:border-[#00D878]"
+                            ? "bg-[#00D878] text-black"
+                            : "bg-black/75 hover:bg-black/95 text-white"
                         )}
                       >
                         {isSaved ? (
-                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                          <Check className="w-4 h-4 stroke-[2.5]" />
                         ) : (
-                          <Plus className="w-3.5 h-3.5" />
+                          <Plus className="w-4 h-4" />
                         )}
                       </button>
 
@@ -467,25 +468,26 @@ function ModernTrendingSection({
                         type="button"
                         onClick={() => onToggleFavorite(movie)}
                         title={isFav ? "Favorited" : "Add to Favorites"}
+                        aria-label={isFav ? "Favorited" : "Add to Favorites"}
                         className={cn(
-                          "w-7 h-7 rounded-full grid place-items-center backdrop-blur-md border transition active:scale-90 cursor-pointer shadow-md",
+                          "w-8 h-8 rounded-full grid place-items-center backdrop-blur-md transition active:scale-90 cursor-pointer shadow-md",
                           isFav
-                            ? "bg-rose-500 text-white border-rose-500"
-                            : "bg-black/60 hover:bg-black/80 text-white/90 border-white/20 hover:border-rose-400"
+                            ? "bg-rose-500 text-white"
+                            : "bg-black/75 hover:bg-black/95 text-white"
                         )}
                       >
-                        <Heart className={cn("w-3.5 h-3.5", isFav && "fill-current")} />
+                        <Heart className={cn("w-4 h-4", isFav && "fill-current")} />
                       </button>
                     </div>
                   </div>
 
-                  {/* Bottom: Score, Title, Year */}
+                  {/* Bottom: Score, Title, Year (Crsp sans-serif, high legibility) */}
                   <div className="relative z-10 space-y-1">
-                    <div className="flex items-center gap-1.5 text-[11px] font-mono font-bold text-[#FBBF24]">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold tabular-nums text-[#FBBF24]">
                       {(movie.vote_average || 0) > 0 && (
                         <span title="TMDB Community Score" className="inline-flex items-center gap-1">
                           <Star className="w-3 h-3 fill-[#FBBF24]" />
-                          <span className="text-[9px] text-white/70 uppercase">TMDB</span>
+                          <span className="text-[10px] text-white/80 uppercase font-medium">TMDB</span>
                           <span>{formatScore(movie.vote_average)}</span>
                         </span>
                       )}
@@ -493,13 +495,13 @@ function ModernTrendingSection({
                         <span className="text-white/50">•</span>
                       )}
                       {formatYear(movie.release_date) && (
-                        <span className="text-white/75 font-normal">
+                        <span className="text-white/95 font-medium">
                           {formatYear(movie.release_date)}
                         </span>
                       )}
                     </div>
 
-                    <h4 className="font-heading font-black text-sm sm:text-base text-white tracking-tight leading-snug line-clamp-2 group-hover:text-[#00D878] transition-colors">
+                    <h4 className="font-heading font-semibold text-sm sm:text-[15px] text-white tracking-tight leading-snug line-clamp-2 group-hover:text-[#00D878] transition-colors">
                       {movie.title}
                     </h4>
                   </div>
@@ -571,7 +573,7 @@ function ModernDiscoveryRow({
           <button
             type="button"
             onClick={onSeeAll}
-            className="text-xs font-mono font-bold text-[#00D878] hover:text-[#00F084] inline-flex items-center gap-1.5 transition-colors cursor-pointer shrink-0 pb-1"
+            className="text-[13px] font-semibold text-[#00D878] hover:text-[#00F084] inline-flex items-center gap-1.5 transition-colors cursor-pointer shrink-0 pb-0.5"
           >
             <span>See All ({movies.length})</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -1007,239 +1009,225 @@ function DiscoverContent() {
 
   return (
     <AppShell>
-      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-12 space-y-5 sm:space-y-6 pt-2 sm:pt-4 pb-8 select-none relative">
-        {/* Soft Ambient Cinematic Glows for Visual Comfort */}
+      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-12 space-y-5 pt-2 sm:pt-3 pb-8 select-none relative">
+        {/* Soft Ambient Cinematic Glows */}
         <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
-          <div className="absolute -top-32 -left-32 w-[650px] h-[650px] bg-[#00D878]/[0.035] rounded-full blur-[160px]" />
-          <div className="absolute top-1/4 -right-32 w-[650px] h-[650px] bg-[#8B5CF6]/[0.035] rounded-full blur-[170px]" />
-          <div className="absolute bottom-1/3 left-1/3 w-[500px] h-[500px] bg-[#F59E0B]/[0.02] rounded-full blur-[150px]" />
+          <div className="absolute -top-32 -left-32 w-[600px] h-[600px] bg-[#00D878]/[0.03] rounded-full blur-[150px]" />
+          <div className="absolute top-1/4 -right-32 w-[600px] h-[600px] bg-[#8B5CF6]/[0.03] rounded-full blur-[160px]" />
         </div>
 
         {/* ================================================================= */}
-        {/* REDESIGNED DISCOVERY HEADER & SIDE SEARCH (Warm, Eye-Friendly)    */}
+        {/* COMPACT EDITORIAL DISCOVER CONSOLE (Zero Empty Top Void)          */}
         {/* ================================================================= */}
         <section
           aria-label="Discover Cinema Header"
-          className="relative z-30 flex flex-col lg:flex-row lg:items-end justify-between gap-5 w-full pt-0"
+          className="relative z-30 rounded-3xl bg-card/70 backdrop-blur-xl px-5 py-5 sm:px-7 sm:py-6 shadow-xl space-y-5"
         >
-          {/* Left Column: Monumental Cinematic Editorial Typography */}
-          <div className="space-y-3 max-w-2xl">
-            {/* Luminous Architectural Eyebrow */}
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card/80 border border-border text-muted-foreground text-[11px] font-mono uppercase tracking-[0.22em] backdrop-blur-md shadow-sm">
-                <Compass className="w-3.5 h-3.5 text-[#00D878]" />
-                <span>Cineaste Editorial • Curated Archive</span>
-              </span>
-            </div>
-
-            {/* Premium, Monumental Cinema Heading (High-fashion editorial contrast) */}
-            <h1 className="font-heading font-black text-4xl sm:text-6xl lg:text-7xl tracking-tighter uppercase leading-[0.95] flex flex-wrap items-baseline gap-x-3.5">
-              <span className="text-foreground drop-shadow-sm">DISCOVER</span>
-              <span className="text-muted-foreground/60 font-light tracking-wider">CINEMA</span>
-            </h1>
-
-            {/* Refined, Authoritative Subtitle */}
-            <p className="text-xs sm:text-sm text-muted-foreground font-normal leading-relaxed max-w-xl">
-              Explore handpicked auteur masterworks, iconic classics, and the definitive visionary releases shaping contemporary cinema.
-            </p>
-          </div>
-
-          {/* Right Column: Precision Search Bar (Title + AI Vibe Search) + Filters */}
-          <div className="flex flex-col items-start lg:items-end gap-2 w-full lg:w-auto">
-            <div
-              className={cn(
-                "flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-card/95 border shadow-[0_10px_35px_rgba(0,0,0,0.45)] transition-all w-full sm:w-[460px] lg:w-[540px] backdrop-blur-xl",
-                isAiMode
-                  ? "border-[#00D878]/60 ring-2 ring-[#00D878]/20"
-                  : "border-border focus-within:border-[#00D878]/70 focus-within:ring-2 focus-within:ring-[#00D878]/20"
-              )}
-            >
-              <form
-                onSubmit={handleSearchSubmit}
-                className="flex-1 min-w-0 flex items-center gap-2.5"
-              >
-                {isAiMode ? (
-                  <Sparkles className="w-4 h-4 text-[#00D878] shrink-0" />
-                ) : (
-                  <Search className="w-4 h-4 text-[#00D878] shrink-0" />
-                )}
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  data-testid="discover-search-input"
-                  value={searchQuery}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setSearchQuery(v);
-                    if (!v.trim()) {
-                      setSearchResults([]);
-                      setAiInterpretation(null);
-                      setSearchError(null);
-                      setHasSubmittedSearch(false);
-                    }
-                  }}
-                  placeholder={
-                    isAiMode
-                      ? "Describe a vibe... e.g. Rainy neo-noir cyberpunk with a lonely atmosphere"
-                      : "Search films, directors, actors, or keywords..."
-                  }
-                  className="flex-1 min-w-0 bg-transparent text-xs sm:text-sm text-foreground placeholder:text-muted-foreground outline-none"
-                />
-
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearchQuery("");
-                      setSearchResults([]);
-                      setAiInterpretation(null);
-                      setSearchError(null);
-                      setHasSubmittedSearch(false);
-                    }}
-                    className="p-1 rounded-md text-muted-foreground hover:text-foreground cursor-pointer"
-                    title="Clear query"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
-
-                {/* AI Vibe Search Mode Toggle */}
-                <button
-                  type="button"
-                  data-testid="discover-ai-toggle"
-                  aria-pressed={isAiMode}
-                  onClick={() => {
-                    const nextAi = !isAiMode;
-                    setIsAiMode(nextAi);
-                    if (searchQuery.trim()) {
-                      executeSearch(searchQuery, nextAi);
-                    }
-                  }}
-                  title={isAiMode ? "AI Vibe Search active — click for title search" : "Switch to AI Vibe Search"}
-                  className={cn(
-                    "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer shrink-0 border",
-                    isAiMode
-                      ? "bg-[#00D878] text-black border-[#00D878] shadow-sm shadow-[#00D878]/30"
-                      : "bg-muted/60 text-muted-foreground border-border hover:text-[#00D878] hover:border-[#00D878]/40"
-                  )}
-                >
-                  <Sparkles className="w-3 h-3" />
-                  <span>AI Vibe</span>
-                </button>
-
-                {/* Voice Search Button */}
-                <button
-                  type="button"
-                  onClick={handleVoiceSearch}
-                  title={isListeningVoice ? "Stop voice listening" : "Voice search"}
-                  className={cn(
-                    "p-1.5 rounded-full transition-colors cursor-pointer shrink-0",
-                    isListeningVoice
-                      ? "bg-rose-500 text-white animate-pulse"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  )}
-                >
-                  <Mic className="w-4 h-4" />
-                </button>
-              </form>
-
-              {/* Multi-Criteria Filter Popover — kept outside <form> */}
-              <DiscoverFiltersDialog
-                compact
-                filters={filters}
-                onChange={(updated) => setFilters((prev) => ({ ...prev, ...updated }))}
-                onClear={() => setFilters(INITIAL_FILTER_STATE)}
-              />
-            </div>
-
-            {/* AI Vibe Quick Prompt Pills when AI mode is active */}
-            {isAiMode && !isSearchActive && (
-              <div className="flex flex-wrap items-center gap-1.5 max-w-[540px] justify-start lg:justify-end animate-fadeIn">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-[#00D878] mr-1">
-                  Try vibe:
-                </span>
-                {[
-                  "Rainy neo-noir cyberpunk movies with a lonely atmosphere",
-                  "Mind-bending sci-fi",
-                  "Cozy weekend watch",
-                ].map((sample) => (
-                  <button
-                    key={sample}
-                    type="button"
-                    onClick={() => {
-                      setSearchQuery(sample);
-                      executeSearch(sample, true);
-                    }}
-                    className="text-[11px] px-2.5 py-1 rounded-full bg-card border border-border text-muted-foreground hover:text-[#00D878] hover:border-[#00D878]/40 transition cursor-pointer"
-                  >
-                    {sample}
-                  </button>
-                ))}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6">
+            {/* Left Column: Compact Editorial Identity */}
+            <div className="space-y-1.5 max-w-xl">
+              <div className="flex items-center gap-2 text-xs font-medium text-[#00D878]">
+                <Compass className="w-3.5 h-3.5 shrink-0" />
+                <span>Curated Global Cinema Index</span>
               </div>
-            )}
 
-            {/* Consumer-Friendly Live Index Badge */}
-            <div className="flex items-center gap-2 pr-3 text-[11px] font-mono text-muted-foreground">
-              <Film className="w-3.5 h-3.5 text-[#00D878] shrink-0" />
-              <span className="font-semibold text-foreground/90">LIVE TMDB INDEX</span>
-              <span>•</span>
-              <span className="text-[#00D878]">1,000,000+ Verified Titles</span>
+              <h1 className="font-heading font-bold text-2xl sm:text-3xl lg:text-4xl tracking-tight text-foreground leading-tight">
+                Discover Cinema
+              </h1>
+
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                Explore global releases, acclaimed masterpieces, and mood-driven selections.
+              </p>
+            </div>
+
+            {/* Right Column: Integrated Search Bar + Mood Vibe + Filter Console */}
+            <div className="flex flex-col items-start lg:items-end gap-2 w-full lg:w-auto shrink-0">
+              <div
+                className={cn(
+                  "flex items-center gap-2 px-3.5 py-2 rounded-full bg-background/85 shadow-md transition-all w-full sm:w-[460px] lg:w-[540px]",
+                  isAiMode
+                    ? "ring-2 ring-[#00D878]/50"
+                    : "focus-within:ring-2 focus-within:ring-[#00D878]/50"
+                )}
+              >
+                <form
+                  onSubmit={handleSearchSubmit}
+                  className="flex-1 min-w-0 flex items-center gap-2.5"
+                >
+                  {isAiMode ? (
+                    <SlidersHorizontal className="w-4 h-4 text-[#00D878] shrink-0" />
+                  ) : (
+                    <Search className="w-4 h-4 text-[#00D878] shrink-0" />
+                  )}
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    data-testid="discover-search-input"
+                    value={searchQuery}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setSearchQuery(v);
+                      if (!v.trim()) {
+                        setSearchResults([]);
+                        setAiInterpretation(null);
+                        setSearchError(null);
+                        setHasSubmittedSearch(false);
+                      }
+                    }}
+                    placeholder={
+                      isAiMode
+                        ? "Describe a vibe... e.g. Rainy neo-noir cyberpunk with a lonely atmosphere"
+                        : "Search films, directors, actors, or keywords..."
+                    }
+                    className="flex-1 min-w-0 bg-transparent text-xs sm:text-sm text-foreground placeholder:text-muted-foreground outline-none"
+                  />
+
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery("");
+                        setSearchResults([]);
+                        setAiInterpretation(null);
+                        setSearchError(null);
+                        setHasSubmittedSearch(false);
+                      }}
+                      className="p-1 rounded-md text-muted-foreground hover:text-foreground cursor-pointer"
+                      title="Clear query"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+
+                  {/* Vibe Search Mode Toggle (clean tuner icon, no AI sparkles) */}
+                  <button
+                    type="button"
+                    data-testid="discover-ai-toggle"
+                    aria-pressed={isAiMode}
+                    onClick={() => {
+                      const nextAi = !isAiMode;
+                      setIsAiMode(nextAi);
+                      if (searchQuery.trim()) {
+                        executeSearch(searchQuery, nextAi);
+                      }
+                    }}
+                    title={isAiMode ? "Vibe Search active — click for title search" : "Switch to Vibe Search"}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer shrink-0",
+                      isAiMode
+                        ? "bg-[#00D878] text-black shadow-sm shadow-[#00D878]/30"
+                        : "bg-secondary text-muted-foreground hover:text-[#00D878]"
+                    )}
+                  >
+                    <SlidersHorizontal className="w-3 h-3" />
+                    <span>AI Vibe</span>
+                  </button>
+
+                  {/* Voice Search Button */}
+                  <button
+                    type="button"
+                    onClick={handleVoiceSearch}
+                    title={isListeningVoice ? "Stop voice listening" : "Voice search"}
+                    className={cn(
+                      "p-1.5 rounded-full transition-colors cursor-pointer shrink-0",
+                      isListeningVoice
+                        ? "bg-rose-500 text-white animate-pulse"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    )}
+                  >
+                    <Mic className="w-4 h-4" />
+                  </button>
+                </form>
+
+                {/* Multi-Criteria Filter Popover — kept outside <form> */}
+                <DiscoverFiltersDialog
+                  compact
+                  filters={filters}
+                  onChange={(updated) => setFilters((prev) => ({ ...prev, ...updated }))}
+                  onClear={() => setFilters(INITIAL_FILTER_STATE)}
+                />
+              </div>
+
+              {isAiMode && !isSearchActive && (
+                <div className="flex flex-wrap items-center gap-1.5 max-w-[540px] justify-start lg:justify-end animate-fadeIn">
+                  <span className="text-xs font-medium text-[#00D878] mr-1">
+                    Try mood:
+                  </span>
+                  {[
+                    "Rainy neo-noir cyberpunk movies with a lonely atmosphere",
+                    "Mind-bending sci-fi",
+                    "Cozy weekend watch",
+                  ].map((sample) => (
+                    <button
+                      key={sample}
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery(sample);
+                        executeSearch(sample, true);
+                      }}
+                      className="text-xs px-3 py-1 rounded-full bg-background/70 text-foreground/80 hover:text-[#00D878] transition cursor-pointer"
+                    >
+                      {sample}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-        </section>
 
-        {/* ================================================================= */}
-        {/* SUBHEADINGS & MOOD SELECTOR BAR (Scrollable with clear affordance) */}
-        {/* ================================================================= */}
-        <section aria-label="Cinephile Categories" className="w-full pt-1 relative group/cats">
-          {catCanScrollLeft && (
-            <button
-              type="button"
-              onClick={() => scrollCategories("left")}
-              aria-label="Scroll categories left"
-              className="hidden sm:grid place-items-center absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-card/95 border border-border text-foreground shadow-lg hover:text-[#00D878] transition cursor-pointer"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-          )}
-          <div
-            ref={categoryRailRef}
-            onScroll={updateCategoryScrollButtons}
-            className="flex items-center gap-2.5 overflow-x-auto no-scrollbar py-2 px-1 scroll-smooth"
-          >
-            {CINEPHILE_CATEGORIES.map((cat) => {
-              const active = selectedCategory === cat.id;
-              return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => handleSelectCategory(cat.id)}
-                  className={cn(
-                    "inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0 border shadow-sm",
-                    active
-                      ? "bg-[#00D878] text-black font-black border-[#00D878] shadow-md shadow-[#00D878]/25"
-                      : "bg-card/80 text-muted-foreground border-border hover:bg-muted hover:text-foreground active:scale-95"
-                  )}
-                >
-                  <span className="text-sm">{cat.icon}</span>
-                  <span>{cat.label}</span>
-                </button>
-              );
-            })}
-          </div>
-          {catCanScrollRight && (
-            <>
-              <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-background to-transparent" />
+          {/* Tightly Integrated Category Strip Inside Console (Zero Gap) */}
+          <div className="pt-1 border-t border-border/50 relative">
+            {catCanScrollLeft && (
               <button
                 type="button"
-                onClick={() => scrollCategories("right")}
-                aria-label="Scroll categories right"
-                className="grid place-items-center absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-card/95 border border-border text-foreground shadow-lg hover:text-[#00D878] transition cursor-pointer"
+                onClick={() => scrollCategories("left")}
+                aria-label="Scroll categories left"
+                className="hidden sm:grid place-items-center absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-card/95 text-foreground shadow-lg hover:text-[#00D878] transition cursor-pointer"
               >
-                <ChevronRight className="w-4 h-4" />
+                <ChevronLeft className="w-4 h-4" />
               </button>
-            </>
-          )}
+            )}
+            <div
+              ref={categoryRailRef}
+              onScroll={updateCategoryScrollButtons}
+              aria-label="Cinephile Categories"
+              className="flex items-center gap-2 overflow-x-auto no-scrollbar pt-3 pb-0.5 scroll-smooth"
+            >
+              {CINEPHILE_CATEGORIES.map((cat) => {
+                const active = selectedCategory === cat.id;
+                const CatIcon = cat.icon;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => handleSelectCategory(cat.id)}
+                    className={cn(
+                      "inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0",
+                      active
+                        ? "bg-[#00D878] text-black shadow-md shadow-[#00D878]/20"
+                        : "bg-secondary/80 text-muted-foreground hover:bg-secondary hover:text-foreground active:scale-95"
+                    )}
+                  >
+                    <CatIcon className="w-3.5 h-3.5 shrink-0" />
+                    <span>{cat.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {catCanScrollRight && (
+              <>
+                <div className="pointer-events-none absolute right-0 top-2 bottom-0 w-10 bg-gradient-to-l from-card to-transparent" />
+                <button
+                  type="button"
+                  onClick={() => scrollCategories("right")}
+                  aria-label="Scroll categories right"
+                  className="grid place-items-center absolute right-0 top-[56%] -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-background/95 text-foreground shadow-lg hover:text-[#00D878] transition cursor-pointer"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </>
+            )}
+          </div>
         </section>
 
         {/* ================================================================= */}
@@ -1252,11 +1240,11 @@ function DiscoverContent() {
                 <div className="flex items-center gap-2 flex-wrap">
                   {isAiMode && (
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#00D878]/15 text-[#00D878] text-[11px] font-semibold">
-                      <Sparkles className="w-3 h-3" />
-                      AI Vibe Search
+                      <SlidersHorizontal className="w-3 h-3" />
+                      Vibe Search
                     </span>
                   )}
-                  <h3 className="font-heading font-black text-xl text-foreground">
+                  <h3 className="font-heading font-semibold text-xl text-foreground">
                     Results for &ldquo;{searchQuery}&rdquo;
                   </h3>
                 </div>
@@ -1273,7 +1261,7 @@ function DiscoverContent() {
                   setSearchError(null);
                   setHasSubmittedSearch(false);
                 }}
-                className="text-xs font-mono font-bold text-[#00D878] hover:underline cursor-pointer self-start sm:self-auto"
+                className="text-xs font-semibold text-[#00D878] hover:underline cursor-pointer self-start sm:self-auto"
               >
                 ← Back to Curated Discover
               </button>
@@ -1284,24 +1272,24 @@ function DiscoverContent() {
                 {Array.from({ length: 12 }).map((_, i) => (
                   <div
                     key={i}
-                    className="aspect-[2/3] rounded-2xl bg-card border border-border/60 animate-pulse"
+                    className="aspect-[2/3] rounded-2xl bg-card animate-pulse"
                   />
                 ))}
               </div>
             ) : searchError ? (
-              <div className="py-16 px-6 text-center space-y-3 bg-card border border-border rounded-3xl">
+              <div className="py-16 px-6 text-center space-y-3 bg-card rounded-3xl">
                 <p className="text-sm text-rose-400 font-medium">{searchError}</p>
                 <button
                   type="button"
                   onClick={() => executeSearch(searchQuery, isAiMode)}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#00D878] text-black text-xs font-bold hover:bg-[#00B855] transition cursor-pointer"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#00D878] text-black text-xs font-semibold hover:bg-[#00B855] transition cursor-pointer"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   <span>Retry Search</span>
                 </button>
               </div>
             ) : searchResults.length === 0 ? (
-              <div className="py-16 px-6 text-center space-y-3 bg-card border border-border rounded-3xl">
+              <div className="py-16 px-6 text-center space-y-3 bg-card rounded-3xl">
                 <p className="text-sm text-muted-foreground">
                   No matching films found for &ldquo;{searchQuery}&rdquo;.
                   {isAiMode
@@ -1315,9 +1303,9 @@ function DiscoverContent() {
                       setIsAiMode(true);
                       executeSearch(searchQuery, true);
                     }}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#00D878]/15 border border-[#00D878]/35 text-[#00D878] text-xs font-semibold hover:bg-[#00D878]/25 transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#00D878]/15 text-[#00D878] text-xs font-semibold hover:bg-[#00D878]/25 transition cursor-pointer"
                   >
-                    <Sparkles className="w-3.5 h-3.5" />
+                    <SlidersHorizontal className="w-3.5 h-3.5" />
                     <span>Search this with AI Vibe</span>
                   </button>
                 )}
@@ -1429,19 +1417,19 @@ function DiscoverContent() {
         {!isSearchActive && !hasActiveFilters && isCategoryActive && activeCategoryDef && (
           <section className="space-y-6 animate-fadeIn">
             {/* Category Banner Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#12131D] via-[#161726] to-[#0E0F16] border border-white/10 shadow-2xl relative overflow-hidden">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#12131D] via-[#161726] to-[#0E0F16] shadow-2xl relative overflow-hidden">
               <div className="space-y-1.5 relative z-10">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">{activeCategoryDef.icon}</span>
-                  <h2 className="font-heading font-black text-2xl sm:text-3xl text-white">
+                <div className="flex items-center gap-2.5">
+                  <activeCategoryDef.icon className="w-6 h-6 text-[#00D878] shrink-0" />
+                  <h2 className="font-heading font-bold text-2xl sm:text-3xl text-white">
                     {activeCategoryDef.label}
                   </h2>
                 </div>
-                <p className="text-xs sm:text-sm text-[#9496A1] max-w-xl">
+                <p className="text-xs sm:text-sm text-[#B4B9C9] max-w-xl">
                   {activeCategoryDef.description}
                 </p>
-                <div className="text-xs font-mono font-bold text-[#00D878] pt-1">
-                  Showing {categoryMovies.length} Curated Motion Pictures
+                <div className="text-xs font-semibold text-[#00D878] pt-1">
+                  Showing {categoryMovies.length} curated motion pictures
                 </div>
               </div>
 
@@ -1502,10 +1490,10 @@ function DiscoverContent() {
               watchlistMap={watchlistMap}
             />
 
-            {/* 2. THE ADRENALINE RUSH (Connected with working See All) */}
+            {/* 2. THE ADRENALINE RUSH */}
             <ModernDiscoveryRow
               title="The Adrenaline Rush"
-              icon={<Zap className="w-5 h-5 text-[#F59E0B]" />}
+              icon={<Activity className="w-5 h-5 text-[#F59E0B]" />}
               subtitle="High-octane action, intense chases, and edge-of-your-seat thrillers"
               movies={adrenalineMovies}
               isLoading={isLoadingSections}
@@ -1516,10 +1504,10 @@ function DiscoverContent() {
               watchlistMap={watchlistMap}
             />
 
-            {/* 3. SCI-FI & FANTASY (Connected with working See All) */}
+            {/* 3. SCI-FI & FANTASY */}
             <ModernDiscoveryRow
               title="Sci-Fi & Fantasy"
-              icon={<Rocket className="w-5 h-5 text-[#8B5CF6]" />}
+              icon={<Orbit className="w-5 h-5 text-[#8B5CF6]" />}
               subtitle="Mind-bending speculative worlds, futuristic visions, and mythic sagas"
               movies={sciFiMovies}
               isLoading={isLoadingSections}
@@ -1533,7 +1521,7 @@ function DiscoverContent() {
             {/* 4. CRITICALLY ACCLAIMED */}
             <ModernDiscoveryRow
               title="Critically Acclaimed Masterpieces"
-              icon={<Trophy className="w-5 h-5 text-[#FBBF24]" />}
+              icon={<Award className="w-5 h-5 text-[#FBBF24]" />}
               subtitle="Festival winners, Academy laureates, and pristine cinema masterworks"
               movies={criticallyAcclaimedMovies}
               isLoading={isLoadingSections}
@@ -1547,7 +1535,7 @@ function DiscoverContent() {
             {/* 5. HIDDEN GEMS */}
             <ModernDiscoveryRow
               title="Hidden Gems & Cult Treasures"
-              icon={<Gem className="w-5 h-5 text-[#38BDF8]" />}
+              icon={<Compass className="w-5 h-5 text-[#38BDF8]" />}
               subtitle="Low-key masterworks and overlooked treasures worth your screen time"
               movies={hiddenGemsMovies}
               isLoading={isLoadingSections}

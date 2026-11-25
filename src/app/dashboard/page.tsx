@@ -11,7 +11,9 @@ import { BecauseYouWatchedSection } from "@/components/dashboard/because-you-wat
 import { MovieRatingModal } from "@/components/dashboard/movie-rating-modal";
 import { WatchlistToast } from "@/components/dashboard/watchlist-toast";
 import { useLibrary } from "@/lib/library-store";
+import { useUser } from "@/lib/user-context";
 import { tmdbFetch } from "@/lib/tmdb-service";
+import { getGreeting } from "@/lib/utils";
 import type { Movie } from "@/types";
 
 /**
@@ -28,10 +30,26 @@ import type { Movie } from "@/types";
 function DashboardContent() {
   const router = useRouter();
   const library = useLibrary();
+  const { user, isAuthenticated } = useUser();
 
   const [toastMessage, setToastMessage] = React.useState<string | null>(null);
   const [ratingModalMovie, setRatingModalMovie] = React.useState<Movie | null>(null);
   const [isRatingModalOpen, setIsRatingModalOpen] = React.useState(false);
+  const [timeGreeting, setTimeGreeting] = React.useState<string>("");
+
+  React.useEffect(() => {
+    setTimeGreeting(getGreeting());
+  }, []);
+
+  const greetingName = React.useMemo(() => {
+    if (isAuthenticated && user?.display_name && !user.display_name.toLowerCase().includes("guest")) {
+      return user.display_name;
+    }
+    if (isAuthenticated && user?.handle && user.handle !== "guest") {
+      return user.handle;
+    }
+    return null;
+  }, [isAuthenticated, user?.display_name, user?.handle]);
 
   // Trending spotlight fallback requiring BOTH backdrop_path AND poster_path for the exact same film
   const [spotlightGlobalMovie, setSpotlightGlobalMovie] = React.useState<Movie | null>(null);
@@ -171,15 +189,32 @@ function DashboardContent() {
     [library]
   );
 
-  // Watched & Personal Rating modal workflow
-  const handleOpenRatingModal = React.useCallback(
+  // Watched & Personal Rating toggle workflow:
+  // If already watched, clicking Eye immediately toggles Watched off -> Watchlist.
+  // If not watched yet, opens Rating Modal (allowing rating or skip).
+  const handleToggleWatchedIcon = React.useCallback(
     (movie: Movie) => {
       const id = movie.tmdb_id || movie.id;
       const existing = (library.movies || []).find((m) => (m.tmdb_id || m.id) === id);
+      if (existing?.status === "watched") {
+        library.updateStatus(id, "want");
+        setToastMessage(`Removed "${movie.title}" from Watched`);
+        return;
+      }
       setRatingModalMovie(existing ? { ...movie, ...existing } : movie);
       setIsRatingModalOpen(true);
     },
-    [library.movies]
+    [library]
+  );
+
+  const handleUnmarkWatched = React.useCallback(
+    (movie: Movie) => {
+      const id = movie.tmdb_id || movie.id;
+      library.updateStatus(id, "want");
+      setIsRatingModalOpen(false);
+      setToastMessage(`Removed "${movie.title}" from Watched`);
+    },
+    [library]
   );
 
   const handleSaveRating = React.useCallback(
@@ -219,13 +254,15 @@ function DashboardContent() {
       <CinemaSpotlightHero
         movie={spotlightMovie}
         mode={spotlightMode}
+        greeting={timeGreeting}
+        userName={greetingName}
         isWatchlist={isSpotlightInWatchlist}
         isWatched={isSpotlightWatched}
         isFavorite={isSpotlightFavorite}
         userRating={spotlightUserRating}
         onOpenDetail={handleOpenDetail}
         onToggleWatchlist={handleToggleWatchlist}
-        onMarkWatchedRequest={handleOpenRatingModal}
+        onMarkWatchedRequest={handleToggleWatchedIcon}
         onToggleFavorite={handleToggleFavorite}
         onDiscoverMore={handleDiscoverMore}
       />
@@ -236,7 +273,7 @@ function DashboardContent() {
         <YourNextGreatWatchSection
           onOpenDetail={handleOpenDetail}
           onToggleWatchlist={handleToggleWatchlist}
-          onToggleWatched={handleOpenRatingModal}
+          onToggleWatched={handleToggleWatchedIcon}
           onToggleFavorite={handleToggleFavorite}
         />
 
@@ -246,7 +283,7 @@ function DashboardContent() {
             movies={savedMovies}
             onOpenDetail={handleOpenDetail}
             onToggleWatchlist={handleToggleWatchlist}
-            onToggleWatched={handleOpenRatingModal}
+            onToggleWatched={handleToggleWatchedIcon}
             onToggleFavorite={handleToggleFavorite}
           />
         )}
@@ -257,7 +294,7 @@ function DashboardContent() {
             movies={watchedMovies}
             onOpenDetail={handleOpenDetail}
             onToggleWatchlist={handleToggleWatchlist}
-            onToggleWatched={handleOpenRatingModal}
+            onToggleWatched={handleToggleWatchedIcon}
             onToggleFavorite={handleToggleFavorite}
           />
         )}
@@ -268,7 +305,7 @@ function DashboardContent() {
             movies={library.movies}
             onOpenDetail={handleOpenDetail}
             onToggleWatchlist={handleToggleWatchlist}
-            onToggleWatched={handleOpenRatingModal}
+            onToggleWatched={handleToggleWatchedIcon}
             onToggleFavorite={handleToggleFavorite}
           />
         )}
@@ -281,6 +318,7 @@ function DashboardContent() {
         onClose={() => setIsRatingModalOpen(false)}
         onSaveRating={handleSaveRating}
         onSkipRating={handleSkipRating}
+        onUnmarkWatched={handleUnmarkWatched}
       />
 
       {/* 4. WATCHLIST & RATING FLOATING TOAST */}

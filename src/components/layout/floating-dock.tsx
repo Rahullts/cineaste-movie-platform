@@ -3,40 +3,43 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, Compass, Library, Settings } from "lucide-react";
+import {
+  CinematicDashboardIcon,
+  CinematicDiscoverIcon,
+  CinematicLibraryIcon,
+  CinematicSettingsIcon,
+} from "@/components/icons/cinematic-icons";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/lib/theme-context";
 
 interface NavButtonItem {
   to: string;
   label: string;
-  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  icon: React.ComponentType<{ className?: string; size?: number | string }>;
   matcher: (pathname: string) => boolean;
 }
 
 /**
- * Cineaste Floating Navigation — Header-Matched Circular Icon Dock
- * Preserves the exact four navigation destinations without text labels,
- * unified circular proportions (h-9 w-9), uniform stroke weight (1.8),
- * crisp dark translucent surfaces, and Cineaste green (#00D664) indicator.
+ * Cineaste Floating Navigation — Dark Borderless Circular Cinema Dock
+ * Uses cohesive custom cinema line-icons matching the header aesthetic.
  */
 const NAV_BUTTONS: NavButtonItem[] = [
   {
     to: "/dashboard",
     label: "Dashboard",
-    icon: LayoutGrid,
+    icon: CinematicDashboardIcon,
     matcher: (p) => p === "/dashboard" || p === "/",
   },
   {
     to: "/discover",
     label: "Discover",
-    icon: Compass,
+    icon: CinematicDiscoverIcon,
     matcher: (p) => p.startsWith("/discover"),
   },
   {
     to: "/library",
     label: "My Library",
-    icon: Library,
+    icon: CinematicLibraryIcon,
     matcher: (p) =>
       p.startsWith("/library") ||
       p.startsWith("/watchlist") ||
@@ -50,7 +53,7 @@ const NAV_BUTTONS: NavButtonItem[] = [
   {
     to: "/settings",
     label: "Settings",
-    icon: Settings,
+    icon: CinematicSettingsIcon,
     matcher: (p) =>
       p.startsWith("/settings") ||
       p.startsWith("/profile") ||
@@ -81,17 +84,17 @@ export function FloatingDock() {
             aria-label={item.label}
             data-active={isActive ? "true" : "false"}
             className={cn(
-              "group relative h-9 w-9 rounded-full grid place-items-center transition-all duration-200 active:scale-95 cursor-pointer backdrop-blur-xl",
+              "group relative h-10 w-10 rounded-full grid place-items-center transition-all duration-200 active:scale-95 cursor-pointer backdrop-blur-xl",
               isLight
                 ? isActive
-                  ? "bg-white/95 text-[#00B855] ring-1 ring-[#00B855]/35 shadow-lg shadow-black/15"
-                  : "bg-white/90 hover:bg-white text-slate-700 hover:text-slate-950 ring-1 ring-black/10 shadow-md shadow-black/10"
+                  ? "bg-white text-[#00B855] shadow-lg shadow-black/15"
+                  : "bg-white/95 hover:bg-white text-slate-700 hover:text-slate-950 shadow-md shadow-black/10"
                 : isActive
-                  ? "bg-[#0E0F15]/95 text-[#00D664] ring-1 ring-[#00D664]/35 shadow-lg shadow-black/60"
-                  : "bg-[#0E0F15]/85 hover:bg-[#1A1C28]/95 text-white/80 hover:text-white ring-1 ring-white/10 shadow-lg shadow-black/50"
+                  ? "bg-[#151824] text-[#00D664] shadow-xl shadow-black/70"
+                  : "bg-[#131520]/90 hover:bg-[#1E2233] text-white/85 hover:text-white shadow-lg shadow-black/60"
             )}
           >
-            <Icon className="w-4 h-4 shrink-0 transition-colors" strokeWidth={1.8} />
+            <Icon size={18} className="shrink-0 transition-colors" />
 
             {/* Cineaste Green Active Indicator Dot */}
             {isActive && (
@@ -106,10 +109,10 @@ export function FloatingDock() {
             {/* Hover Tooltip */}
             <span
               className={cn(
-                "hidden sm:block absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-md backdrop-blur-md text-[10px] font-medium tracking-wide whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50",
+                "hidden sm:block absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-md backdrop-blur-md text-[11px] font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50",
                 isLight
-                  ? "bg-white/95 text-slate-900 border border-black/10 shadow-sm"
-                  : "bg-[#0E0F15]/95 text-white border border-white/10"
+                  ? "bg-white/95 text-slate-900 shadow-sm"
+                  : "bg-[#131520]/95 text-white shadow-md"
               )}
             >
               {item.label}
