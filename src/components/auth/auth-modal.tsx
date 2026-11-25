@@ -31,6 +31,7 @@ export function AuthModal({
   onSuccess,
 }: AuthModalProps) {
   const dialogRef = React.useRef<HTMLDialogElement>(null);
+  const oauthInFlightRef = React.useRef(false);
   const [mode, setMode] = React.useState<"signin" | "signup" | "reset">(defaultMode);
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -48,6 +49,8 @@ export function AuthModal({
   const [successMsg, setSuccessMsg] = React.useState<string | null>(null);
 
   React.useEffect(() => {
+    oauthInFlightRef.current = false;
+    setLoading(false);
     setMode(defaultMode);
     setEmailError(null);
     setPasswordError(null);
@@ -245,6 +248,8 @@ export function AuthModal({
   };
 
   const handleOAuthSignIn = async (provider: "google" | "github") => {
+    if (oauthInFlightRef.current || loading) return;
+
     setFormErrorMsg(null);
     setSuccessMsg(null);
 
@@ -256,48 +261,37 @@ export function AuthModal({
       return;
     }
 
+    oauthInFlightRef.current = true;
     setLoading(true);
     try {
+      // Derive callback strictly from the active browser origin so production stays on Render
+      // and local development stays on its localhost port, always landing on /dashboard.
       const redirectUrl = `${window.location.origin}/auth/callback?next=${encodeURIComponent(
-        window.location.pathname
+        "/dashboard"
       )}`;
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo: redirectUrl,
-          skipBrowserRedirect: true,
         },
       });
 
       if (error) {
         setFormErrorMsg(error.message);
+        oauthInFlightRef.current = false;
         setLoading(false);
         return;
       }
 
-      if (data?.url) {
-        try {
-          const probe = await fetch(data.url, { method: "GET", redirect: "manual" });
-          if (probe.status === 400) {
-            const body = await probe.json().catch(() => null);
-            if (body?.msg?.includes("Unsupported provider") || body?.code === 400) {
-              const name = provider === "google" ? "Google" : "GitHub";
-              setFormErrorMsg(
-                `${name} sign-in is not yet enabled in Supabase Authentication > Providers (requires Client ID & Secret). Use Email & Password or GitHub meanwhile.`
-              );
-              setLoading(false);
-              return;
-            }
-          }
-        } catch {
-          // Proceed when CORS/network blocks probe
-        }
-
-        window.location.href = data.url;
+      if (!data?.url) {
+        setFormErrorMsg(`Unable to start ${provider} sign-in. Please try again.`);
+        oauthInFlightRef.current = false;
+        setLoading(false);
       }
     } catch (err: any) {
       setFormErrorMsg(err?.message || `Failed to initiate ${provider} authentication.`);
+      oauthInFlightRef.current = false;
       setLoading(false);
     }
   };

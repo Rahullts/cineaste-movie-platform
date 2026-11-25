@@ -3,10 +3,22 @@ import { type NextRequest, NextResponse } from "next/server";
 import type { Database } from "./database.types";
 
 export async function updateSession(request: NextRequest) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const supabaseAnonKey = (
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+  )?.trim();
 
   if (!supabaseUrl || !supabaseAnonKey || !supabaseUrl.startsWith("http")) {
+    return NextResponse.next({ request });
+  }
+
+  // Never intercept or pre-consume session cookies during the OAuth callback exchange
+  if (
+    request.nextUrl.pathname.startsWith("/_next") ||
+    request.nextUrl.pathname.startsWith("/auth/callback") ||
+    request.nextUrl.pathname.includes(".")
+  ) {
     return NextResponse.next({ request });
   }
 
@@ -32,14 +44,6 @@ export async function updateSession(request: NextRequest) {
       },
     },
   });
-
-  // Do not run on static assets or image requests
-  if (
-    request.nextUrl.pathname.startsWith("/_next") ||
-    request.nextUrl.pathname.includes(".")
-  ) {
-    return supabaseResponse;
-  }
 
   // Refresh user session token if expired
   await supabase.auth.getUser();

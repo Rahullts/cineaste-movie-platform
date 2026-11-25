@@ -7,10 +7,33 @@ import type {
   UserSubscription,
   SubscriptionPlanId,
 } from "@/types";
+import { AlertCircle, RefreshCw, X } from "lucide-react";
 import { getBrowserClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { ensureUserProfileAndPreferences } from "@/lib/supabase/profile-bootstrap";
 import { migrateLocalDataToSupabase } from "@/lib/supabase/migration-service";
 import { getUserProfileStorageKey } from "@/lib/library-storage";
 import { AuthModal } from "@/components/auth/auth-modal";
+
+const processedOAuthCodes = new Set<string>();
+
+function formatAuthErrorMessage(code: string | null, description: string | null): string {
+  const normalized = (code || "").toLowerCase();
+  if (normalized === "access_denied") {
+    return "Google sign-in was cancelled. You can continue browsing or try again.";
+  }
+  if (normalized === "profile_init_failed") {
+    return description
+      ? `Signed in, but profile setup failed (${description}).`
+      : "Signed in, but profile setup could not complete. Please retry.";
+  }
+  if (normalized === "oauth_exchange_failed") {
+    return "Could not complete Google authentication. Please try signing in again.";
+  }
+  if (normalized === "missing_auth_code") {
+    return "Authentication callback did not receive a valid authorization code.";
+  }
+  return description || "Authentication could not be completed. Please try again.";
+}
 
 const LEGACY_USER_STORAGE_KEY = "cineaste:user_profile:v1";
 
@@ -121,6 +144,9 @@ interface UserContextValue {
   isAdmin: boolean;
   isAuthenticated: boolean;
   isLoaded: boolean;
+  authError: string | null;
+  clearAuthError: () => void;
+  retryProfileSetup: () => Promise<void>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<void> | void;
   updateSettings: (updates: Partial<UserSettings>) => Promise<void> | void;
   updateSubscription: (updates: Partial<UserSubscription>) => Promise<void> | void;
@@ -135,6 +161,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = React.useState<UserProfile>(GUEST_USER);
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
   const [isLoaded, setIsLoaded] = React.useState(false);
+  const [authError, setAuthError] = React.useState<string | null>(null);
+  const syncSeqRef = React.useRef(0);
+  const lastSessionKeyRef = React.useRef<string | null>(null);
 
   // Auth modal management
   const [isAuthModalOpen, setIsAuthModalOpen] = React.useState(false);
@@ -145,43 +174,59 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setIsAuthModalOpen(true);
   };
 
-  // Sync Supabase Auth & Local storage
-  React.useEffect(() => {
-    const supabase = getBrowserClient();
+  const clearAuthError = React.useCallback(() => {
+    setAuthError(null);
+  }, []);
 
-    const loadLocalFallback = () => {
-      try {
-        const guestKey = getUserProfileStorageKey(null);
-        const stored = localStorage.getItem(guestKey) || localStorage.getItem(LEGACY_USER_STORAGE_KEY);
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          // Guard against leaking an authenticated user's profile from legacy unscoped storage
-          if (!parsed?.id || parsed.id === "guest-cinephile") {
-            setUser({
-              ...GUEST_USER,
-              ...parsed,
-              subscription: { ...DEFAULT_SUBSCRIPTION, ...(parsed.subscription || {}) },
-              settings: { ...DEFAULT_SETTINGS, ...(parsed.settings || {}) },
-            });
+  const syncSessionUser = React.useCallback(
+    async (session: any, force: boolean = false) => {
+      const supabase = getBrowserClient();
+
+      const loadLocalFallback = () => {
+        try {
+          const guestKey = getUserProfileStorageKey(null);
+          const stored =
+            localStorage.getItem(guestKey) ||
+            localStorage.getItem(LEGACY_USER_STORAGE_KEY);
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            if (!parsed?.id || parsed.id === "guest-cinephile") {
+              setUser({
+                ...GUEST_USER,
+                ...parsed,
+                subscription: {
+                  ...DEFAULT_SUBSCRIPTION,
+                  ...(parsed.subscription || {}),
+                },
+                settings: { ...DEFAULT_SETTINGS, ...(parsed.settings || {}) },
+              });
+            } else {
+              setUser(GUEST_USER);
+            }
           } else {
             setUser(GUEST_USER);
           }
-        } else {
+        } catch {
           setUser(GUEST_USER);
         }
-      } catch {
-        setUser(GUEST_USER);
+        setIsLoaded(true);
+      };
+
+      if (!supabase || !isSupabaseConfigured) {
+        loadLocalFallback();
+        return;
       }
-      setIsLoaded(true);
-    };
 
-    if (!supabase || !isSupabaseConfigured) {
-      loadLocalFallback();
-      return;
-    }
+      const sessionKey = session?.user
+        ? `${session.user.id}:${session.access_token?.slice(-12) || ""}`
+        : "guest";
 
-    // Load initial Supabase session
-    const syncSessionUser = async (session: any) => {
+      if (!force && lastSessionKeyRef.current === sessionKey) {
+        return;
+      }
+      lastSessionKeyRef.current = sessionKey;
+      const seq = ++syncSeqRef.current;
+
       if (!session?.user) {
         setIsAuthenticated(false);
         loadLocalFallback();
@@ -192,33 +237,38 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       setIsAuthenticated(true);
 
       try {
-        // Fetch real profile from Supabase
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", uid)
-          .maybeSingle();
+        // Ensure first-time profile and preferences exist idempotently before dashboard renders user data
+        const bootstrap = await ensureUserProfileAndPreferences(
+          supabase,
+          session.user
+        );
+        if (seq !== syncSeqRef.current) return;
 
-        // Fetch user preferences
-        const { data: prefs } = await supabase
-          .from("user_preferences")
-          .select("*")
-          .eq("user_id", uid)
-          .maybeSingle();
+        if (!bootstrap.ok) {
+          setAuthError(
+            formatAuthErrorMessage("profile_init_failed", bootstrap.error || null)
+          );
+          setIsLoaded(true);
+          return;
+        }
 
-        // Fetch real server-controlled role
-        const { data: roleRow } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", uid)
-          .maybeSingle();
+        const [{ data: profile }, { data: prefs }, { data: roleRow }, { data: subRow }] =
+          await Promise.all([
+            supabase.from("profiles").select("*").eq("id", uid).maybeSingle(),
+            supabase
+              .from("user_preferences")
+              .select("*")
+              .eq("user_id", uid)
+              .maybeSingle(),
+            supabase.from("user_roles").select("role").eq("user_id", uid).maybeSingle(),
+            supabase
+              .from("user_subscriptions")
+              .select("plan, status")
+              .eq("user_id", uid)
+              .maybeSingle(),
+          ]);
 
-        // Fetch real server-controlled subscription if exists
-        const { data: subRow } = await supabase
-          .from("user_subscriptions")
-          .select("plan, status")
-          .eq("user_id", uid)
-          .maybeSingle();
+        if (seq !== syncSeqRef.current) return;
 
         const role: "admin" | "user" = roleRow?.role === "admin" ? "admin" : "user";
         const subscription: UserSubscription = subRow
@@ -228,12 +278,24 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         const syncedUser: UserProfile = {
           id: uid,
           email: session.user.email || "",
-          display_name: profile?.display_name || session.user.user_metadata?.full_name || "Cinephile",
+          display_name:
+            profile?.display_name ||
+            session.user.user_metadata?.full_name ||
+            session.user.user_metadata?.name ||
+            "Cinephile",
           handle: profile?.username || (session.user.email || "user").split("@")[0],
           role,
-          avatar_url: profile?.avatar_url || session.user.user_metadata?.avatar_url || "",
+          avatar_url:
+            profile?.avatar_url ||
+            session.user.user_metadata?.avatar_url ||
+            session.user.user_metadata?.picture ||
+            "",
           bio: profile?.bio || "Curating personal cinema memories.",
-          favorite_genres: profile?.preferred_genres || ["Drama", "Sci-Fi", "Thriller"],
+          favorite_genres: profile?.preferred_genres || [
+            "Drama",
+            "Sci-Fi",
+            "Thriller",
+          ],
           favorite_languages: profile?.language ? [profile.language] : ["English"],
           member_since: profile?.member_since || "Member",
           subscription,
@@ -256,21 +318,101 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         };
 
         setUser(syncedUser);
+        setAuthError(null);
 
         // Run idempotent local data migration
         migrateLocalDataToSupabase(supabase, uid)
           .then((res) => {
-            if (res.success && !res.skipped && (res.moviesCount > 0 || res.collectionsCount > 0 || res.activitiesCount > 0)) {
+            if (
+              res.success &&
+              !res.skipped &&
+              (res.moviesCount > 0 ||
+                res.collectionsCount > 0 ||
+                res.activitiesCount > 0)
+            ) {
               window.dispatchEvent(new Event("cineaste:library-refresh"));
             }
           })
           .catch((err) => console.error("Migration error:", err));
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error fetching Supabase user state:", err);
+        if (seq === syncSeqRef.current) {
+          setAuthError(
+            formatAuthErrorMessage(
+              "profile_init_failed",
+              err?.message || "Unexpected session sync error"
+            )
+          );
+        }
       } finally {
-        setIsLoaded(true);
+        if (seq === syncSeqRef.current) {
+          setIsLoaded(true);
+        }
       }
-    };
+    },
+    []
+  );
+
+  const retryProfileSetup = React.useCallback(async () => {
+    const supabase = getBrowserClient();
+    if (!supabase || !isSupabaseConfigured) return;
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    await syncSessionUser(session, true);
+  }, [syncSessionUser]);
+
+  // Sync Supabase Auth, handle callback query errors cleanly, and initialize profile once
+  React.useEffect(() => {
+    const supabase = getBrowserClient();
+
+    if (typeof window !== "undefined") {
+      try {
+        const currentUrl = new URL(window.location.href);
+        const qAuthErr =
+          currentUrl.searchParams.get("auth_error") ||
+          currentUrl.searchParams.get("error");
+        const qAuthDesc =
+          currentUrl.searchParams.get("auth_error_description") ||
+          currentUrl.searchParams.get("error_description");
+        const qCode = currentUrl.searchParams.get("code");
+
+        if (qAuthErr || qAuthDesc) {
+          setAuthError(formatAuthErrorMessage(qAuthErr, qAuthDesc));
+          currentUrl.searchParams.delete("auth_error");
+          currentUrl.searchParams.delete("auth_error_description");
+          currentUrl.searchParams.delete("error");
+          currentUrl.searchParams.delete("error_description");
+          window.history.replaceState({}, "", currentUrl.pathname + currentUrl.search + currentUrl.hash);
+        }
+
+        // Prevent duplicate code processing if Supabase lands directly on a client route with ?code=
+        if (qCode && supabase && isSupabaseConfigured && !processedOAuthCodes.has(qCode)) {
+          processedOAuthCodes.add(qCode);
+          currentUrl.searchParams.delete("code");
+          window.history.replaceState({}, "", currentUrl.pathname + currentUrl.search + currentUrl.hash);
+          supabase.auth
+            .getSession()
+            .then(async ({ data: { session } }) => {
+              if (!session) {
+                const { error } = await supabase.auth.exchangeCodeForSession(qCode);
+                if (error) {
+                  const { data: recheck } = await supabase.auth.getSession();
+                  if (!recheck.session) {
+                    setAuthError(formatAuthErrorMessage("oauth_exchange_failed", error.message));
+                  }
+                }
+              }
+            })
+            .catch(() => {});
+        }
+      } catch {}
+    }
+
+    if (!supabase || !isSupabaseConfigured) {
+      syncSessionUser(null, true);
+      return;
+    }
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       syncSessionUser(session);
@@ -278,14 +420,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      syncSessionUser(session);
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      const shouldForce =
+        event === "SIGNED_IN" ||
+        event === "SIGNED_OUT" ||
+        event === "USER_UPDATED";
+      syncSessionUser(session, shouldForce);
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [syncSessionUser]);
 
   // Synchronize CSS custom properties and accessibility attributes with active user settings
   React.useEffect(() => {
@@ -386,9 +532,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     const supabase = getBrowserClient();
-    if (supabase && isAuthenticated) {
-      await supabase.auth.signOut();
+    if (supabase) {
+      await supabase.auth.signOut().catch(() => {});
     }
+    lastSessionKeyRef.current = "guest";
+    setAuthError(null);
     setIsAuthenticated(false);
     setUser(GUEST_USER);
     try {
@@ -404,6 +552,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         isAdmin: user.role === "admin",
         isAuthenticated,
         isLoaded,
+        authError,
+        clearAuthError,
+        retryProfileSetup,
         updateProfile,
         updateSettings,
         updateSubscription,
@@ -413,6 +564,45 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }}
     >
       {children}
+      {authError && (
+        <div
+          role="alert"
+          data-testid="auth-error-banner"
+          className="fixed bottom-24 right-4 sm:right-6 z-50 max-w-sm rounded-2xl bg-popover dark:bg-[#141722] text-foreground shadow-[0_20px_48px_-12px_rgba(0,0,0,0.8)] p-4 flex items-start gap-3 animate-in fade-in slide-in-from-bottom-2"
+        >
+          <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0 space-y-2">
+            <p className="text-xs leading-relaxed text-foreground">{authError}</p>
+            <div className="flex items-center gap-2">
+              {isAuthenticated && (
+                <button
+                  type="button"
+                  onClick={() => retryProfileSetup()}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#00D878] text-[#050608] text-[11px] font-semibold cursor-pointer"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  <span>Retry</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={clearAuthError}
+                className="text-[11px] text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={clearAuthError}
+            aria-label="Dismiss authentication alert"
+            className="text-muted-foreground hover:text-foreground p-0.5 cursor-pointer"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
