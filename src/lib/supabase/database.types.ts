@@ -516,6 +516,22 @@ export interface Database {
         Args: { user_uid?: string };
         Returns: boolean;
       };
+      ensure_movie_catalog_entry: {
+        Args: {
+          p_tmdb_id: number;
+          p_title: string;
+          p_original_title?: string | null;
+          p_overview?: string | null;
+          p_poster_path?: string | null;
+          p_backdrop_path?: string | null;
+          p_release_date?: string | null;
+          p_runtime?: number | null;
+          p_vote_average?: number | null;
+          p_vote_count?: number | null;
+          p_genres?: Json | null;
+        };
+        Returns: string;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

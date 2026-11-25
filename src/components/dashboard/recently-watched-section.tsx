@@ -38,14 +38,22 @@ export function RecentlyWatchedSection({
   onToggleWatched,
   onToggleFavorite,
 }: RecentlyWatchedSectionProps) {
-  // Filter & sort watched movies strictly by actual watched date (newest first)
+  // Filter & sort watched movies by screening day descending, breaking same-day ties by exact timestamp
   const watchedMovies = React.useMemo(() => {
+    const getDayKey = (m: Movie) =>
+      (m.watched_date || m.watched_at || m.updated_date || "").slice(0, 10);
+    const getTimeMs = (m: Movie) => {
+      const ts = new Date(m.watched_at || m.updated_date || m.watched_date || 0).getTime();
+      return Number.isNaN(ts) ? 0 : ts;
+    };
+
     return movies
       .filter((m) => m.status === "watched")
       .sort((a, b) => {
-        const dateA = new Date(a.watched_date || a.watched_at || a.updated_date || 0).getTime();
-        const dateB = new Date(b.watched_date || b.watched_at || b.updated_date || 0).getTime();
-        return dateB - dateA;
+        const dayA = getDayKey(a);
+        const dayB = getDayKey(b);
+        if (dayA !== dayB) return dayB.localeCompare(dayA);
+        return getTimeMs(b) - getTimeMs(a);
       })
       .slice(0, 15);
   }, [movies]);

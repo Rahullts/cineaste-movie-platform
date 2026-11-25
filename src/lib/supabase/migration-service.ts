@@ -13,6 +13,7 @@ import {
   getMovieTimestampMs,
   clearConsumedGuestLibraryStorage,
 } from "@/lib/library-storage";
+import { ensureCatalogMovieId } from "./library-repository";
 
 export interface MigrationResult {
   success: boolean;
@@ -177,38 +178,18 @@ export async function migrateLocalDataToSupabase(
             }
           }
 
-          const { data: movieRecord, error: movieErr } = await supabase
-            .from("movies")
-            .upsert(
-              {
-                tmdb_id: tmdbId,
-                title: movie.title,
-                original_title: movie.original_title || movie.title,
-                overview: movie.overview || null,
-                poster_path: movie.poster_path || null,
-                backdrop_path: movie.backdrop_path || null,
-                release_date: movie.release_date || null,
-                runtime: movie.runtime || null,
-                vote_average: movie.vote_average || null,
-                vote_count: movie.vote_count || null,
-                genres: movie.genres ? (movie.genres as any) : null,
-                metadata_updated_at: new Date().toISOString(),
-              },
-              { onConflict: "tmdb_id" }
-            )
-            .select("id")
-            .single();
+          const catRes = await ensureCatalogMovieId(supabase, movie);
 
-          if (movieErr || !movieRecord) {
+          if (!catRes.ok || !catRes.data) {
             hadError = true;
-            console.warn(`Could not catalog movie ${movie.title}:`, movieErr);
+            console.warn(`Could not catalog movie ${movie.title}:`, catRes.error);
             continue;
           }
 
           const { error: userMovieErr } = await supabase.from("user_movies").upsert(
             {
               user_id: userId,
-              movie_id: movieRecord.id,
+              movie_id: catRes.data,
               tmdb_id: tmdbId,
               status: movie.status || "want",
               is_favorite: Boolean(movie.is_favorite),

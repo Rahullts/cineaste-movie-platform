@@ -693,13 +693,12 @@ function DiscoverContent() {
   }, [library.movies]);
 
   const handleToggleWatchlist = (movie: Movie) => {
-    const isSaved = Boolean(watchlistMap[movie.tmdb_id || movie.id]);
-    if (isSaved) {
-      library.removeFromWatchlist(
-        watchlistMap[movie.tmdb_id || movie.id]?.id || movie.tmdb_id || movie.id
-      );
+    const tmdbId = movie.tmdb_id || movie.id;
+    const existing = watchlistMap[tmdbId];
+    if (existing) {
+      void library.removeFromWatchlist(tmdbId);
     } else {
-      library.addToWatchlist(movie);
+      void library.addToWatchlist(movie);
     }
   };
 

@@ -156,35 +156,41 @@ function DashboardContent() {
 
   // Watchlist interaction using existing library-store
   const handleToggleWatchlist = React.useCallback(
-    (movie: Movie) => {
+    async (movie: Movie) => {
       const id = movie.tmdb_id || movie.id;
       const isAlreadySaved = (library.movies || []).some(
         (m) => (m.tmdb_id || m.id) === id && (m.status === "want" || m.status === "watching")
       );
 
       if (isAlreadySaved) {
-        library.removeFromWatchlist(id);
-        setToastMessage(`Removed "${movie.title}" from your Watchlist`);
+        const res = await library.removeFromWatchlist(id);
+        if (res.ok) {
+          setToastMessage(`Removed "${movie.title}" from your Watchlist`);
+        }
       } else {
-        library.addToWatchlist(movie);
-        setToastMessage(`Added "${movie.title}" to your Watchlist`);
+        const res = await library.addToWatchlist(movie);
+        if (res.ok) {
+          setToastMessage(`Added "${movie.title}" to your Watchlist`);
+        }
       }
     },
     [library]
   );
 
-  // Favorite interaction with feedback toast
+  // Favorite interaction with verified feedback toast
   const handleToggleFavorite = React.useCallback(
-    (movie: Movie) => {
+    async (movie: Movie) => {
       const id = movie.tmdb_id || movie.id;
       const existing = (library.movies || []).find((m) => (m.tmdb_id || m.id) === id);
       const willBeFav = !existing?.is_favorite;
-      library.toggleFavorite(existing || movie);
-      setToastMessage(
-        willBeFav
-          ? `Added "${movie.title}" to Favorites`
-          : `Removed "${movie.title}" from Favorites`
-      );
+      const res = await library.toggleFavorite(existing || movie);
+      if (res.ok) {
+        setToastMessage(
+          willBeFav
+            ? `Added "${movie.title}" to Favorites`
+            : `Removed "${movie.title}" from Favorites`
+        );
+      }
     },
     [library]
   );
@@ -193,12 +199,14 @@ function DashboardContent() {
   // If already watched, clicking Eye immediately toggles Watched off -> Watchlist.
   // If not watched yet, opens Rating Modal (allowing rating or skip).
   const handleToggleWatchedIcon = React.useCallback(
-    (movie: Movie) => {
+    async (movie: Movie) => {
       const id = movie.tmdb_id || movie.id;
       const existing = (library.movies || []).find((m) => (m.tmdb_id || m.id) === id);
       if (existing?.status === "watched") {
-        library.updateStatus(id, "want");
-        setToastMessage(`Removed "${movie.title}" from Watched`);
+        const res = await library.updateStatus(id, "want");
+        if (res.ok) {
+          setToastMessage(`Removed "${movie.title}" from Watched`);
+        }
         return;
       }
       setRatingModalMovie(existing ? { ...movie, ...existing } : movie);
@@ -208,33 +216,39 @@ function DashboardContent() {
   );
 
   const handleUnmarkWatched = React.useCallback(
-    (movie: Movie) => {
+    async (movie: Movie) => {
       const id = movie.tmdb_id || movie.id;
-      library.updateStatus(id, "want");
       setIsRatingModalOpen(false);
-      setToastMessage(`Removed "${movie.title}" from Watched`);
+      const res = await library.updateStatus(id, "want");
+      if (res.ok) {
+        setToastMessage(`Removed "${movie.title}" from Watched`);
+      }
     },
     [library]
   );
 
   const handleSaveRating = React.useCallback(
-    (movie: Movie, rating?: number, review?: string) => {
-      library.markWatched(movie, rating, review);
+    async (movie: Movie, rating?: number, review?: string) => {
       setIsRatingModalOpen(false);
-      setToastMessage(
-        rating
-          ? `Screening logged for "${movie.title}" • Rated ${rating.toFixed(1)}/10`
-          : `Marked "${movie.title}" as Watched`
-      );
+      const res = await library.markWatched(movie, rating, review);
+      if (res.ok) {
+        setToastMessage(
+          rating
+            ? `Screening logged for "${movie.title}" • Rated ${rating.toFixed(1)}/10`
+            : `Marked "${movie.title}" as Watched`
+        );
+      }
     },
     [library]
   );
 
   const handleSkipRating = React.useCallback(
-    (movie: Movie) => {
-      library.markWatched(movie, undefined);
+    async (movie: Movie) => {
       setIsRatingModalOpen(false);
-      setToastMessage(`Marked "${movie.title}" as Watched`);
+      const res = await library.markWatched(movie, undefined);
+      if (res.ok) {
+        setToastMessage(`Marked "${movie.title}" as Watched`);
+      }
     },
     [library]
   );

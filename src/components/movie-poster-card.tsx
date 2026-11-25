@@ -79,18 +79,20 @@ export function MoviePosterCard({
   const activeWatchlist =
     isWatchlist ??
     Boolean(
-      (userMovie && (userMovie.status === "want" || userMovie.status === "watching")) ||
-        movie.status === "want" ||
-        movie.status === "watching"
+      userMovie
+        ? userMovie.status === "want" || userMovie.status === "watching"
+        : !library.isLoaded && (movie.status === "want" || movie.status === "watching")
     );
 
   const activeFavorite =
     isFavorite ??
-    Boolean(userMovie ? userMovie.is_favorite : movie.is_favorite);
+    Boolean(userMovie ? userMovie.is_favorite : !library.isLoaded && movie.is_favorite);
 
   const isWatchedMovie =
     isWatched ??
-    Boolean((userMovie && userMovie.status === "watched") || movie.status === "watched");
+    Boolean(
+      userMovie ? userMovie.status === "watched" : !library.isLoaded && movie.status === "watched"
+    );
 
   const resolvedPersonalRating = React.useMemo(() => {
     if (typeof personalRating === "number" && personalRating > 0) return personalRating;

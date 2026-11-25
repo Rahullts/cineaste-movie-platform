@@ -28,15 +28,23 @@ export function BecauseYouWatchedSection({
   onToggleWatched,
   onToggleFavorite,
 }: BecauseYouWatchedSectionProps) {
-  // Reference Movie: derived strictly from the user's actual watched films
+  // Reference Movie: derived strictly from the most recently watched film (with same-day tie-breaker)
   const referenceMovie = React.useMemo(() => {
     const watched = movies.filter((m) => m.status === "watched");
     if (watched.length === 0) return null;
 
+    const getDayKey = (m: Movie) =>
+      (m.watched_date || m.watched_at || m.updated_date || "").slice(0, 10);
+    const getTimeMs = (m: Movie) => {
+      const ts = new Date(m.watched_at || m.updated_date || m.watched_date || 0).getTime();
+      return Number.isNaN(ts) ? 0 : ts;
+    };
+
     return [...watched].sort((a, b) => {
-      const dateA = new Date(a.watched_date || a.watched_at || a.updated_date || 0).getTime();
-      const dateB = new Date(b.watched_date || b.watched_at || b.updated_date || 0).getTime();
-      return dateB - dateA;
+      const dayA = getDayKey(a);
+      const dayB = getDayKey(b);
+      if (dayA !== dayB) return dayB.localeCompare(dayA);
+      return getTimeMs(b) - getTimeMs(a);
     })[0];
   }, [movies]);
 

@@ -199,6 +199,17 @@ function LibraryContent() {
   const [detailCollection, setDetailCollection] = React.useState<Collection | null>(null);
   const [movieForAddDialog, setMovieForAddDialog] = React.useState<Movie | null>(null);
 
+  // Derive active collection live from shared LibraryContext so edits/adds reflect without closing
+  const activeDetailCollection = React.useMemo(() => {
+    if (!detailCollection) return null;
+    const resolvedId = library.resolveCollectionId(detailCollection.id);
+    return (
+      library.collections.find(
+        (c) => c.id === detailCollection.id || c.id === resolvedId
+      ) || null
+    );
+  }, [detailCollection, library]);
+
   // Categorized movie datasets
   const watchingMovies = React.useMemo(() => {
     return library.movies.filter((m) => m.status === "watching");
@@ -323,15 +334,18 @@ function LibraryContent() {
   };
 
   const handleToggleInCollection = (collectionId: string, movie: Movie) => {
-    const col = library.collections.find((c) => c.id === collectionId);
+    const resolvedId = library.resolveCollectionId(collectionId);
+    const col = library.collections.find(
+      (c) => c.id === collectionId || c.id === resolvedId
+    );
     if (!col) return;
     const mId = movie.tmdb_id || movie.id;
     const currentIds =
       col.movie_ids || (col.movies || []).map((m) => m.tmdb_id || m.id);
     if (currentIds.includes(mId)) {
-      library.removeMovieFromCollection(collectionId, mId);
+      void library.removeMovieFromCollection(col.id, mId);
     } else {
-      library.addMovieToCollection(collectionId, movie);
+      void library.addMovieToCollection(col.id, movie);
     }
   };
 
@@ -830,7 +844,7 @@ function LibraryContent() {
         />
 
         <CollectionDetailSheet
-          collection={detailCollection}
+          collection={activeDetailCollection}
           allLibraryMovies={library.movies}
           onClose={() => setDetailCollection(null)}
           onSelectMovieForDetail={handleOpenMovieDetail}

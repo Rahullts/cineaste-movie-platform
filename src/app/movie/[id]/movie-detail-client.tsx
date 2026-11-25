@@ -3,7 +3,6 @@
 import * as React from "react";
 import { MovieDetailView } from "@/components/movie/movie-detail-view";
 import { useLibrary } from "@/lib/library-store";
-import type { Movie } from "@/types";
 
 interface MovieDetailClientProps {
   id: string;
@@ -13,7 +12,7 @@ export default function MovieDetailClient({ id }: MovieDetailClientProps) {
   const library = useLibrary();
   const parsedId = Number(id);
 
-  // Check if film exists in user's library initially
+  // Live reactive lookup from shared LibraryContext
   const libraryMovie = React.useMemo(() => {
     if (!library.movies || library.movies.length === 0) return null;
     return (
@@ -26,7 +25,7 @@ export default function MovieDetailClient({ id }: MovieDetailClientProps) {
     );
   }, [library.movies, parsedId, id]);
 
-  const [movieData, setMovieData] = React.useState<any | null>(libraryMovie);
+  const [tmdbDetails, setTmdbDetails] = React.useState<any | null>(null);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const libraryMovieRef = React.useRef(libraryMovie);
   libraryMovieRef.current = libraryMovie;
@@ -38,7 +37,9 @@ export default function MovieDetailClient({ id }: MovieDetailClientProps) {
       setIsLoading(true);
       try {
         const currentLib = libraryMovieRef.current;
-        const targetId = isNaN(parsedId) ? currentLib?.tmdb_id || 157336 : parsedId;
+        const targetId = isNaN(parsedId)
+          ? currentLib?.tmdb_id || 157336
+          : parsedId;
         const res = await fetch("/api/tmdb", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -46,20 +47,9 @@ export default function MovieDetailClient({ id }: MovieDetailClientProps) {
         });
 
         if (res.ok) {
-          const tmdbDetails = await res.json();
-          if (!isCancelled && tmdbDetails && tmdbDetails.title) {
-            // Merge TMDB rich metadata with user library state without overwriting release status with internal library enum
-            setMovieData({
-              ...tmdbDetails,
-              id: currentLib?.id || tmdbDetails.tmdb_id || targetId,
-              tmdb_id: tmdbDetails.tmdb_id || targetId,
-              release_status: tmdbDetails.status || "Released",
-              status: tmdbDetails.status || "Released",
-              user_status: currentLib?.status,
-              rating: currentLib?.rating ?? tmdbDetails.rating,
-              review: currentLib?.review ?? tmdbDetails.review,
-              is_favorite: currentLib?.is_favorite ?? false,
-            });
+          const details = await res.json();
+          if (!isCancelled && details && details.title) {
+            setTmdbDetails(details);
             setIsLoading(false);
             return;
           }
@@ -68,11 +58,7 @@ export default function MovieDetailClient({ id }: MovieDetailClientProps) {
         console.error("Failed to load TMDB details:", err);
       }
 
-      // Fallback to library movie if network fails
       if (!isCancelled) {
-        if (libraryMovieRef.current) {
-          setMovieData(libraryMovieRef.current);
-        }
         setIsLoading(false);
       }
     }
@@ -84,10 +70,28 @@ export default function MovieDetailClient({ id }: MovieDetailClientProps) {
     };
   }, [parsedId, id]);
 
+  // Dynamically merge TMDB catalog metadata with reactive library state
+  const mergedMovie = React.useMemo(() => {
+    if (tmdbDetails) {
+      return {
+        ...tmdbDetails,
+        id: libraryMovie?.id || tmdbDetails.tmdb_id || parsedId,
+        tmdb_id: tmdbDetails.tmdb_id || parsedId,
+        release_status: tmdbDetails.status || "Released",
+        status: tmdbDetails.status || "Released",
+        user_status: libraryMovie?.status,
+        rating: libraryMovie?.rating ?? tmdbDetails.rating,
+        review: libraryMovie?.review ?? tmdbDetails.review,
+        is_favorite: libraryMovie?.is_favorite ?? false,
+      };
+    }
+    return libraryMovie;
+  }, [tmdbDetails, libraryMovie, parsedId]);
+
   return (
     <MovieDetailView
-      movie={movieData}
-      isLoading={isLoading && !movieData}
+      movie={mergedMovie}
+      isLoading={isLoading && !mergedMovie}
     />
   );
 }

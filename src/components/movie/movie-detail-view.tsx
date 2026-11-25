@@ -127,18 +127,19 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
     }
   };
 
-  // Sync review/rating when userMovie changes
+  // Sync review/rating cleanly when userMovie changes or is removed
   React.useEffect(() => {
     if (userMovie) {
-      if (typeof userMovie.rating === "number") {
-        setPersonalRating(userMovie.rating);
-      }
-      if (typeof userMovie.review === "string") {
-        setPersonalReview(userMovie.review);
-      }
+      setPersonalRating(typeof userMovie.rating === "number" ? userMovie.rating : 0);
+      setPersonalReview(typeof userMovie.review === "string" ? userMovie.review : "");
       if (userMovie.watched_at) {
         setWatchedDate(userMovie.watched_at.slice(0, 10));
+      } else if (userMovie.watched_date) {
+        setWatchedDate(userMovie.watched_date.slice(0, 10));
       }
+    } else {
+      setPersonalRating(0);
+      setPersonalReview("");
     }
   }, [userMovie]);
 
@@ -149,13 +150,13 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
   };
 
   // Watchlist Toggle
-  const handleToggleWatchlist = () => {
+  const handleToggleWatchlist = async () => {
     if (!movie) return;
     if (isInWatchlist) {
-      library.removeFromWatchlist(tmdbId);
-      showToast("Removed from your Watchlist");
+      const res = await library.removeFromWatchlist(tmdbId);
+      if (res.ok) showToast("Removed from your Watchlist");
     } else {
-      library.addToWatchlist({
+      const res = await library.addToWatchlist({
         id: tmdbId,
         tmdb_id: tmdbId,
         title: movie.title,
@@ -169,13 +170,14 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
         genre_ids: movie.genre_ids,
         status: "want",
       });
-      showToast("Saved to your Watchlist");
+      if (res.ok) showToast("Saved to your Watchlist");
     }
   };
 
   // Favorite Toggle
-  const handleToggleFavorite = () => {
+  const handleToggleFavorite = async () => {
     if (!movie) return;
+    const willBeFav = !isFavorite;
     const baseMovie = userMovie || {
       id: tmdbId,
       tmdb_id: tmdbId,
@@ -190,18 +192,20 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
       status: "want" as MovieStatus,
       is_favorite: false,
     };
-    library.toggleFavorite(baseMovie);
-    showToast(isFavorite ? "Removed from Favorites" : "Added to Favorites");
+    const res = await library.toggleFavorite(baseMovie);
+    if (res.ok) {
+      showToast(willBeFav ? "Added to Favorites" : "Removed from Favorites");
+    }
   };
 
   // Watched Toggle
-  const handleToggleWatched = () => {
+  const handleToggleWatched = async () => {
     if (!movie) return;
     if (isWatched) {
-      library.updateStatus(tmdbId, "want");
-      showToast("Moved to Watchlist (Unwatched)");
+      const res = await library.updateStatus(tmdbId, "want");
+      if (res.ok) showToast("Moved to Watchlist (Unwatched)");
     } else {
-      library.markWatched(
+      const res = await library.markWatched(
         {
           id: tmdbId,
           tmdb_id: tmdbId,
@@ -214,44 +218,21 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
           runtime: movie.runtime,
           genres: movie.genres,
         },
-        personalRating || 0,
+        personalRating || undefined,
         personalReview
       );
-      showToast("Marked as Watched");
+      if (res.ok) showToast("Marked as Watched");
     }
   };
 
   // Status Switcher
-  const handleStatusChange = (status: MovieStatus) => {
+  const handleStatusChange = async (status: MovieStatus) => {
     if (!movie) return;
+    let res;
     if (userMovie) {
-      library.updateStatus(tmdbId, status);
-    } else {
-      library.addToWatchlist({
-        id: tmdbId,
-        tmdb_id: tmdbId,
-        title: movie.title,
-        overview: movie.overview,
-        poster_path: movie.poster_path,
-        backdrop_path: movie.backdrop_path,
-        release_date: movie.release_date,
-        vote_average: movie.vote_average,
-        runtime: movie.runtime,
-        genres: movie.genres,
-        status,
-      });
-    }
-    showToast(`Status changed to ${LIBRARY_STATUS_LABELS[status] || status}`);
-  };
-
-  // Rating Change
-  const handleRatingSelect = (score: number) => {
-    setPersonalRating(score);
-    if (!movie) return;
-    if (userMovie) {
-      library.updateRating(tmdbId, score, personalReview);
-    } else {
-      library.markWatched(
+      res = await library.updateStatus(tmdbId, status);
+    } else if (status === "watched") {
+      res = await library.markWatched(
         {
           id: tmdbId,
           tmdb_id: tmdbId,
@@ -264,29 +245,11 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
           runtime: movie.runtime,
           genres: movie.genres,
         },
-        score,
+        personalRating || undefined,
         personalReview
       );
-    }
-    showToast(`Rated ${score}/10`);
-  };
-
-  const handleClearRating = () => {
-    setPersonalRating(0);
-    if (userMovie) {
-      library.updateRating(tmdbId, 0, personalReview);
-      showToast("Personal rating cleared");
-    }
-  };
-
-  // Save Review Notes
-  const handleSaveReview = () => {
-    if (!movie) return;
-    setIsSavingReview(true);
-    if (userMovie) {
-      library.updateRating(tmdbId, personalRating, personalReview);
     } else {
-      library.addToWatchlist({
+      res = await library.addToWatchlist({
         id: tmdbId,
         tmdb_id: tmdbId,
         title: movie.title,
@@ -297,22 +260,99 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
         vote_average: movie.vote_average,
         runtime: movie.runtime,
         genres: movie.genres,
-        rating: personalRating,
-        review: personalReview,
-        status: "want",
       });
+      if (res.ok && status && status !== "want") {
+        res = await library.updateStatus(tmdbId, status);
+      }
     }
-    setTimeout(() => {
-      setIsSavingReview(false);
-      showToast("Personal screening notes saved");
-    }, 400);
+    if (res.ok) {
+      showToast(`Status changed to ${LIBRARY_STATUS_LABELS[status] || status}`);
+    }
   };
 
-  const handleClearReview = () => {
+  // Rating Change
+  const handleRatingSelect = async (score: number) => {
+    const prevRating = personalRating;
+    setPersonalRating(score);
+    if (!movie) return;
+    const res = userMovie
+      ? await library.updateRating(tmdbId, score, personalReview)
+      : await library.markWatched(
+          {
+            id: tmdbId,
+            tmdb_id: tmdbId,
+            title: movie.title,
+            overview: movie.overview,
+            poster_path: movie.poster_path,
+            backdrop_path: movie.backdrop_path,
+            release_date: movie.release_date,
+            vote_average: movie.vote_average,
+            runtime: movie.runtime,
+            genres: movie.genres,
+          },
+          score,
+          personalReview
+        );
+    if (res.ok) {
+      showToast(`Rated ${score}/10`);
+    } else {
+      setPersonalRating(prevRating);
+    }
+  };
+
+  const handleClearRating = async () => {
+    const prevRating = personalRating;
+    setPersonalRating(0);
+    if (userMovie) {
+      const res = await library.updateRating(tmdbId, 0, personalReview);
+      if (res.ok) {
+        showToast("Personal rating cleared");
+      } else {
+        setPersonalRating(prevRating);
+      }
+    }
+  };
+
+  // Save Review Notes
+  const handleSaveReview = async () => {
+    if (!movie) return;
+    setIsSavingReview(true);
+    try {
+      const res = userMovie
+        ? await library.updateRating(tmdbId, personalRating || undefined, personalReview)
+        : await library.addToWatchlist({
+            id: tmdbId,
+            tmdb_id: tmdbId,
+            title: movie.title,
+            overview: movie.overview,
+            poster_path: movie.poster_path,
+            backdrop_path: movie.backdrop_path,
+            release_date: movie.release_date,
+            vote_average: movie.vote_average,
+            runtime: movie.runtime,
+            genres: movie.genres,
+            rating: personalRating || undefined,
+            review: personalReview,
+            status: "want",
+          });
+      if (res.ok) {
+        showToast("Personal screening notes saved");
+      }
+    } finally {
+      setIsSavingReview(false);
+    }
+  };
+
+  const handleClearReview = async () => {
+    const prevReview = personalReview;
     setPersonalReview("");
     if (userMovie) {
-      library.updateRating(tmdbId, personalRating, "");
-      showToast("Notes cleared");
+      const res = await library.updateRating(tmdbId, personalRating || undefined, "");
+      if (res.ok) {
+        showToast("Notes cleared");
+      } else {
+        setPersonalReview(prevReview);
+      }
     }
   };
 
@@ -1522,15 +1562,18 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
           genres: movie.genres,
         }}
         collections={library.collections}
-        onToggleInCollection={(colId, m) => {
-          const col = library.collections.find((c) => c.id === colId);
+        onToggleInCollection={async (colId, m) => {
+          const resolvedId = library.resolveCollectionId(colId);
+          const col = library.collections.find(
+            (c) => c.id === colId || c.id === resolvedId
+          );
           const hasMovie = col?.movie_ids?.includes(tmdbId);
           if (hasMovie) {
-            library.removeMovieFromCollection(colId, tmdbId);
-            showToast("Removed from collection");
+            const res = await library.removeMovieFromCollection(col?.id || colId, tmdbId);
+            if (res.ok) showToast("Removed from collection");
           } else {
-            library.addMovieToCollection(colId, m);
-            showToast("Added to collection");
+            const res = await library.addMovieToCollection(col?.id || colId, m);
+            if (res.ok) showToast("Added to collection");
           }
         }}
         onCreateCollection={(title, color, description, initialMovies) => {

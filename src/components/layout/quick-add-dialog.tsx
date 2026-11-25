@@ -166,11 +166,12 @@ function QuickAddDialogContent({
   );
 
   const handleWatchlistToggle = (film: Movie) => {
-    const existing = getLibraryEntry(film.tmdb_id || film.id);
-    if (existing) {
-      removeFromWatchlist(film.tmdb_id || film.id);
+    const id = film.tmdb_id || film.id;
+    const existing = getLibraryEntry(id);
+    if (existing && (existing.status === "want" || existing.status === "watching")) {
+      void removeFromWatchlist(id);
     } else {
-      addToWatchlist(film);
+      void addToWatchlist(film);
     }
   };
 

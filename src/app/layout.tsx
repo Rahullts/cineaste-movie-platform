@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { ThemeProvider } from "@/lib/theme-context";
 import { UserProvider } from "@/lib/user-context";
+import { LibraryProvider } from "@/lib/library-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -54,7 +55,9 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
         <ThemeProvider>
-          <UserProvider>{children}</UserProvider>
+          <UserProvider>
+            <LibraryProvider>{children}</LibraryProvider>
+          </UserProvider>
         </ThemeProvider>
       </body>
     </html>

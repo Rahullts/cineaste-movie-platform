@@ -46,17 +46,22 @@ function ActivityHubContent() {
   const [addToColMovie, setAddToColMovie] = React.useState<Movie | null>(null);
   const [detailMovie, setDetailMovie] = React.useState<Movie | null>(null);
 
-  // Keep selectedCollection in sync with library updates
+  // Keep selectedCollection in sync with library updates (including temp->UUID resolution)
   React.useEffect(() => {
     if (selectedCollection) {
-      const refreshed = library.collections.find((c) => c.id === selectedCollection.id);
+      const resolvedId = library.resolveCollectionId(selectedCollection.id);
+      const refreshed = library.collections.find(
+        (c) => c.id === selectedCollection.id || c.id === resolvedId
+      );
       if (refreshed) {
-        setSelectedCollection(refreshed);
+        if (refreshed !== selectedCollection) {
+          setSelectedCollection(refreshed);
+        }
       } else {
         setSelectedCollection(null);
       }
     }
-  }, [library.collections, selectedCollection]);
+  }, [library, selectedCollection]);
 
   const handleSaveCollection = (
     title: string,
@@ -80,16 +85,19 @@ function ActivityHubContent() {
   };
 
   const handleToggleInCollection = (collectionId: string, movie: Movie) => {
-    const col = library.collections.find((c) => c.id === collectionId);
+    const resolvedId = library.resolveCollectionId(collectionId);
+    const col = library.collections.find(
+      (c) => c.id === collectionId || c.id === resolvedId
+    );
     if (!col) return;
     const movieId = movie.tmdb_id || movie.id;
     const currentIds =
       col.movie_ids || (col.movies || []).map((m) => m.tmdb_id || m.id);
 
     if (currentIds.includes(movieId)) {
-      library.removeMovieFromCollection(collectionId, movieId);
+      void library.removeMovieFromCollection(col.id, movieId);
     } else {
-      library.addMovieToCollection(collectionId, movie);
+      void library.addMovieToCollection(col.id, movie);
     }
   };
 
