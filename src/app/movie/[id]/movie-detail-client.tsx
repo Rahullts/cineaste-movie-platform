@@ -48,14 +48,16 @@ export default function MovieDetailClient({ id }: MovieDetailClientProps) {
         if (res.ok) {
           const tmdbDetails = await res.json();
           if (!isCancelled && tmdbDetails && tmdbDetails.title) {
-            // Merge TMDB rich metadata with user library state
+            // Merge TMDB rich metadata with user library state without overwriting release status with internal library enum
             setMovieData({
               ...tmdbDetails,
               id: currentLib?.id || tmdbDetails.tmdb_id || targetId,
               tmdb_id: tmdbDetails.tmdb_id || targetId,
+              release_status: tmdbDetails.status || "Released",
+              status: tmdbDetails.status || "Released",
+              user_status: currentLib?.status,
               rating: currentLib?.rating ?? tmdbDetails.rating,
               review: currentLib?.review ?? tmdbDetails.review,
-              status: currentLib?.status || "want",
               is_favorite: currentLib?.is_favorite ?? false,
             });
             setIsLoading(false);

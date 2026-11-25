@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutGrid, Compass, Library, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/lib/theme-context";
 
 interface NavButtonItem {
   to: string;
@@ -60,11 +61,14 @@ const NAV_BUTTONS: NavButtonItem[] = [
 
 export function FloatingDock() {
   const pathname = usePathname();
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === "light";
 
   return (
     <nav
       aria-label="Primary Navigation"
-      className="fixed bottom-5 sm:bottom-6 left-1/2 -translate-x-1/2 z-40 select-none animate-fadeIn pointer-events-auto flex items-center gap-3 sm:gap-3.5"
+      style={{ bottom: "calc(1.25rem + env(safe-area-inset-bottom, 0px))" }}
+      className="fixed left-1/2 -translate-x-1/2 z-40 select-none animate-fadeIn pointer-events-auto flex items-center gap-3 sm:gap-3.5"
     >
       {NAV_BUTTONS.map((item) => {
         const Icon = item.icon;
@@ -77,21 +81,37 @@ export function FloatingDock() {
             aria-label={item.label}
             data-active={isActive ? "true" : "false"}
             className={cn(
-              "group relative h-9 w-9 rounded-full grid place-items-center transition-all duration-200 active:scale-95 cursor-pointer backdrop-blur-xl shadow-lg shadow-black/50",
-              isActive
-                ? "bg-[#0E0F15]/90 text-[#00D664]"
-                : "bg-[#0E0F15]/75 hover:bg-[#1A1C28]/90 text-white/80 hover:text-white"
+              "group relative h-9 w-9 rounded-full grid place-items-center transition-all duration-200 active:scale-95 cursor-pointer backdrop-blur-xl",
+              isLight
+                ? isActive
+                  ? "bg-white/95 text-[#00B855] ring-1 ring-[#00B855]/35 shadow-lg shadow-black/15"
+                  : "bg-white/90 hover:bg-white text-slate-700 hover:text-slate-950 ring-1 ring-black/10 shadow-md shadow-black/10"
+                : isActive
+                  ? "bg-[#0E0F15]/95 text-[#00D664] ring-1 ring-[#00D664]/35 shadow-lg shadow-black/60"
+                  : "bg-[#0E0F15]/85 hover:bg-[#1A1C28]/95 text-white/80 hover:text-white ring-1 ring-white/10 shadow-lg shadow-black/50"
             )}
           >
             <Icon className="w-4 h-4 shrink-0 transition-colors" strokeWidth={1.8} />
 
             {/* Cineaste Green Active Indicator Dot */}
             {isActive && (
-              <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[#00D664]" />
+              <span
+                className={cn(
+                  "absolute -bottom-2 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full",
+                  isLight ? "bg-[#00B855]" : "bg-[#00D664]"
+                )}
+              />
             )}
 
             {/* Hover Tooltip */}
-            <span className="hidden sm:block absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-md bg-[#0E0F15]/95 backdrop-blur-md text-[10px] font-medium tracking-wide text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+            <span
+              className={cn(
+                "hidden sm:block absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-md backdrop-blur-md text-[10px] font-medium tracking-wide whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50",
+                isLight
+                  ? "bg-white/95 text-slate-900 border border-black/10 shadow-sm"
+                  : "bg-[#0E0F15]/95 text-white border border-white/10"
+              )}
+            >
               {item.label}
             </span>
           </Link>

@@ -109,16 +109,16 @@ export function MoviePosterCard({
   }, [movie.poster_path, movie.backdrop_path, tmdbId]);
 
   // Portrait-only URLs in Dashboard mode (never crop landscape backdrop inside 2:3 poster slot)
+  // Prefer w500 first for faster carousel decoding and lower bandwidth contention
   const candidateUrls = React.useMemo(() => {
     const urls: string[] = [];
     if (movie.poster_path) {
       const cleanP = movie.poster_path.startsWith("/") ? movie.poster_path : `/${movie.poster_path}`;
-      urls.push(`/api/image?path=${encodeURIComponent(cleanP)}&w=780`);
-      urls.push(`https://image.tmdb.org/t/p/w780${cleanP}`);
       urls.push(`/api/image?path=${encodeURIComponent(cleanP)}&w=500`);
+      urls.push(`/api/image?path=${encodeURIComponent(cleanP)}&w=780`);
       urls.push(`https://image.tmdb.org/t/p/w500${cleanP}`);
       urls.push(
-        `https://wsrv.nl/?url=${encodeURIComponent(`image.tmdb.org/t/p/w780${cleanP}`)}&output=webp&q=90`
+        `https://wsrv.nl/?url=${encodeURIComponent(`image.tmdb.org/t/p/w500${cleanP}`)}&output=webp&q=85`
       );
     }
     if (!editorialDashboard && movie.backdrop_path) {
@@ -127,10 +127,6 @@ export function MoviePosterCard({
         : `/${movie.backdrop_path}`;
       urls.push(`/api/image?path=${encodeURIComponent(cleanB)}&w=780`);
       urls.push(`https://image.tmdb.org/t/p/w780${cleanB}`);
-      urls.push(`/api/image?path=${encodeURIComponent(cleanB)}&w=1280`);
-      urls.push(
-        `https://wsrv.nl/?url=${encodeURIComponent(`image.tmdb.org/t/p/w780${cleanB}`)}&output=webp&q=90`
-      );
     }
     return urls;
   }, [movie.poster_path, movie.backdrop_path, editorialDashboard]);
@@ -255,6 +251,7 @@ export function MoviePosterCard({
             )}
             onError={handleImageError}
             priority={index < 4}
+            decoding="async"
           />
         ) : (
           /* Clean Poster-Formatted Fallback (never cropped landscape artwork) */
@@ -313,9 +310,11 @@ export function MoviePosterCard({
             tmdbScore && (
               <span
                 data-testid="card-rating-badge"
+                title="TMDB Community Score"
                 className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-mono font-bold bg-black/75 backdrop-blur-md text-[#FBBF24] shadow-md ring-1 ring-white/10"
               >
                 <Star className="w-2.5 h-2.5 fill-[#FBBF24] stroke-none" />
+                <span className="text-[9px] text-white/75 uppercase">TMDB</span>
                 <span>{tmdbScore}</span>
               </span>
             )
@@ -419,20 +418,30 @@ export function MoviePosterCard({
             )}
           </>
         ) : (
-          /* Preserved Classic Corner Controls for Discover Cinema & My Library */
+          /* Discover & My Library Controls: Positioned at bottom dock on hover so they never overlap upper-left Watched / Rating badges */
           <>
+            {/* Subtle resting Watchlist dot top-right when saved (unobstructive, never collides with top-left badges) */}
+            {activeWatchlist && (
+              <span
+                aria-hidden="true"
+                className="absolute top-2.5 right-2.5 z-10 w-2.5 h-2.5 rounded-full bg-[#00D878] ring-2 ring-black/60 shadow md:group-hover:opacity-0 transition-opacity pointer-events-none"
+              />
+            )}
+
+            {hasHoverMetadata && (
+              <div className="hidden md:flex absolute inset-x-0 bottom-0 pt-7 pb-2.5 px-2.5 bg-gradient-to-t from-black/95 via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none items-center justify-between text-[10px] font-mono font-medium text-white/90 pr-20">
+                {genreDisplay && <span className="truncate">{genreDisplay}</span>}
+                {!genreDisplay && runtimeDisplay && <span className="text-white/70">{runtimeDisplay}</span>}
+              </div>
+            )}
+
             {showActions && (
               <div
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                 }}
-                className={cn(
-                  "absolute top-2.5 right-2.5 flex items-center gap-1.5 z-20 transition-all duration-200",
-                  activeWatchlist || activeFavorite
-                    ? "opacity-100"
-                    : "opacity-100 md:opacity-0 md:group-hover:opacity-100"
-                )}
+                className="hidden md:flex absolute bottom-2 right-2 z-20 items-center gap-1.5 px-1.5 py-1 rounded-full bg-[#0A0B0F]/85 backdrop-blur-md border border-white/10 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-200"
               >
                 <button
                   type="button"
@@ -441,14 +450,14 @@ export function MoviePosterCard({
                   aria-label={activeWatchlist ? "Remove from Watchlist" : "Add to Watchlist"}
                   title={activeWatchlist ? "In Watchlist" : "Add to Watchlist"}
                   className={cn(
-                    "w-7 h-7 sm:w-8 sm:h-8 rounded-full grid place-items-center backdrop-blur-md shadow-md transition-all duration-200 hover:scale-110 active:scale-90 cursor-pointer",
+                    "w-7 h-7 rounded-full grid place-items-center shadow-md transition-all duration-200 hover:scale-110 active:scale-90 cursor-pointer",
                     activeWatchlist
                       ? "bg-[#00D878] text-black shadow-[#00D878]/30 ring-1 ring-[#00D878]"
-                      : "bg-black/60 hover:bg-black/85 text-white/80 hover:text-[#00D878] ring-1 ring-white/10 hover:ring-white/20"
+                      : "bg-black/60 hover:bg-black/85 text-white/85 hover:text-[#00D878]"
                   )}
                 >
                   <CinematicBookmarkIcon
-                    size={14}
+                    size={13}
                     filled={activeWatchlist}
                     className={cn("transition-colors", activeWatchlist && "text-black")}
                   />
@@ -461,25 +470,18 @@ export function MoviePosterCard({
                   aria-label={activeFavorite ? "Remove from Favorites" : "Add to Favorites"}
                   title={activeFavorite ? "Favorited" : "Add to Favorites"}
                   className={cn(
-                    "w-7 h-7 sm:w-8 sm:h-8 rounded-full grid place-items-center backdrop-blur-md shadow-md transition-all duration-200 hover:scale-110 active:scale-90 cursor-pointer",
+                    "w-7 h-7 rounded-full grid place-items-center shadow-md transition-all duration-200 hover:scale-110 active:scale-90 cursor-pointer",
                     activeFavorite
                       ? "bg-rose-500 text-white shadow-rose-500/30 ring-1 ring-rose-500"
-                      : "bg-black/60 hover:bg-black/85 text-white/80 hover:text-rose-400 ring-1 ring-white/10 hover:ring-white/20"
+                      : "bg-black/60 hover:bg-black/85 text-white/85 hover:text-rose-400"
                   )}
                 >
                   <CinematicHeartIcon
-                    size={14}
+                    size={13}
                     filled={activeFavorite}
                     className={cn("transition-colors", activeFavorite && "text-white")}
                   />
                 </button>
-              </div>
-            )}
-
-            {hasHoverMetadata && (
-              <div className="absolute inset-x-0 bottom-0 pt-6 pb-2 px-2.5 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none flex items-center justify-between text-[10px] font-mono font-medium text-white/90">
-                {genreDisplay && <span className="truncate max-w-[65%]">{genreDisplay}</span>}
-                {runtimeDisplay && <span className="shrink-0 text-white/70">{runtimeDisplay}</span>}
               </div>
             )}
           </>
@@ -534,7 +536,7 @@ export function MoviePosterCard({
         </div>
 
         {/* Accessible Touch Action Strip on Mobile (unobstructed poster artwork) */}
-        {editorialDashboard && showActions && (
+        {showActions && (
           <div
             onClick={(e) => {
               e.preventDefault();
@@ -552,7 +554,7 @@ export function MoviePosterCard({
                   "flex-1 h-7 rounded-lg grid place-items-center transition active:scale-95 border",
                   isWatchedMovie
                     ? "bg-[#00D664]/15 border-[#00D664]/40 text-[#00D664]"
-                    : "bg-white/[0.04] border-white/[0.08] text-white/70"
+                    : "bg-muted/40 border-border/60 text-muted-foreground hover:text-foreground"
                 )}
               >
                 <Eye className="w-3.5 h-3.5 stroke-[1.8]" />
@@ -568,7 +570,7 @@ export function MoviePosterCard({
                 "flex-1 h-7 rounded-lg grid place-items-center transition active:scale-95 border",
                 activeWatchlist
                   ? "bg-[#00D664]/15 border-[#00D664]/40 text-[#00D664]"
-                  : "bg-white/[0.04] border-white/[0.08] text-white/70"
+                  : "bg-muted/40 border-border/60 text-muted-foreground hover:text-foreground"
               )}
             >
               <CinematicBookmarkIcon size={13} filled={activeWatchlist} />
@@ -583,7 +585,7 @@ export function MoviePosterCard({
                 "flex-1 h-7 rounded-lg grid place-items-center transition active:scale-95 border",
                 activeFavorite
                   ? "bg-rose-500/15 border-rose-500/40 text-rose-400"
-                  : "bg-white/[0.04] border-white/[0.08] text-white/70"
+                  : "bg-muted/40 border-border/60 text-muted-foreground hover:text-foreground"
               )}
             >
               <CinematicHeartIcon size={13} filled={activeFavorite} />

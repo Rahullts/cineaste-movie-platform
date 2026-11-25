@@ -32,6 +32,7 @@ import { useTheme, type Theme } from "@/lib/theme-context";
 import { useUser } from "@/lib/user-context";
 import { useLibrary } from "@/lib/library-store";
 import { cn } from "@/lib/utils";
+import { getBrowserClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import type { UserSettings } from "@/types";
 
 const ACCENT_COLORS: { id: string; name: string; hex: string }[] = [
@@ -846,7 +847,7 @@ function SettingsContent() {
                   <div className="space-y-1">
                     <p className="text-sm font-bold text-foreground">Account Identifier</p>
                     <p className="text-xs text-muted-foreground font-mono">
-                      {user.email || "guest@cineaste.vault (Local Session)"}
+                      {user.email || "No account signed in (Local Guest Session)"}
                     </p>
                   </div>
                   <span className="text-xs px-3.5 py-1.5 rounded-full bg-[#00D878]/10 text-[#00D878] font-semibold self-start sm:self-auto font-mono">
@@ -859,7 +860,9 @@ function SettingsContent() {
                   <div className="space-y-1">
                     <p className="text-sm font-bold text-foreground">Two-Factor Authentication (2FA)</p>
                     <p className="text-xs text-muted-foreground">
-                      Require an authenticator app confirmation code during sign in.
+                      {isAuthenticated
+                        ? "Multi-factor enforcement is managed through your authentication provider settings."
+                        : "Sign in with a cloud account to manage multi-factor authentication."}
                     </p>
                   </div>
 
@@ -868,36 +871,60 @@ function SettingsContent() {
                     onClick={() =>
                       showToast(
                         isAuthenticated
-                          ? "2FA is active via your primary OAuth/Supabase identity provider."
+                          ? "Manage 2FA directly within your OAuth or Supabase identity provider settings."
                           : "Connect an account to configure two-factor authentication."
                       )
                     }
                     className="h-10 px-4 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] hover:text-[#00D878] text-xs font-semibold transition cursor-pointer self-start sm:self-auto shadow-sm"
                   >
-                    <span>Configure 2FA</span>
+                    <span>Security Info</span>
                   </button>
                 </div>
 
-                {/* Active Browser Sessions (Borderless) */}
+                {/* Active Browser Sessions — Honest Backend-Verified State Only */}
                 <div className="p-5 sm:p-6 rounded-2xl bg-white/[0.03] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-1">
-                    <p className="text-sm font-bold text-foreground">Active Browser Sessions</p>
+                    <p className="text-sm font-bold text-foreground">Active Sessions &amp; Device Telemetry</p>
                     <p className="text-xs text-muted-foreground">
-                      1 active session on this device (Chrome / Windows • IP: 127.0.0.1)
+                      {isAuthenticated
+                        ? "Current browser session is authenticated. Cross-device session logs and IP telemetry are unavailable in this client view."
+                        : "Local guest mode — no server-side authentication session is active."}
                     </p>
                   </div>
 
                   <button
                     type="button"
-                    onClick={() => {
-                      setActiveSessionNotice(
-                        "Verified: Only 1 active session exists on this browser. All other historical tokens have been revoked."
-                      );
-                      showToast("Device sessions verified");
+                    onClick={async () => {
+                      const supabase = getBrowserClient();
+                      if (!supabase || !isSupabaseConfigured || !isAuthenticated) {
+                        setActiveSessionNotice(
+                          "Session details unavailable: no verified server authentication session is active in Guest Mode."
+                        );
+                        showToast("Guest local session");
+                        return;
+                      }
+                      try {
+                        const { data: { session }, error } = await supabase.auth.getSession();
+                        if (error || !session) {
+                          setActiveSessionNotice(
+                            "Session verification failed or session has expired. Please sign in again."
+                          );
+                        } else {
+                          const exp = session.expires_at
+                            ? new Date(session.expires_at * 1000).toLocaleString()
+                            : "Unavailable";
+                          setActiveSessionNotice(
+                            `Current browser session verified via Supabase Auth (expires: ${exp}). Remote device lists and IP logs are not exposed by the client API.`
+                          );
+                        }
+                        showToast("Session status checked");
+                      } catch {
+                        setActiveSessionNotice("Unable to verify session status right now.");
+                      }
                     }}
                     className="h-10 px-4 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] hover:text-[#00D878] text-xs font-semibold transition cursor-pointer self-start sm:self-auto shadow-sm"
                   >
-                    <span>Audit Sessions</span>
+                    <span>Check Session</span>
                   </button>
                 </div>
 

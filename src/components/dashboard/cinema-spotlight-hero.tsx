@@ -241,7 +241,7 @@ export function CinemaSpotlightHero({
             </p>
           )}
 
-          {/* Compact Metadata Strip */}
+          {/* Compact Metadata Strip — grouped to avoid dangling trailing bullets when wrapping on mobile */}
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-xs sm:text-[13px] text-[#B0B3C2]">
             {imdbRating && (
               <span
@@ -262,33 +262,36 @@ export function CinemaSpotlightHero({
               </span>
             )}
 
-            {releaseYear && releaseYear !== "--" && (
-              <span className="tabular-nums font-medium text-white/90">{releaseYear}</span>
-            )}
-
-            {runtimeDisplay && (
-              <>
-                <span className="text-white/30">&bull;</span>
-                <span className="inline-flex items-center gap-1.5 tabular-nums text-white/90">
-                  <Clock className="w-3.5 h-3.5 text-white/55 stroke-[1.8]" />
-                  <span>{runtimeDisplay}</span>
-                </span>
-              </>
+            {( (releaseYear && releaseYear !== "--") || runtimeDisplay ) && (
+              <span className="inline-flex items-center gap-2 shrink-0">
+                {releaseYear && releaseYear !== "--" && (
+                  <span className="tabular-nums font-medium text-white/90">{releaseYear}</span>
+                )}
+                {releaseYear && releaseYear !== "--" && runtimeDisplay && (
+                  <span className="text-white/30" aria-hidden="true">&bull;</span>
+                )}
+                {runtimeDisplay && (
+                  <span className="inline-flex items-center gap-1.5 tabular-nums text-white/90">
+                    <Clock className="w-3.5 h-3.5 text-white/55 stroke-[1.8]" />
+                    <span>{runtimeDisplay}</span>
+                  </span>
+                )}
+              </span>
             )}
 
             {genresList.length > 0 && (
-              <>
-                <span className="text-white/30">&bull;</span>
-                <span className="text-white/80 font-normal">
-                  {genresList.slice(0, 3).join(", ")}
-                </span>
-              </>
+              <span className="inline-flex items-center gap-2 text-white/80 font-normal">
+                {((releaseYear && releaseYear !== "--") || runtimeDisplay) && (
+                  <span className="hidden sm:inline text-white/30" aria-hidden="true">&bull;</span>
+                )}
+                <span>{genresList.slice(0, 3).join(", ")}</span>
+              </span>
             )}
 
             {/* Personal Cineaste Rating (Strictly separate from external ratings) */}
             {resolvedUserRating !== null && (
-              <>
-                <span className="text-white/30">&bull;</span>
+              <span className="inline-flex items-center gap-2">
+                <span className="hidden sm:inline text-white/30" aria-hidden="true">&bull;</span>
                 <span
                   title="Your Personal Cineaste Rating"
                   className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#00D664]/15 border border-[#00D664]/30 text-[#00D664] font-medium text-xs tabular-nums"
@@ -296,7 +299,7 @@ export function CinemaSpotlightHero({
                   <Star className="w-3 h-3 fill-[#00D664] stroke-none" />
                   <span>Your Rating: {resolvedUserRating.toFixed(1)}/10</span>
                 </span>
-              </>
+              </span>
             )}
           </div>
 

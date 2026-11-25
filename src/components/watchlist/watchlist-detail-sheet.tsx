@@ -105,7 +105,7 @@ export function WatchlistDetailSheet({
   };
 
   const statuses: { key: MovieStatus; label: string; icon: React.ComponentType<{ size?: number; className?: string }> }[] = [
-    { key: "want", label: "To Watch", icon: VaultMark },
+    { key: "want", label: "In Watchlist", icon: VaultMark },
     { key: "watching", label: "Watching", icon: OrbitMark },
     { key: "watched", label: "Watched", icon: CompletionFrameMark },
     { key: "dropped", label: "Dropped", icon: Trash2 },
@@ -181,8 +181,9 @@ export function WatchlistDetailSheet({
                   <span>{formatYear(movie.release_date)}</span>
                   {movie.runtime ? <span>• {formatRuntime(movie.runtime)}</span> : null}
                   {(movie.vote_average || 0) > 0 && (
-                    <span className="flex items-center gap-1 text-[#FBBF24]">
+                    <span title="TMDB Community Score" className="flex items-center gap-1 text-[#FBBF24]">
                       <Star className="w-3 h-3 fill-current" />
+                      <span className="text-[10px] text-white/70">TMDB</span>
                       {formatScore(movie.vote_average)}
                     </span>
                   )}
@@ -330,7 +331,7 @@ export function WatchlistDetailSheet({
                       <div className="w-8 h-8 rounded-lg overflow-hidden bg-[#101118] relative shrink-0">
                         {actor.profile_path ? (
                           <Image
-                            src={`https://image.tmdb.org/t/p/w185${actor.profile_path}`}
+                            src={getTmdbImageUrl(actor.profile_path, "w185") || ""}
                             alt={actor.name}
                             fill
                             className="object-cover"

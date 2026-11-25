@@ -140,7 +140,21 @@ function LibraryContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const library = useLibrary();
-  console.log("===> LibraryContent render: movies count =", library.movies.length);
+
+  const tabRailRef = React.useRef<HTMLDivElement>(null);
+  const [canScrollTabsRight, setCanScrollTabsRight] = React.useState(false);
+
+  const checkTabsOverflow = React.useCallback(() => {
+    const el = tabRailRef.current;
+    if (!el) return;
+    setCanScrollTabsRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 8);
+  }, []);
+
+  React.useEffect(() => {
+    checkTabsOverflow();
+    window.addEventListener("resize", checkTabsOverflow);
+    return () => window.removeEventListener("resize", checkTabsOverflow);
+  }, [checkTabsOverflow, library.movies.length, library.collections.length]);
 
   // Primary tab state synced with URL ?tab=...
   const rawTab = (searchParams.get("tab") || "all-films").toLowerCase();
@@ -365,43 +379,61 @@ function LibraryContent() {
         </section>
 
         {/* ================================================================= */}
-        {/* COMPACT 7-TAB HORIZONTAL SUB-NAVIGATION                           */}
+        {/* COMPACT 7-TAB HORIZONTAL SUB-NAVIGATION (Zero Tab Clipping)       */}
         {/* ================================================================= */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-2.5">
-          {LIBRARY_TABS.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.key;
-            const count = tab.getCount ? tab.getCount(library) : null;
+        <div className="relative">
+          <div
+            ref={tabRailRef}
+            onScroll={checkTabsOverflow}
+            className="flex items-center md:flex-wrap gap-1.5 overflow-x-auto md:overflow-visible no-scrollbar pb-2.5 pr-8 md:pr-0"
+          >
+            {LIBRARY_TABS.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.key;
+              const count = tab.getCount ? tab.getCount(library) : null;
 
-            return (
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => handleTabChange(tab.key)}
+                  className={cn(
+                    "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition shrink-0 cursor-pointer whitespace-nowrap",
+                    isActive
+                      ? "bg-[#00D878]/15 text-[#00D878] font-bold ring-1 ring-[#00D878]/30"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  )}
+                >
+                  <Icon className={cn("w-3.5 h-3.5", isActive && "text-[#00D878]")} />
+                  <span>{tab.label}</span>
+                  {count !== null && (
+                    <span
+                      className={cn(
+                        "text-[10px] px-1.5 py-0.2 rounded-full font-mono",
+                        isActive
+                          ? "bg-[#00D878]/20 text-[#00D878] font-bold"
+                          : "bg-muted text-muted-foreground"
+                      )}
+                    >
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          {canScrollTabsRight && (
+            <div className="md:hidden pointer-events-none absolute right-0 top-0 bottom-2.5 w-12 bg-gradient-to-l from-background via-background/85 to-transparent flex items-center justify-end">
               <button
-                key={tab.key}
                 type="button"
-                onClick={() => handleTabChange(tab.key)}
-                className={cn(
-                  "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition shrink-0 cursor-pointer",
-                  isActive
-                    ? "bg-[#00D878]/15 text-[#00D878] font-bold"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                )}
+                aria-label="Scroll library tabs right"
+                onClick={() => tabRailRef.current?.scrollBy({ left: 180, behavior: "smooth" })}
+                className="pointer-events-auto h-7 w-7 rounded-full bg-card border border-border text-foreground grid place-items-center shadow-md cursor-pointer"
               >
-                <Icon className={cn("w-3.5 h-3.5", isActive && "text-[#00D878]")} />
-                <span>{tab.label}</span>
-                {count !== null && (
-                  <span
-                    className={cn(
-                      "text-[10px] px-1.5 py-0.2 rounded-full font-mono",
-                      isActive
-                        ? "bg-[#00D878]/20 text-[#00D878] font-bold"
-                        : "bg-muted text-muted-foreground"
-                    )}
-                  >
-                    {count}
-                  </span>
-                )}
+                <span className="text-xs font-bold">›</span>
               </button>
-            );
-          })}
+            </div>
+          )}
         </div>
 
         {/* ================================================================= */}
@@ -411,31 +443,31 @@ function LibraryContent() {
           <div className="space-y-6 animate-fadeIn">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="font-heading text-lg font-bold text-white flex items-center gap-2">
+                <h2 className="font-heading text-lg font-bold text-foreground flex items-center gap-2">
                   <Tv className="w-4 h-4 text-[#00D878]" />
                   <span>Currently Watching ({watchingMovies.length})</span>
                 </h2>
-                <p className="text-xs text-[#9496A1]">
+                <p className="text-xs text-muted-foreground">
                   Films and series you have actively started and are in progress.
                 </p>
               </div>
             </div>
 
             {watchingMovies.length === 0 ? (
-              <div className="rounded-3xl bg-[#0E0F17]/60 p-12 text-center space-y-4 shadow-xl">
+              <div className="rounded-3xl bg-card/40 p-12 text-center space-y-4 shadow-xl border border-border/40">
                 <div className="w-14 h-14 rounded-2xl bg-[#00D878]/10 text-[#00D878] mx-auto grid place-items-center">
                   <Tv className="w-7 h-7" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="font-heading font-bold text-base text-white">No active screenings</h3>
-                  <p className="text-xs text-[#9496A1] max-w-sm mx-auto">
+                  <h3 className="font-heading font-bold text-base text-foreground">No active screenings</h3>
+                  <p className="text-xs text-muted-foreground max-w-sm mx-auto">
                     Click &ldquo;Currently Watching&rdquo; inside any film&apos;s details to feature it in your active screening room.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => handleTabChange("all-films")}
-                  className="px-4 py-2 rounded-full bg-white/10 hover:bg-white/15 text-white text-xs font-semibold cursor-pointer"
+                  className="px-4 py-2 rounded-full bg-muted hover:bg-muted/80 text-foreground text-xs font-semibold cursor-pointer"
                 >
                   Browse All Films
                 </button>
@@ -625,7 +657,15 @@ function LibraryContent() {
                     movie={movie}
                     variant="grid"
                     index={idx}
-                    subLabel={movie.status === "watched" ? "Watched" : movie.status === "watching" ? "Watching" : "In Queue"}
+                    subLabel={
+                      movie.status === "watched"
+                        ? "Watched"
+                        : movie.status === "watching"
+                          ? "Watching"
+                          : movie.status === "dropped"
+                            ? "Dropped"
+                            : "In Watchlist"
+                    }
                     onOpenDetail={() => handleOpenMovieDetail(movie)}
                     onToggleWatched={() => handleToggleWatched(movie)}
                     onToggleFavorite={() => library.toggleFavorite(movie)}

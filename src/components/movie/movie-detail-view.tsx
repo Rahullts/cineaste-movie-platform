@@ -41,6 +41,34 @@ import { TrailerModal } from "./trailer-modal";
 import { AddToCollectionDialog } from "@/components/library/add-to-collection-dialog";
 import type { Movie, MovieStatus } from "@/types";
 
+const LIBRARY_STATUS_LABELS: Record<string, string> = {
+  want: "In Watchlist",
+  watching: "Currently Watching",
+  watched: "Watched",
+  dropped: "Dropped",
+};
+
+function formatMovieStatusLabel(movie: any): string {
+  if (movie?.release_status && !LIBRARY_STATUS_LABELS[movie.release_status]) {
+    return movie.release_status;
+  }
+  const raw = movie?.status;
+  if (!raw) return "Released";
+  return LIBRARY_STATUS_LABELS[String(raw).toLowerCase()] || String(raw);
+}
+
+function formatLanguageName(code: string | null | undefined): string {
+  if (!code || typeof code !== "string") return "Unavailable";
+  const cleaned = code.trim();
+  if (!cleaned) return "Unavailable";
+  try {
+    const names = new Intl.DisplayNames(["en"], { type: "language" });
+    return names.of(cleaned) || cleaned.toUpperCase();
+  } catch {
+    return cleaned.toUpperCase();
+  }
+}
+
 export interface MovieDetailViewProps {
   movie: any | null;
   isLoading?: boolean;
@@ -213,7 +241,7 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
         status,
       });
     }
-    showToast(`Status changed to ${status === "want" ? "To Watch" : status}`);
+    showToast(`Status changed to ${LIBRARY_STATUS_LABELS[status] || status}`);
   };
 
   // Rating Change
@@ -385,7 +413,7 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
     return (
       <div
         key={actor.id || actor.name}
-        onClick={() => router.push(`/discover?search=${encodeURIComponent(actor.name)}`)}
+        onClick={() => router.push(`/discover?q=${encodeURIComponent(actor.name)}`)}
         className={`group relative flex flex-col ${inGrid ? "w-full" : "shrink-0 w-36 sm:w-44 lg:w-48"} cursor-pointer select-none`}
       >
         <div className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden bg-[#141520] shadow-xl shadow-black/60 group-hover:shadow-2xl group-hover:shadow-black/90 group-hover:-translate-y-1 transition-all duration-300">
@@ -499,32 +527,36 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
             <div className="w-full h-full bg-gradient-to-br from-[#14151F] via-[#0A0B0F] to-black" />
           )}
 
-          {/* Controlled Scrims: subtle, preserving artwork brightness and colors */}
-          {/* Top: subtle dark gradient for navigation visibility */}
-          <div className="absolute top-0 inset-x-0 h-28 sm:h-36 bg-gradient-to-b from-black/75 via-black/20 to-transparent pointer-events-none" />
-          {/* Left: moderate gradient behind movie information, leaving center & right vivid */}
-          <div className="absolute inset-y-0 left-0 w-full md:w-3/5 lg:w-1/2 bg-gradient-to-r from-[#0A0B0F]/90 via-[#0A0B0F]/45 to-transparent pointer-events-none" />
-          {/* Bottom: gradual transition into the lower page content (soft, no dark canyon) */}
-          <div className="absolute bottom-0 inset-x-0 h-28 sm:h-36 bg-gradient-to-t from-[#0A0B0F] via-[#0A0B0F]/50 to-transparent pointer-events-none" />
+          {/* Controlled Scrims: guarantee crisp WCAG contrast over bright backdrops while keeping artwork rich */}
+          <div className="absolute inset-0 bg-black/35 pointer-events-none" />
+          {/* Top: strong dark gradient behind fixed TopNav & Back button */}
+          <div className="absolute top-0 inset-x-0 h-32 sm:h-40 bg-gradient-to-b from-black/85 via-black/45 to-transparent pointer-events-none" />
+          {/* Left-to-right & full-width lower vignette behind title, tagline, genres & actions */}
+          <div className="absolute inset-y-0 left-0 w-full md:w-3/4 bg-gradient-to-r from-[#0A0B0F]/95 via-[#0A0B0F]/70 to-transparent pointer-events-none" />
+          <div className="absolute inset-x-0 bottom-0 h-4/5 bg-gradient-to-t from-[#0A0B0F] via-[#0A0B0F]/80 to-transparent pointer-events-none" />
         </div>
 
-        {/* Compact Back Navigation Control */}
-        <div className="absolute top-20 sm:top-24 left-4 sm:left-8 lg:left-12 z-30">
-          <button
-            type="button"
-            onClick={handleBack}
-            aria-label="Back to previous page"
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/60 hover:bg-black/90 text-[#F3F4F6] hover:text-white backdrop-blur-md text-xs sm:text-sm font-medium transition-all shadow-xl group cursor-pointer"
-          >
-            <ArrowLeft className="w-4 h-4 text-[#00D878] group-hover:-translate-x-0.5 transition-transform" />
-            <span>Back</span>
-          </button>
-        </div>
+        {/* Hero Content Composition with Independent Back Control Row Above Poster */}
+        <div className="relative z-10 w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-12 pb-6 sm:pb-8 pt-20 sm:pt-22 flex flex-col gap-5 sm:gap-6">
+          {/* Independent Back Navigation Control — positioned cleanly above the poster so zero overlap ever occurs */}
+          <div className="flex items-center">
+            <button
+              type="button"
+              onClick={handleBack}
+              aria-label="Back to previous page"
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/75 hover:bg-black/95 border border-white/15 text-[#F3F4F6] hover:text-white backdrop-blur-md text-xs sm:text-sm font-medium transition-all shadow-xl group cursor-pointer"
+            >
+              <ArrowLeft className="w-4 h-4 text-[#00D878] group-hover:-translate-x-0.5 transition-transform" />
+              <span>Back</span>
+            </button>
+          </div>
 
-        {/* Hero Content Composition (Snug bottom padding) */}
-        <div className="relative z-10 w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-12 pb-4 sm:pb-6 pt-20 sm:pt-24 flex flex-col md:flex-row items-center md:items-end gap-6 sm:gap-8 lg:gap-10">
+          <div className="flex flex-col md:flex-row items-center md:items-end gap-6 sm:gap-8 lg:gap-10">
           {/* Left Poster (Exact 2:3 aspect ratio, refined rounded corners, no distortion) */}
-          <div className="relative w-44 sm:w-56 md:w-64 lg:w-72 shrink-0 aspect-[2/3] rounded-2xl overflow-hidden bg-[#14151F] shadow-2xl shadow-black/90 group select-none">
+          <div
+            data-testid="movie-detail-poster"
+            className="relative w-44 sm:w-56 md:w-64 lg:w-72 shrink-0 aspect-[2/3] rounded-2xl overflow-hidden bg-[#14151F] shadow-2xl shadow-black/90 group select-none"
+          >
             {posterUrl ? (
               <Image
                 src={posterUrl}
@@ -730,6 +762,7 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
               </button>
             </div>
           </div>
+          </div>
         </div>
       </section>
 
@@ -838,7 +871,7 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
                 </span>
                 <div className="flex flex-wrap items-center gap-2">
                   {[
-                    { key: "want", label: "To Watch", icon: Bookmark },
+                    { key: "want", label: "In Watchlist", icon: Bookmark },
                     { key: "watching", label: "Watching", icon: Play },
                     { key: "watched", label: "Watched", icon: CheckCircle2 },
                     { key: "dropped", label: "Dropped", icon: Trash2 },
@@ -1038,7 +1071,7 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
                 Status
               </p>
               <p className="text-white font-bold text-base sm:text-lg">
-                {movie.status || "Released"}
+                {formatMovieStatusLabel(movie)}
               </p>
             </div>
 
@@ -1070,8 +1103,8 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
               <p className="text-[10px] sm:text-xs font-mono uppercase tracking-[0.2em] text-[#8B92A5]">
                 Original Language
               </p>
-              <p className="text-white font-bold text-base sm:text-lg uppercase">
-                {movie.original_language || "EN"}
+              <p className="text-white font-bold text-base sm:text-lg">
+                {formatLanguageName(movie.original_language)}
               </p>
             </div>
 
@@ -1304,7 +1337,7 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
                   <button
                     key={`${c.id}-${c.job}`}
                     type="button"
-                    onClick={() => router.push(`/discover?search=${encodeURIComponent(c.name)}`)}
+                    onClick={() => router.push(`/discover?q=${encodeURIComponent(c.name)}`)}
                     className="group flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#101118] hover:bg-[#151622] transition-colors text-left cursor-pointer"
                   >
                     <span className="text-[10px] font-mono uppercase tracking-wider text-[#00D878]/90 bg-[#00D878]/10 px-1.5 py-0.5 rounded">

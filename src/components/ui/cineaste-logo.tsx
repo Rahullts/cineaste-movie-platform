@@ -7,6 +7,7 @@ export interface CineasteLogoProps extends React.SVGProps<SVGSVGElement> {
   size?: number | string;
   className?: string;
   showWordmark?: boolean;
+  forceLightWordmark?: boolean;
 }
 
 /**
@@ -27,6 +28,7 @@ export function CineasteLogo({
   size = 32,
   className,
   showWordmark = false,
+  forceLightWordmark = false,
   ...props
 }: CineasteLogoProps) {
   return (
@@ -100,10 +102,20 @@ export function CineasteLogo({
 
       {showWordmark && (
         <div className="flex flex-col min-w-0">
-          <span className="font-heading text-sm font-black tracking-widest text-foreground truncate leading-none">
+          <span
+            className={cn(
+              "font-heading text-sm font-black tracking-widest truncate leading-none",
+              forceLightWordmark ? "text-white" : "text-foreground"
+            )}
+          >
             CINEASTE
           </span>
-          <span className="text-[8px] uppercase tracking-wider font-semibold text-muted-foreground mt-0.5 truncate hidden sm:block">
+          <span
+            className={cn(
+              "text-[8px] uppercase tracking-wider font-semibold mt-0.5 truncate hidden sm:block",
+              forceLightWordmark ? "text-white/75" : "text-muted-foreground"
+            )}
+          >
             CINEMA, CURATED.
           </span>
         </div>

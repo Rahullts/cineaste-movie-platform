@@ -3,6 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import { Film, ChevronLeft, ChevronRight } from "lucide-react";
+import { getTmdbImageUrl } from "@/lib/image-util";
 import { VaultMark } from "./watchlist-icons";
 import type { Movie } from "@/types";
 
@@ -88,11 +89,7 @@ export function WatchlistRecentlyAddedRail({
         className="flex gap-3 overflow-x-auto no-scrollbar pb-2 scroll-smooth"
       >
         {movies.map((movie) => {
-          const posterUrl = movie.poster_path
-            ? movie.poster_path.startsWith("http")
-              ? movie.poster_path
-              : `https://image.tmdb.org/t/p/w185${movie.poster_path}`
-            : null;
+          const posterUrl = getTmdbImageUrl(movie.poster_path, "w185");
 
           const dateBadge = formatShortDate(movie.created_date);
 

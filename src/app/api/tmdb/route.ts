@@ -272,6 +272,135 @@ const GENRES_LIST = [
   { id: 37, name: "Western" },
 ];
 
+function parseAiVibePrompt(rawPrompt: string) {
+  const q = rawPrompt.toLowerCase().trim();
+  const genreIds = new Set<number>();
+  const hints: string[] = [];
+  const searchTerms: string[] = [];
+  let language: string | undefined;
+  let year: number | undefined;
+  let minRating: number | undefined;
+  let minVotes: number | undefined;
+  let maxRuntime: number | undefined;
+  let sortBy = "popularity.desc";
+
+  const genreRules: Array<{ words: RegExp; genres: number[]; searchTerm?: string; label: string }> = [
+    { words: /cyberpunk|cyber|neo-?noir|dystop|futur|blade runner/i, genres: [878, 53], searchTerm: "cyberpunk", label: "Cyberpunk & Neo-Noir" },
+    { words: /noir|rainy|lonely|isolation|solitude|bleak|melanchol|moody/i, genres: [9648, 80, 18], searchTerm: "noir", label: "Atmospheric Nocturne" },
+    { words: /sci-?fi|space|time travel|wormhole|alien|planet|multiverse/i, genres: [878], label: "Sci-Fi" },
+    { words: /thriller|suspense|twist|mind-?bend|cerebral|psycho/i, genres: [53, 9648], label: "Mind-Bending Thriller" },
+    { words: /crime|detective|heist|mafia|gangster/i, genres: [80, 53], label: "Crime" },
+    { words: /horror|scary|spooky|ghost|haunt|terror|slasher/i, genres: [27, 53], label: "Horror" },
+    { words: /cozy|warm|heartwarm|feel[- ]?good|comfort|uplift|whimsical/i, genres: [35, 10751, 10749], label: "Warm & Feel-Good" },
+    { words: /funny|comedy|hilarious|laugh|satire/i, genres: [35], label: "Comedy" },
+    { words: /romanc|love|heart[- ]?tug|romantic/i, genres: [10749, 18], label: "Romance" },
+    { words: /action|adrenaline|chase|explosi|superhero|marvel|martial/i, genres: [28, 12], label: "Action" },
+    { words: /animat|anime|ghibli|pixar/i, genres: [16], label: "Animation" },
+    { words: /drama|oscar|acclaimed|masterpiece|critically|prestige|arthouse/i, genres: [18], label: "Acclaimed Drama" },
+    { words: /fantasy|magic|myth|medieval/i, genres: [14, 12], label: "Fantasy" },
+    { words: /documentary|true story|non-?fiction/i, genres: [99], label: "Documentary" },
+    { words: /war|history|historical|period/i, genres: [10752, 36], label: "Historical" },
+  ];
+
+  for (const rule of genreRules) {
+    if (rule.words.test(q)) {
+      rule.genres.forEach((g) => genreIds.add(g));
+      hints.push(rule.label);
+      if (rule.searchTerm) searchTerms.push(rule.searchTerm);
+    }
+  }
+
+  const langRules: Array<{ regex: RegExp; code: string; label: string }> = [
+    { regex: /\btamil\b/i, code: "ta", label: "Tamil" },
+    { regex: /\bmalayalam\b/i, code: "ml", label: "Malayalam" },
+    { regex: /\btelugu\b/i, code: "te", label: "Telugu" },
+    { regex: /\bkannada\b/i, code: "kn", label: "Kannada" },
+    { regex: /\bhindi|bollywood\b/i, code: "hi", label: "Hindi" },
+    { regex: /\bkorean|k-drama|seoul\b/i, code: "ko", label: "Korean" },
+    { regex: /\bjapanese|tokyo|anime\b/i, code: "ja", label: "Japanese" },
+    { regex: /\bfrench|paris\b/i, code: "fr", label: "French" },
+    { regex: /\bspanish\b/i, code: "es", label: "Spanish" },
+  ];
+  for (const l of langRules) {
+    if (l.regex.test(q)) {
+      language = l.code;
+      hints.push(l.label);
+      break;
+    }
+  }
+
+  const exactYearMatch = q.match(/\b(19[5-9]\d|20[0-2]\d)\b/);
+  if (exactYearMatch) {
+    year = Number(exactYearMatch[1]);
+    hints.push(String(year));
+  } else if (/\b90s\b/i.test(q)) {
+    year = 1995;
+    hints.push("1990s");
+  } else if (/\b80s\b/i.test(q)) {
+    year = 1985;
+    hints.push("1980s");
+  }
+
+  if (/oscar|masterpiece|acclaimed|best|critically|top/i.test(q)) {
+    minRating = 7.4;
+    minVotes = 800;
+    sortBy = "vote_average.desc";
+  }
+  if (/short|quick|under 90/i.test(q)) {
+    maxRuntime = 95;
+    hints.push("Under 95m");
+  }
+
+  if (q.includes("marvel")) searchTerms.push("Avengers");
+  if (q.includes("time travel")) searchTerms.push("time travel");
+  if (q.includes("space horror")) searchTerms.push("Alien");
+
+  const hasIntent = genreIds.size > 0 || Boolean(language) || Boolean(year) || Boolean(minRating) || searchTerms.length > 0;
+
+  return {
+    hasIntent,
+    genreIds: Array.from(genreIds),
+    language,
+    year,
+    minRating,
+    minVotes: minVotes ?? (hasIntent ? 120 : undefined),
+    maxRuntime,
+    sortBy,
+    searchTerms,
+    interpretation: hints.length > 0
+      ? `AI Vibe interpretation: ${hints.join(" • ")}`
+      : `Searching TMDB catalog for "${rawPrompt}"`,
+  };
+}
+
+function scoreVibeMatch(movie: any, rawPrompt: string, targetGenres: number[]): number {
+  const words = rawPrompt
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter(
+      (w) =>
+        w.length >= 3 &&
+        !["with", "movies", "movie", "films", "film", "that", "from", "like", "vibe", "and", "the"].includes(w)
+    );
+  const text = `${movie.title || ""} ${movie.overview || ""}`.toLowerCase();
+  let score = 0;
+  for (const w of words) {
+    if (text.includes(w)) score += 2.5;
+  }
+  const mGenres: number[] = Array.isArray(movie.genre_ids) ? movie.genre_ids : [];
+  for (const g of targetGenres) {
+    if (mGenres.includes(g)) score += 2.0;
+  }
+  const votes = Number(movie.vote_count) || 0;
+  const rating = Number(movie.vote_average) || 0;
+  // Favor established, genuinely released cinema with real votes & poster artwork
+  if (votes >= 50) score += Math.min(8, Math.log10(votes) * 2.2);
+  else if (votes === 0) score -= 5;
+  if (movie.poster_path) score += 2;
+  score += Math.min(3, rating / 3);
+  return score;
+}
+
 export async function POST(request: Request) {
   try {
     const payload = await request.json();
@@ -292,36 +421,94 @@ export async function POST(request: Request) {
       return NextResponse.json(cached.data);
     }
 
-    // Handle AI Vibe / Semantic Search action locally if requested
+    // Handle AI Vibe Search using LIVE TMDB discovery & search (never fabricating unrelated movies)
     if (payload.action === "ai_search" || payload.ai === true) {
-      const q = (payload.query || payload.prompt || "").toLowerCase();
-      let matchedGenres: number[] = [];
-      let interpretation = `Curated films matching "${payload.query || payload.prompt}"`;
-
-      if (q.includes("cyber") || q.includes("sci-fi") || q.includes("future") || q.includes("space")) {
-        matchedGenres = [878, 53];
-        interpretation = "Curated sci-fi thrillers, cyberpunk aesthetics, and speculative cinema";
-      } else if (q.includes("dark") || q.includes("crime") || q.includes("noir") || q.includes("mystery")) {
-        matchedGenres = [80, 9648, 53];
-        interpretation = "Curated atmospheric crime noir, gritty mysteries, and psychological tension";
-      } else if (q.includes("feel good") || q.includes("warm") || q.includes("cozy") || q.includes("comedy")) {
-        matchedGenres = [35, 10751];
-        interpretation = "Heartwarming feel-good cinema and uplifting character journeys";
-      } else if (q.includes("adrenaline") || q.includes("action") || q.includes("fast")) {
-        matchedGenres = [28, 53];
-        interpretation = "High-octane adrenaline cinema with visceral pacing";
+      const rawQuery = String(payload.query || payload.prompt || "").trim();
+      if (!rawQuery) {
+        return NextResponse.json({ results: [], page: 1, total_pages: 1, total_results: 0 });
       }
 
-      const results = CURATED_MOVIES.filter((m) =>
-        matchedGenres.some((g) => m.genre_ids.includes(g))
-      );
+      const vibe = parseAiVibePrompt(rawQuery);
+      const jobs: Promise<any>[] = [];
+
+      if (vibe.genreIds.length > 0 || vibe.language || vibe.year || vibe.minRating || vibe.maxRuntime) {
+        // Use OR "|" for multi-genre mood exploration, or intersection for 2 genres
+        const genreParam = vibe.genreIds.length > 0 ? vibe.genreIds.join("|") : undefined;
+        jobs.push(
+          fetch(BASE44_PROXY_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "discover",
+              with_genres: genreParam,
+              language: vibe.language,
+              year: vibe.year,
+              min_rating: vibe.minRating,
+              min_votes: vibe.minVotes,
+              max_runtime: vibe.maxRuntime,
+              sort_by: vibe.sortBy,
+              page: 1,
+            }),
+            signal: AbortSignal.timeout(7000),
+          }).then((r) => (r.ok ? r.json() : null))
+        );
+      }
+
+      const keywordTerm = vibe.searchTerms[0] || (!vibe.hasIntent ? rawQuery : null);
+      if (keywordTerm) {
+        jobs.push(
+          fetch(BASE44_PROXY_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "search", query: keywordTerm, page: 1 }),
+            signal: AbortSignal.timeout(7000),
+          }).then((r) => (r.ok ? r.json() : null))
+        );
+      }
+
+      const settled = await Promise.allSettled(jobs);
+      const mergedMap = new Map<number, any>();
+      let anyUpstreamSuccess = false;
+
+      for (const res of settled) {
+        if (res.status === "fulfilled" && res.value && Array.isArray(res.value.results)) {
+          anyUpstreamSuccess = true;
+          for (const item of res.value.results) {
+            const id = Number(item.tmdb_id || item.id);
+            if (id && !mergedMap.has(id)) {
+              mergedMap.set(id, item);
+            }
+          }
+        }
+      }
+
+      if (!anyUpstreamSuccess) {
+        return NextResponse.json(
+          {
+            results: [],
+            page: 1,
+            total_pages: 0,
+            total_results: 0,
+            error: "Unable to reach film discovery service right now. Please try again.",
+          },
+          { status: 502 }
+        );
+      }
+
+      const ranked = Array.from(mergedMap.values())
+        .filter((m) => (vibe.hasIntent ? (Number(m.vote_count) || 0) >= 10 || Boolean(m.poster_path) : true))
+        .sort((a, b) => scoreVibeMatch(b, rawQuery, vibe.genreIds) - scoreVibeMatch(a, rawQuery, vibe.genreIds))
+        .slice(0, 24);
 
       const aiResponse = {
-        results: results.length > 0 ? results : CURATED_MOVIES.slice(0, 8),
-        interpretation,
+        results: ranked,
+        interpretation:
+          ranked.length > 0
+            ? vibe.interpretation
+            : `No films matched "${rawQuery}" in live TMDB results.`,
         page: 1,
         total_pages: 1,
-        total_results: results.length,
+        total_results: ranked.length,
       };
 
       memoryCache.set(cacheKey, { data: aiResponse, expiry: Date.now() + CACHE_TTL_MS });
@@ -332,6 +519,40 @@ export async function POST(request: Request) {
     if (payload.action === "genres") {
       const genresResponse = { genres: GENRES_LIST };
       return NextResponse.json(genresResponse);
+    }
+
+    // Upstream proxy exposes movie-specific recommendations & similar titles via `action: "details"`
+    if (payload.action === "recommendations" && payload.id) {
+      try {
+        const resp = await fetch(BASE44_PROXY_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "details", id: payload.id }),
+          signal: AbortSignal.timeout(7000),
+        });
+        if (resp.ok) {
+          const det = await resp.json();
+          const combined = [...(det?.recommendations || []), ...(det?.similar || [])];
+          const seenIds = new Set<number>();
+          const uniqueRecs = combined.filter((m: any) => {
+            const mId = Number(m?.tmdb_id || m?.id);
+            if (!mId || mId === Number(payload.id) || seenIds.has(mId)) return false;
+            seenIds.add(mId);
+            return true;
+          });
+          const recPayload = {
+            page: 1,
+            total_pages: 1,
+            total_results: uniqueRecs.length,
+            results: uniqueRecs,
+          };
+          memoryCache.set(cacheKey, { data: recPayload, expiry: Date.now() + CACHE_TTL_MS });
+          return NextResponse.json(recPayload);
+        }
+      } catch {
+        // Fall through cleanly to empty recommendations rather than showing unrelated movies
+      }
+      return NextResponse.json({ page: 1, total_pages: 1, total_results: 0, results: [] });
     }
 
     // Attempt remote upstream fetch with 6-second timeout
@@ -369,9 +590,6 @@ export async function POST(request: Request) {
           m.title.toLowerCase().includes(q) ||
           m.overview.toLowerCase().includes(q)
       );
-      if (fallbackResults.length === 0) {
-        fallbackResults = CURATED_MOVIES.slice(0, 4);
-      }
     } else if (payload.with_genres) {
       const targetGenreIds = String(payload.with_genres)
         .split(/[|,]/)

@@ -28,6 +28,8 @@ import {
   Gem,
   Clapperboard,
   Calendar,
+  Sparkles,
+  RotateCcw,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { MoviePosterCard } from "@/components/movie-poster-card";
@@ -38,8 +40,12 @@ import { useLibrary } from "@/lib/library-store";
 import { formatScore, formatYear, cn } from "@/lib/utils";
 import {
   INITIAL_FILTER_STATE,
+  MOOD_GENRE_MAP,
+  MOOD_OPTIONS,
+  LANGUAGE_OPTIONS,
   type DiscoverFilterState,
 } from "@/lib/constants/discover-filters";
+import { TMDB_GENRES } from "@/lib/constants/tmdb-genres";
 import type { Movie } from "@/types";
 
 // Curated Fallback Movies for Instant Zero-Black-Box Rendering
@@ -241,25 +247,25 @@ function ModernTrendingSection({
         <div>
           <div className="flex items-center gap-2.5">
             <Flame className="w-6 h-6 text-[#F59E0B] shrink-0" />
-            <h2 className="font-heading text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white flex items-center gap-2">
+            <h2 className="font-heading text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-foreground flex items-center gap-2 flex-wrap">
               <span>Trending Now</span>
               <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#00D878] bg-[#00D878]/10 border border-[#00D878]/30 px-2.5 py-0.5 rounded-full">
                 This Week
               </span>
             </h2>
           </div>
-          <p className="text-xs sm:text-sm text-[#9496A1] mt-1 font-medium pl-8">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1 font-medium pl-8">
             What cinephiles and viewers across the globe are watching right now.
           </p>
         </div>
 
         {/* Carousel Arrow Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={() => scroll("left")}
             aria-label="Previous trending films"
-            className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 hover:text-white grid place-items-center transition active:scale-95 cursor-pointer shadow-sm"
+            className="w-8 h-8 rounded-full bg-card hover:bg-muted border border-border text-foreground grid place-items-center transition active:scale-95 cursor-pointer shadow-sm"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -267,7 +273,7 @@ function ModernTrendingSection({
             type="button"
             onClick={() => scroll("right")}
             aria-label="Next trending films"
-            className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 hover:text-white grid place-items-center transition active:scale-95 cursor-pointer shadow-sm"
+            className="w-8 h-8 rounded-full bg-card hover:bg-muted border border-border text-foreground grid place-items-center transition active:scale-95 cursor-pointer shadow-sm"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -341,13 +347,21 @@ function ModernTrendingSection({
 
           {/* Bottom Information */}
           <div className="relative z-10 space-y-3 pt-12">
-            <div className="flex items-center gap-2.5 text-xs font-mono font-semibold text-white/90">
-              <span className="inline-flex items-center gap-1 text-[#FBBF24]">
-                <Star className="w-3.5 h-3.5 fill-[#FBBF24]" />
-                {heroMovie.vote_average ? formatScore(heroMovie.vote_average) : "8.5"}
-              </span>
-              <span>•</span>
-              <span>{formatYear(heroMovie.release_date) || "2026"}</span>
+            <div className="flex flex-wrap items-center gap-2 text-xs font-mono font-semibold text-white/90">
+              {(heroMovie.vote_average || 0) > 0 && (
+                <>
+                  <span
+                    title="TMDB Community Score"
+                    className="inline-flex items-center gap-1 text-[#FBBF24]"
+                  >
+                    <Star className="w-3.5 h-3.5 fill-[#FBBF24]" />
+                    <span className="text-[10px] text-white/75 uppercase">TMDB</span>
+                    {formatScore(heroMovie.vote_average)}
+                  </span>
+                  <span>•</span>
+                </>
+              )}
+              <span>{formatYear(heroMovie.release_date) || "TBA"}</span>
               {Array.isArray(heroMovie.genres) && heroMovie.genres[0] && (
                 <>
                   <span>•</span>
@@ -404,10 +418,11 @@ function ModernTrendingSection({
                   {/* Poster Art */}
                   {movie.poster_path && (
                     <img
-                      src={`/api/image?path=${encodeURIComponent(movie.poster_path)}&w=780`}
+                      src={`/api/image?path=${encodeURIComponent(movie.poster_path)}&w=500`}
                       alt={movie.title}
                       className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
                       loading="lazy"
+                      decoding="async"
                     />
                   )}
 
@@ -415,14 +430,19 @@ function ModernTrendingSection({
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none" />
                   <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/80 to-transparent pointer-events-none" />
 
-                  {/* Top: Rank Badge + Quick Actions */}
+                  {/* Top: Rank Badge + Hover Quick Actions */}
                   <div className="relative z-10 flex items-center justify-between gap-1">
                     <span className="w-8 h-8 rounded-full bg-black/80 backdrop-blur-md border border-white/20 text-white font-mono font-black text-xs grid place-items-center shadow-lg group-hover:border-[#00D878]/60 group-hover:text-[#00D878] transition-colors">
                       #{rank}
                     </span>
 
                     <div
-                      className="flex items-center gap-1.5"
+                      className={cn(
+                        "flex items-center gap-1.5 transition-opacity duration-200",
+                        isSaved || isFav
+                          ? "opacity-100"
+                          : "opacity-100 md:opacity-0 md:group-hover:opacity-100 group-focus-within:opacity-100"
+                      )}
                       onClick={(e) => e.stopPropagation()}
                     >
                       <button
@@ -461,10 +481,22 @@ function ModernTrendingSection({
 
                   {/* Bottom: Score, Title, Year */}
                   <div className="relative z-10 space-y-1">
-                    <div className="flex items-center gap-1 text-[11px] font-mono font-bold text-[#FBBF24]">
-                      <Star className="w-3 h-3 fill-[#FBBF24]" />
-                      <span>{movie.vote_average ? formatScore(movie.vote_average) : "8.0"}</span>
-                      <span className="text-white/60 font-normal">• {formatYear(movie.release_date)}</span>
+                    <div className="flex items-center gap-1.5 text-[11px] font-mono font-bold text-[#FBBF24]">
+                      {(movie.vote_average || 0) > 0 && (
+                        <span title="TMDB Community Score" className="inline-flex items-center gap-1">
+                          <Star className="w-3 h-3 fill-[#FBBF24]" />
+                          <span className="text-[9px] text-white/70 uppercase">TMDB</span>
+                          <span>{formatScore(movie.vote_average)}</span>
+                        </span>
+                      )}
+                      {(movie.vote_average || 0) > 0 && formatYear(movie.release_date) && (
+                        <span className="text-white/50">•</span>
+                      )}
+                      {formatYear(movie.release_date) && (
+                        <span className="text-white/75 font-normal">
+                          {formatYear(movie.release_date)}
+                        </span>
+                      )}
                     </div>
 
                     <h4 className="font-heading font-black text-sm sm:text-base text-white tracking-tight leading-snug line-clamp-2 group-hover:text-[#00D878] transition-colors">
@@ -524,12 +556,12 @@ function ModernDiscoveryRow({
             ) : (
               <Film className="w-5 h-5 text-[#00D878] shrink-0" />
             )}
-            <h2 className="font-heading text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-white group-hover:text-[#00D878] transition-colors flex items-center gap-2">
+            <h2 className="font-heading text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-foreground group-hover:text-[#00D878] transition-colors flex items-center gap-2">
               <span>{title}</span>
             </h2>
           </button>
           {subtitle && (
-            <p className="text-xs sm:text-sm text-[#9496A1] mt-0.5 font-medium pl-8">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 font-medium pl-8">
               {subtitle}
             </p>
           )}
@@ -589,13 +621,44 @@ function DiscoverContent() {
 
   // Search state
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [hasSubmittedSearch, setHasSubmittedSearch] = React.useState(false);
   const [isAiMode, setIsAiMode] = React.useState(false);
   const [isListeningVoice, setIsListeningVoice] = React.useState(false);
   const [searchResults, setSearchResults] = React.useState<Movie[]>([]);
+  const [aiInterpretation, setAiInterpretation] = React.useState<string | null>(null);
+  const [searchError, setSearchError] = React.useState<string | null>(null);
   const [isSearching, setIsSearching] = React.useState(false);
 
   // Filters state
   const [filters, setFilters] = React.useState<DiscoverFilterState>(INITIAL_FILTER_STATE);
+  const [filteredMovies, setFilteredMovies] = React.useState<Movie[]>([]);
+  const [isLoadingFilters, setIsLoadingFilters] = React.useState(false);
+  const [filterError, setFilterError] = React.useState<string | null>(null);
+
+  // Category horizontal rail ref & scroll affordance
+  const categoryRailRef = React.useRef<HTMLDivElement>(null);
+  const [catCanScrollLeft, setCatCanScrollLeft] = React.useState(false);
+  const [catCanScrollRight, setCatCanScrollRight] = React.useState(true);
+
+  const updateCategoryScrollButtons = React.useCallback(() => {
+    const el = categoryRailRef.current;
+    if (!el) return;
+    setCatCanScrollLeft(el.scrollLeft > 8);
+    setCatCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 8);
+  }, []);
+
+  React.useEffect(() => {
+    updateCategoryScrollButtons();
+    window.addEventListener("resize", updateCategoryScrollButtons);
+    return () => window.removeEventListener("resize", updateCategoryScrollButtons);
+  }, [updateCategoryScrollButtons]);
+
+  const scrollCategories = (dir: "left" | "right") => {
+    categoryRailRef.current?.scrollBy({
+      left: dir === "left" ? -260 : 260,
+      behavior: "smooth",
+    });
+  };
 
   // Active Category / Subheading State
   const [selectedCategory, setSelectedCategory] = React.useState("all");
@@ -612,6 +675,7 @@ function DiscoverContent() {
   const [isLoadingSections, setIsLoadingSections] = React.useState(false);
 
   const voiceRecognitionRef = React.useRef<any>(null);
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleOpenDetail = (m: Movie) => {
     router.push(`/movie/${m.tmdb_id || m.id}`);
@@ -729,23 +793,36 @@ function DiscoverContent() {
     }
   }, []);
 
-  // 3. Search Handler
+  // 3. Search Handler (Normal Title Search & Live AI Vibe Search)
   const executeSearch = React.useCallback(async (queryText: string, ai: boolean) => {
-    if (!queryText.trim()) {
+    const clean = queryText.trim();
+    if (!clean) {
       setSearchResults([]);
+      setAiInterpretation(null);
+      setSearchError(null);
+      setHasSubmittedSearch(false);
       return;
     }
 
+    setHasSubmittedSearch(true);
     setIsSearching(true);
+    setSearchError(null);
+    setAiInterpretation(null);
     try {
-      if (ai) {
-        const res = await tmdbAiSearch(queryText.trim());
-        setSearchResults(res.results || []);
+      const res = ai
+        ? await tmdbAiSearch(clean)
+        : await tmdbFetch({ action: "search", query: clean, page: 1 });
+      if (res.error) {
+        setSearchError(res.error);
+        setSearchResults([]);
       } else {
-        const res = await tmdbFetch({ action: "search", query: queryText.trim(), page: 1 });
         setSearchResults(res.results || []);
+        if (ai && res.interpretation) {
+          setAiInterpretation(res.interpretation);
+        }
       }
-    } catch {
+    } catch (err: any) {
+      setSearchError(err?.message || "Failed to search movies. Please try again.");
       setSearchResults([]);
     } finally {
       setIsSearching(false);
@@ -754,11 +831,121 @@ function DiscoverContent() {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    executeSearch(searchQuery, isAiMode);
+    const domVal = searchInputRef.current?.value;
+    const effective = (domVal !== undefined ? domVal : searchQuery).trim();
+    if (effective !== searchQuery) {
+      setSearchQuery(effective);
+    }
+    executeSearch(effective, isAiMode);
   };
 
+  // 4. Filter Execution Handler
+  const hasActiveFilters = React.useMemo(
+    () =>
+      Boolean(
+        filters.genre ||
+          filters.mood ||
+          filters.language ||
+          filters.year ||
+          filters.minRating ||
+          filters.length
+      ),
+    [filters]
+  );
+
+  const executeFilters = React.useCallback(async (activeFilters: DiscoverFilterState) => {
+    const anyActive = Boolean(
+      activeFilters.genre ||
+        activeFilters.mood ||
+        activeFilters.language ||
+        activeFilters.year ||
+        activeFilters.minRating ||
+        activeFilters.length
+    );
+    if (!anyActive) {
+      setFilteredMovies([]);
+      setFilterError(null);
+      return;
+    }
+
+    setIsLoadingFilters(true);
+    setFilterError(null);
+    try {
+      const payload: Record<string, any> = {
+        action: "discover",
+        page: 1,
+        sort_by: activeFilters.minRating ? "vote_average.desc" : "popularity.desc",
+      };
+
+      const genreParts: string[] = [];
+      if (activeFilters.genre) genreParts.push(String(activeFilters.genre));
+      if (activeFilters.mood && MOOD_GENRE_MAP[activeFilters.mood]) {
+        genreParts.push(MOOD_GENRE_MAP[activeFilters.mood]);
+      }
+      if (genreParts.length === 2) {
+        // Combine user selected genre with mood genre
+        payload.with_genres = `${genreParts[0]},${genreParts[1].split(",")[0]}`;
+      } else if (genreParts.length === 1) {
+        // Mood maps use "|" OR when multiple genres represent the mood
+        payload.with_genres = activeFilters.mood ? genreParts[0].replace(/,/g, "|") : genreParts[0];
+      }
+
+      if (activeFilters.language) payload.language = activeFilters.language;
+      if (activeFilters.year) payload.year = Number(activeFilters.year);
+      if (activeFilters.minRating) {
+        payload.min_rating = Number(activeFilters.minRating);
+        payload.min_votes = 120;
+      }
+      if (activeFilters.length === "short") {
+        payload.max_runtime = 90;
+      } else if (activeFilters.length === "medium") {
+        payload.min_runtime = 90;
+        payload.max_runtime = 150;
+      } else if (activeFilters.length === "long") {
+        payload.min_runtime = 150;
+      }
+
+      const res = await tmdbFetch(payload);
+      if (res.error) {
+        setFilterError(res.error);
+        setFilteredMovies([]);
+      } else {
+        setFilteredMovies(res.results || []);
+      }
+    } catch (err: any) {
+      setFilterError(err?.message || "Failed to apply filters.");
+      setFilteredMovies([]);
+    } finally {
+      setIsLoadingFilters(false);
+    }
+  }, []);
+
   React.useEffect(() => {
-    const q = searchParams.get("q");
+    executeFilters(filters);
+  }, [filters, executeFilters]);
+
+  const activeFilterChips = React.useMemo(() => {
+    const chips: Array<{ key: keyof DiscoverFilterState; label: string }> = [];
+    if (filters.genre) {
+      const g = TMDB_GENRES.find((x) => String(x.id) === String(filters.genre));
+      chips.push({ key: "genre", label: `Genre: ${g?.name || filters.genre}` });
+    }
+    if (filters.mood) {
+      const m = MOOD_OPTIONS.find((x) => x.v === filters.mood);
+      chips.push({ key: "mood", label: `Mood: ${m?.l || filters.mood}` });
+    }
+    if (filters.language) {
+      const l = LANGUAGE_OPTIONS.find((x) => x.v === filters.language);
+      chips.push({ key: "language", label: `Language: ${l?.l || filters.language}` });
+    }
+    if (filters.year) chips.push({ key: "year", label: `Year: ${filters.year}` });
+    if (filters.minRating) chips.push({ key: "minRating", label: `Min ${filters.minRating}+ ★` });
+    if (filters.length) chips.push({ key: "length", label: `Runtime: ${filters.length}` });
+    return chips;
+  }, [filters]);
+
+  React.useEffect(() => {
+    const q = searchParams.get("q") || searchParams.get("search");
     const ai = searchParams.get("ai") === "1";
     const cat = searchParams.get("category");
     if (q) {
@@ -814,13 +1001,13 @@ function DiscoverContent() {
     }
   };
 
-  const isSearchActive = searchQuery.trim().length > 0;
+  const isSearchActive = hasSubmittedSearch && searchQuery.trim().length > 0;
   const isCategoryActive = selectedCategory !== "all";
   const activeCategoryDef = CINEPHILE_CATEGORIES.find((c) => c.id === selectedCategory);
 
   return (
     <AppShell>
-      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-12 space-y-5 sm:space-y-6 pb-28 select-none relative -mt-8 sm:-mt-12">
+      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-12 space-y-5 sm:space-y-6 pt-2 sm:pt-4 pb-8 select-none relative">
         {/* Soft Ambient Cinematic Glows for Visual Comfort */}
         <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
           <div className="absolute -top-32 -left-32 w-[650px] h-[650px] bg-[#00D878]/[0.035] rounded-full blur-[160px]" />
@@ -839,7 +1026,7 @@ function DiscoverContent() {
           <div className="space-y-3 max-w-2xl">
             {/* Luminous Architectural Eyebrow */}
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/10 text-white/70 text-[11px] font-mono uppercase tracking-[0.22em] backdrop-blur-md shadow-sm">
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card/80 border border-border text-muted-foreground text-[11px] font-mono uppercase tracking-[0.22em] backdrop-blur-md shadow-sm">
                 <Compass className="w-3.5 h-3.5 text-[#00D878]" />
                 <span>Cineaste Editorial • Curated Archive</span>
               </span>
@@ -847,76 +1034,154 @@ function DiscoverContent() {
 
             {/* Premium, Monumental Cinema Heading (High-fashion editorial contrast) */}
             <h1 className="font-heading font-black text-4xl sm:text-6xl lg:text-7xl tracking-tighter uppercase leading-[0.95] flex flex-wrap items-baseline gap-x-3.5">
-              <span className="text-white drop-shadow-sm">DISCOVER</span>
-              <span className="text-white/40 font-light tracking-wider">CINEMA</span>
+              <span className="text-foreground drop-shadow-sm">DISCOVER</span>
+              <span className="text-muted-foreground/60 font-light tracking-wider">CINEMA</span>
             </h1>
 
             {/* Refined, Authoritative Subtitle */}
-            <p className="text-xs sm:text-sm text-[#9496A1] font-normal leading-relaxed max-w-xl">
+            <p className="text-xs sm:text-sm text-muted-foreground font-normal leading-relaxed max-w-xl">
               Explore handpicked auteur masterworks, iconic classics, and the definitive visionary releases shaping contemporary cinema.
             </p>
           </div>
 
-          {/* Right Column: Premium Precision Search Bar & Live Index Badge */}
+          {/* Right Column: Precision Search Bar (Title + AI Vibe Search) + Filters */}
           <div className="flex flex-col items-start lg:items-end gap-2 w-full lg:w-auto">
-            <form
-              onSubmit={handleSearchSubmit}
-              className="flex items-center gap-3 px-4 py-3 rounded-full bg-[#11121C]/90 border border-white/15 shadow-[0_10px_35px_rgba(0,0,0,0.6)] focus-within:border-[#00D878]/70 focus-within:bg-[#151624] focus-within:ring-2 focus-within:ring-[#00D878]/20 transition-all w-full sm:w-[420px] lg:w-[480px] backdrop-blur-xl"
+            <div
+              className={cn(
+                "flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-card/95 border shadow-[0_10px_35px_rgba(0,0,0,0.45)] transition-all w-full sm:w-[460px] lg:w-[540px] backdrop-blur-xl",
+                isAiMode
+                  ? "border-[#00D878]/60 ring-2 ring-[#00D878]/20"
+                  : "border-border focus-within:border-[#00D878]/70 focus-within:ring-2 focus-within:ring-[#00D878]/20"
+              )}
             >
-              <Search className="w-4 h-4 text-[#00D878] shrink-0" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  if (!e.target.value.trim()) setSearchResults([]);
-                }}
-                placeholder="Search films, directors, actors, or genres..."
-                className="flex-1 min-w-0 bg-transparent text-xs sm:text-sm text-white placeholder:text-[#9496A1] outline-none"
-              />
+              <form
+                onSubmit={handleSearchSubmit}
+                className="flex-1 min-w-0 flex items-center gap-2.5"
+              >
+                {isAiMode ? (
+                  <Sparkles className="w-4 h-4 text-[#00D878] shrink-0" />
+                ) : (
+                  <Search className="w-4 h-4 text-[#00D878] shrink-0" />
+                )}
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  data-testid="discover-search-input"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setSearchQuery(v);
+                    if (!v.trim()) {
+                      setSearchResults([]);
+                      setAiInterpretation(null);
+                      setSearchError(null);
+                      setHasSubmittedSearch(false);
+                    }
+                  }}
+                  placeholder={
+                    isAiMode
+                      ? "Describe a vibe... e.g. Rainy neo-noir cyberpunk with a lonely atmosphere"
+                      : "Search films, directors, actors, or keywords..."
+                  }
+                  className="flex-1 min-w-0 bg-transparent text-xs sm:text-sm text-foreground placeholder:text-muted-foreground outline-none"
+                />
 
-              {searchQuery && (
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setSearchResults([]);
+                      setAiInterpretation(null);
+                      setSearchError(null);
+                      setHasSubmittedSearch(false);
+                    }}
+                    className="p-1 rounded-md text-muted-foreground hover:text-foreground cursor-pointer"
+                    title="Clear query"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+
+                {/* AI Vibe Search Mode Toggle */}
                 <button
                   type="button"
+                  data-testid="discover-ai-toggle"
+                  aria-pressed={isAiMode}
                   onClick={() => {
-                    setSearchQuery("");
-                    setSearchResults([]);
+                    const nextAi = !isAiMode;
+                    setIsAiMode(nextAi);
+                    if (searchQuery.trim()) {
+                      executeSearch(searchQuery, nextAi);
+                    }
                   }}
-                  className="p-1 rounded-md text-[#9496A1] hover:text-white cursor-pointer"
-                  title="Clear query"
+                  title={isAiMode ? "AI Vibe Search active — click for title search" : "Switch to AI Vibe Search"}
+                  className={cn(
+                    "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer shrink-0 border",
+                    isAiMode
+                      ? "bg-[#00D878] text-black border-[#00D878] shadow-sm shadow-[#00D878]/30"
+                      : "bg-muted/60 text-muted-foreground border-border hover:text-[#00D878] hover:border-[#00D878]/40"
+                  )}
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <Sparkles className="w-3 h-3" />
+                  <span>AI Vibe</span>
                 </button>
-              )}
 
-              {/* Voice Search Button */}
-              <button
-                type="button"
-                onClick={handleVoiceSearch}
-                title={isListeningVoice ? "Stop voice listening" : "Voice search"}
-                className={cn(
-                  "p-1.5 rounded-full transition-colors cursor-pointer",
-                  isListeningVoice
-                    ? "bg-rose-500 text-white animate-pulse"
-                    : "text-[#9496A1] hover:text-white hover:bg-white/10"
-                )}
-              >
-                <Mic className="w-4 h-4" />
-              </button>
+                {/* Voice Search Button */}
+                <button
+                  type="button"
+                  onClick={handleVoiceSearch}
+                  title={isListeningVoice ? "Stop voice listening" : "Voice search"}
+                  className={cn(
+                    "p-1.5 rounded-full transition-colors cursor-pointer shrink-0",
+                    isListeningVoice
+                      ? "bg-rose-500 text-white animate-pulse"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  )}
+                >
+                  <Mic className="w-4 h-4" />
+                </button>
+              </form>
 
-              {/* Advanced Filter Modal */}
+              {/* Multi-Criteria Filter Popover — kept outside <form> */}
               <DiscoverFiltersDialog
                 compact
                 filters={filters}
                 onChange={(updated) => setFilters((prev) => ({ ...prev, ...updated }))}
                 onClear={() => setFilters(INITIAL_FILTER_STATE)}
               />
-            </form>
+            </div>
+
+            {/* AI Vibe Quick Prompt Pills when AI mode is active */}
+            {isAiMode && !isSearchActive && (
+              <div className="flex flex-wrap items-center gap-1.5 max-w-[540px] justify-start lg:justify-end animate-fadeIn">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-[#00D878] mr-1">
+                  Try vibe:
+                </span>
+                {[
+                  "Rainy neo-noir cyberpunk movies with a lonely atmosphere",
+                  "Mind-bending sci-fi",
+                  "Cozy weekend watch",
+                ].map((sample) => (
+                  <button
+                    key={sample}
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery(sample);
+                      executeSearch(sample, true);
+                    }}
+                    className="text-[11px] px-2.5 py-1 rounded-full bg-card border border-border text-muted-foreground hover:text-[#00D878] hover:border-[#00D878]/40 transition cursor-pointer"
+                  >
+                    {sample}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Consumer-Friendly Live Index Badge */}
-            <div className="flex items-center gap-2 pr-3 text-[11px] font-mono text-[#8B92A5]">
+            <div className="flex items-center gap-2 pr-3 text-[11px] font-mono text-muted-foreground">
               <Film className="w-3.5 h-3.5 text-[#00D878] shrink-0" />
-              <span className="font-semibold text-white/90">LIVE TMDB INDEX</span>
+              <span className="font-semibold text-foreground/90">LIVE TMDB INDEX</span>
               <span>•</span>
               <span className="text-[#00D878]">1,000,000+ Verified Titles</span>
             </div>
@@ -924,10 +1189,24 @@ function DiscoverContent() {
         </section>
 
         {/* ================================================================= */}
-        {/* SUBHEADINGS & MOOD SELECTOR BAR (Clickable & Fully Connected)     */}
+        {/* SUBHEADINGS & MOOD SELECTOR BAR (Scrollable with clear affordance) */}
         {/* ================================================================= */}
-        <section aria-label="Cinephile Categories" className="w-full pt-1">
-          <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar pb-1">
+        <section aria-label="Cinephile Categories" className="w-full pt-1 relative group/cats">
+          {catCanScrollLeft && (
+            <button
+              type="button"
+              onClick={() => scrollCategories("left")}
+              aria-label="Scroll categories left"
+              className="hidden sm:grid place-items-center absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-card/95 border border-border text-foreground shadow-lg hover:text-[#00D878] transition cursor-pointer"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+          )}
+          <div
+            ref={categoryRailRef}
+            onScroll={updateCategoryScrollButtons}
+            className="flex items-center gap-2.5 overflow-x-auto no-scrollbar py-2 px-1 scroll-smooth"
+          >
             {CINEPHILE_CATEGORIES.map((cat) => {
               const active = selectedCategory === cat.id;
               return (
@@ -938,8 +1217,8 @@ function DiscoverContent() {
                   className={cn(
                     "inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0 border shadow-sm",
                     active
-                      ? "bg-[#00D878] text-black font-black border-[#00D878] shadow-lg shadow-[#00D878]/25 scale-105"
-                      : "bg-white/[0.05] text-[#9496A1] border-white/10 hover:bg-white/[0.1] hover:text-white hover:border-white/25 active:scale-95"
+                      ? "bg-[#00D878] text-black font-black border-[#00D878] shadow-md shadow-[#00D878]/25"
+                      : "bg-card/80 text-muted-foreground border-border hover:bg-muted hover:text-foreground active:scale-95"
                   )}
                 >
                   <span className="text-sm">{cat.icon}</span>
@@ -948,6 +1227,19 @@ function DiscoverContent() {
               );
             })}
           </div>
+          {catCanScrollRight && (
+            <>
+              <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-background to-transparent" />
+              <button
+                type="button"
+                onClick={() => scrollCategories("right")}
+                aria-label="Scroll categories right"
+                className="grid place-items-center absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-card/95 border border-border text-foreground shadow-lg hover:text-[#00D878] transition cursor-pointer"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </>
+          )}
         </section>
 
         {/* ================================================================= */}
@@ -955,13 +1247,21 @@ function DiscoverContent() {
         {/* ================================================================= */}
         {isSearchActive && (
           <section className="space-y-6 animate-fadeIn">
-            <div className="flex items-center justify-between pb-2 border-b border-white/10">
-              <div>
-                <h3 className="font-heading font-black text-xl text-white">
-                  Search Results for &ldquo;{searchQuery}&rdquo;
-                </h3>
-                <p className="text-xs text-[#9496A1]">
-                  Found {searchResults.length} matching films in catalog
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {isAiMode && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#00D878]/15 text-[#00D878] text-[11px] font-semibold">
+                      <Sparkles className="w-3 h-3" />
+                      AI Vibe Search
+                    </span>
+                  )}
+                  <h3 className="font-heading font-black text-xl text-foreground">
+                    Results for &ldquo;{searchQuery}&rdquo;
+                  </h3>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {aiInterpretation || `Found ${searchResults.length} matching films in live catalog`}
                 </p>
               </div>
               <button
@@ -969,20 +1269,58 @@ function DiscoverContent() {
                 onClick={() => {
                   setSearchQuery("");
                   setSearchResults([]);
+                  setAiInterpretation(null);
+                  setSearchError(null);
+                  setHasSubmittedSearch(false);
                 }}
-                className="text-xs font-mono font-bold text-[#00D878] hover:underline cursor-pointer"
+                className="text-xs font-mono font-bold text-[#00D878] hover:underline cursor-pointer self-start sm:self-auto"
               >
                 ← Back to Curated Discover
               </button>
             </div>
 
             {isSearching ? (
-              <div className="py-24 text-center text-sm text-[#9496A1] animate-pulse">
-                Exploring cinema records...
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5">
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="aspect-[2/3] rounded-2xl bg-card border border-border/60 animate-pulse"
+                  />
+                ))}
+              </div>
+            ) : searchError ? (
+              <div className="py-16 px-6 text-center space-y-3 bg-card border border-border rounded-3xl">
+                <p className="text-sm text-rose-400 font-medium">{searchError}</p>
+                <button
+                  type="button"
+                  onClick={() => executeSearch(searchQuery, isAiMode)}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#00D878] text-black text-xs font-bold hover:bg-[#00B855] transition cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Retry Search</span>
+                </button>
               </div>
             ) : searchResults.length === 0 ? (
-              <div className="py-20 text-center text-sm text-[#9496A1] bg-[#0E0F15] border border-white/5 rounded-3xl">
-                No matching films found. Try another movie title, actor, or genre.
+              <div className="py-16 px-6 text-center space-y-3 bg-card border border-border rounded-3xl">
+                <p className="text-sm text-muted-foreground">
+                  No matching films found for &ldquo;{searchQuery}&rdquo;.
+                  {isAiMode
+                    ? " Try describing a clearer genre, mood, language, or decade."
+                    : " Try another movie title, or switch on AI Vibe for mood-based search."}
+                </p>
+                {!isAiMode && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAiMode(true);
+                      executeSearch(searchQuery, true);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#00D878]/15 border border-[#00D878]/35 text-[#00D878] text-xs font-semibold hover:bg-[#00D878]/25 transition cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Search this with AI Vibe</span>
+                  </button>
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5">
@@ -1005,10 +1343,90 @@ function DiscoverContent() {
         )}
 
         {/* ================================================================= */}
+        {/* VIEW 1B: MULTI-CRITERIA FILTERED DISCOVERY RESULTS                */}
+        {/* ================================================================= */}
+        {!isSearchActive && hasActiveFilters && (
+          <section className="space-y-6 animate-fadeIn">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border">
+              <div className="space-y-2">
+                <h3 className="font-heading font-black text-xl text-foreground">
+                  Filtered Cinema ({filteredMovies.length})
+                </h3>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {activeFilterChips.map((chip) => (
+                    <button
+                      key={chip.key}
+                      type="button"
+                      onClick={() =>
+                        setFilters((prev) => ({ ...prev, [chip.key]: "" }))
+                      }
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#00D878]/15 border border-[#00D878]/30 text-[#00D878] text-xs font-medium hover:bg-[#00D878]/25 transition cursor-pointer"
+                    >
+                      <span>{chip.label}</span>
+                      <X className="w-3 h-3" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setFilters(INITIAL_FILTER_STATE)}
+                className="text-xs font-mono font-bold text-[#00D878] hover:underline cursor-pointer self-start sm:self-auto"
+              >
+                Clear All Filters
+              </button>
+            </div>
+
+            {isLoadingFilters ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5">
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="aspect-[2/3] rounded-2xl bg-card border border-border/60 animate-pulse"
+                  />
+                ))}
+              </div>
+            ) : filterError ? (
+              <div className="py-16 px-6 text-center space-y-3 bg-card border border-border rounded-3xl">
+                <p className="text-sm text-rose-400">{filterError}</p>
+                <button
+                  type="button"
+                  onClick={() => executeFilters(filters)}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#00D878] text-black text-xs font-bold cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Retry</span>
+                </button>
+              </div>
+            ) : filteredMovies.length === 0 ? (
+              <div className="py-16 px-6 text-center text-sm text-muted-foreground bg-card border border-border rounded-3xl">
+                No films matched your selected filter combination. Try loosening a criterion.
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5">
+                {filteredMovies.map((movie, idx) => (
+                  <MoviePosterCard
+                    key={movie.tmdb_id || movie.id}
+                    movie={movie}
+                    variant="grid"
+                    index={idx}
+                    isWatchlist={Boolean(watchlistMap[movie.tmdb_id || movie.id])}
+                    isFavorite={Boolean(watchlistMap[movie.tmdb_id || movie.id]?.is_favorite)}
+                    onOpenDetail={handleOpenDetail}
+                    onToggleWatchlist={handleToggleWatchlist}
+                    onToggleFavorite={(m) => library.toggleFavorite(m)}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* ================================================================= */}
         {/* VIEW 2: DEDICATED SUBHEADING / CATEGORY VIEW                       */}
         {/* (e.g. When "The Adrenaline Rush" or "Sci-Fi & Fantasy" is clicked) */}
         {/* ================================================================= */}
-        {!isSearchActive && isCategoryActive && activeCategoryDef && (
+        {!isSearchActive && !hasActiveFilters && isCategoryActive && activeCategoryDef && (
           <section className="space-y-6 animate-fadeIn">
             {/* Category Banner Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#12131D] via-[#161726] to-[#0E0F16] border border-white/10 shadow-2xl relative overflow-hidden">
@@ -1073,7 +1491,7 @@ function DiscoverContent() {
         {/* ================================================================= */}
         {/* VIEW 3: MAIN CURATED DISCOVERY FEED (Trending + Dedicated Rails)   */}
         {/* ================================================================= */}
-        {!isSearchActive && !isCategoryActive && (
+        {!isSearchActive && !hasActiveFilters && !isCategoryActive && (
           <div className="space-y-10 sm:space-y-12">
             {/* 1. MODERNIZED TRENDING NOW SHOWCASE */}
             <ModernTrendingSection

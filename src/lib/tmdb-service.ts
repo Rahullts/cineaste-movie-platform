@@ -7,6 +7,7 @@ export interface TMDBResponse {
   total_results: number;
   results: Movie[];
   interpretation?: string;
+  error?: string;
 }
 
 export interface TMDBPeopleResponse {
@@ -30,7 +31,12 @@ export async function tmdbFetch(payload: Record<string, any>): Promise<TMDBRespo
     });
 
     if (!res.ok) {
-      return { page: 1, total_pages: 0, total_results: 0, results: [] };
+      let errMsg = `Request failed (${res.status})`;
+      try {
+        const errData = await res.json();
+        if (errData?.error) errMsg = errData.error;
+      } catch {}
+      return { page: 1, total_pages: 0, total_results: 0, results: [], error: errMsg };
     }
 
     const data = await res.json();
@@ -56,8 +62,14 @@ export async function tmdbFetch(payload: Record<string, any>): Promise<TMDBRespo
         runtime: item.runtime || null,
       })),
     };
-  } catch {
-    return { page: 1, total_pages: 0, total_results: 0, results: [] };
+  } catch (err: any) {
+    return {
+      page: 1,
+      total_pages: 0,
+      total_results: 0,
+      results: [],
+      error: err?.message || "Network error contacting discovery service",
+    };
   }
 }
 

@@ -264,12 +264,18 @@ export function QuickAddDialog({
 
                         <div className="flex items-center gap-2 text-xs text-[#9496A1] mt-1">
                           {movie.vote_average !== undefined && movie.vote_average > 0 && (
-                            <span className="inline-flex items-center gap-1 font-semibold text-white">
-                              <Star className="w-3 h-3 fill-[#FBBF24] text-[#FBBF24]" />
-                              <span>{formatScore(movie.vote_average)}</span>
-                            </span>
+                            <>
+                              <span
+                                title="TMDB Community Score"
+                                className="inline-flex items-center gap-1 font-semibold text-white"
+                              >
+                                <Star className="w-3 h-3 fill-[#FBBF24] text-[#FBBF24]" />
+                                <span className="text-[10px] text-[#9496A1]">TMDB</span>
+                                <span>{formatScore(movie.vote_average)}</span>
+                              </span>
+                              <span>•</span>
+                            </>
                           )}
-                          <span>•</span>
                           <span>{formatYear(movie.release_date)}</span>
                           {isWatched && (
                             <span className="px-1.5 py-0.2 rounded bg-[#00D664]/15 text-[#00D664] text-[10px] font-medium border border-[#00D664]/30">

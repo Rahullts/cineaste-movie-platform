@@ -2,13 +2,19 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types";
 import type { Movie, Collection, TimelineActivity } from "@/types";
 
+export interface FetchResult<T> {
+  data: T[];
+  error: Error | null;
+}
+
 /**
- * Fetches all user library movies from Supabase joined with cached movie metadata.
+ * Fetches all user library movies from Supabase joined with cached movie metadata,
+ * preserving error distinction so callers do not confuse network failure with an empty vault.
  */
-export async function fetchUserLibrary(
+export async function fetchUserLibraryResult(
   supabase: SupabaseClient<Database>,
   userId: string
-): Promise<Movie[]> {
+): Promise<FetchResult<Movie>> {
   const { data, error } = await supabase
     .from("user_movies")
     .select(
@@ -42,42 +48,53 @@ export async function fetchUserLibrary(
 
   if (error || !data) {
     console.error("Error fetching user library from Supabase:", error);
-    return [];
+    return { data: [], error: error ? new Error(error.message) : new Error("Failed to fetch user library") };
   }
 
-  return data.map((row: any) => {
-    const meta = row.movies || {};
-    return {
-      id: row.tmdb_id,
-      tmdb_id: row.tmdb_id,
-      title: meta.title || "Untitled Film",
-      original_title: meta.original_title,
-      overview: meta.overview,
-      poster_path: meta.poster_path,
-      backdrop_path: meta.backdrop_path,
-      release_date: meta.release_date,
-      runtime: meta.runtime,
-      vote_average: meta.vote_average ? Number(meta.vote_average) : undefined,
-      vote_count: meta.vote_count,
-      genres: meta.genres || [],
-      status: row.status,
-      is_favorite: row.is_favorite,
-      rating: row.personal_rating !== null ? Number(row.personal_rating) : undefined,
-      review: row.review || undefined,
-      watched_date: row.watched_date || undefined,
-      created_date: row.added_at,
-      updated_date: row.updated_at,
-    };
-  });
+  return {
+    error: null,
+    data: data.map((row: any) => {
+      const meta = row.movies || {};
+      return {
+        id: row.tmdb_id,
+        tmdb_id: row.tmdb_id,
+        title: meta.title || "Untitled Film",
+        original_title: meta.original_title,
+        overview: meta.overview,
+        poster_path: meta.poster_path,
+        backdrop_path: meta.backdrop_path,
+        release_date: meta.release_date,
+        runtime: meta.runtime,
+        vote_average: meta.vote_average ? Number(meta.vote_average) : undefined,
+        vote_count: meta.vote_count,
+        genres: meta.genres || [],
+        status: row.status,
+        is_favorite: row.is_favorite,
+        rating: row.personal_rating !== null ? Number(row.personal_rating) : undefined,
+        review: row.review || undefined,
+        watched_date: row.watched_date || undefined,
+        created_date: row.added_at,
+        updated_date: row.updated_at,
+      };
+    }),
+  };
+}
+
+export async function fetchUserLibrary(
+  supabase: SupabaseClient<Database>,
+  userId: string
+): Promise<Movie[]> {
+  const res = await fetchUserLibraryResult(supabase, userId);
+  return res.data;
 }
 
 /**
  * Fetches all collections for the user with nested collection movies.
  */
-export async function fetchUserCollections(
+export async function fetchUserCollectionsResult(
   supabase: SupabaseClient<Database>,
   userId: string
-): Promise<Collection[]> {
+): Promise<FetchResult<Collection>> {
   const { data: collections, error: colErr } = await supabase
     .from("collections")
     .select("*")
@@ -86,7 +103,10 @@ export async function fetchUserCollections(
 
   if (colErr || !collections) {
     console.error("Error fetching user collections from Supabase:", colErr);
-    return [];
+    return {
+      data: [],
+      error: colErr ? new Error(colErr.message) : new Error("Failed to fetch user collections"),
+    };
   }
 
   const results: Collection[] = [];
@@ -145,16 +165,24 @@ export async function fetchUserCollections(
     });
   }
 
-  return results;
+  return { data: results, error: null };
+}
+
+export async function fetchUserCollections(
+  supabase: SupabaseClient<Database>,
+  userId: string
+): Promise<Collection[]> {
+  const res = await fetchUserCollectionsResult(supabase, userId);
+  return res.data;
 }
 
 /**
  * Fetches user movie journey timeline activities.
  */
-export async function fetchUserActivities(
+export async function fetchUserActivitiesResult(
   supabase: SupabaseClient<Database>,
   userId: string
-): Promise<TimelineActivity[]> {
+): Promise<FetchResult<TimelineActivity>> {
   const { data, error } = await supabase
     .from("movie_activities")
     .select(
@@ -176,23 +204,37 @@ export async function fetchUserActivities(
 
   if (error || !data) {
     console.error("Error fetching user activities:", error);
-    return [];
+    return {
+      data: [],
+      error: error ? new Error(error.message) : new Error("Failed to fetch user activities"),
+    };
   }
 
-  return data.map((row: any) => {
-    const meta = row.movies || {};
-    return {
-      id: row.id,
-      type: row.activity_type,
-      tmdb_id: row.tmdb_id,
-      title: meta.title || row.metadata?.title || "Movie Event",
-      poster_path: meta.poster_path || row.metadata?.poster_path,
-      rating: row.metadata?.rating,
-      review: row.metadata?.review,
-      metadata: row.metadata || undefined,
-      occurred_at: row.occurred_at,
-    };
-  });
+  return {
+    error: null,
+    data: data.map((row: any) => {
+      const meta = row.movies || {};
+      return {
+        id: row.id,
+        type: row.activity_type,
+        tmdb_id: row.tmdb_id,
+        title: meta.title || row.metadata?.title || "Movie Event",
+        poster_path: meta.poster_path || row.metadata?.poster_path,
+        rating: row.metadata?.rating,
+        review: row.metadata?.review,
+        metadata: row.metadata || undefined,
+        occurred_at: row.occurred_at,
+      };
+    }),
+  };
+}
+
+export async function fetchUserActivities(
+  supabase: SupabaseClient<Database>,
+  userId: string
+): Promise<TimelineActivity[]> {
+  const res = await fetchUserActivitiesResult(supabase, userId);
+  return res.data;
 }
 
 /**

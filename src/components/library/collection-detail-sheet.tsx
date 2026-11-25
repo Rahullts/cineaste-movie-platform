@@ -17,6 +17,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { tmdbFetch } from "@/lib/tmdb-service";
+import { getTmdbImageUrl } from "@/lib/image-util";
 import type { Movie, Collection } from "@/types";
 
 interface CollectionDetailSheetProps {
@@ -333,11 +334,7 @@ export function CollectionDetailSheet({
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5 sm:gap-4">
               {collectionMovies.map((movie) => {
                 const mId = movie.tmdb_id || movie.id;
-                const posterUrl = movie.poster_path
-                  ? movie.poster_path.startsWith("http")
-                    ? movie.poster_path
-                    : `https://image.tmdb.org/t/p/w342${movie.poster_path}`
-                  : null;
+                const posterUrl = getTmdbImageUrl(movie.poster_path, "w342");
 
                 return (
                   <div
@@ -378,8 +375,11 @@ export function CollectionDetailSheet({
 
                       {/* Score Badge */}
                       {movie.vote_average && Number(movie.vote_average) > 0 && (
-                        <div className="absolute bottom-2 left-2 px-1.5 py-0.5 rounded-md bg-black/80 backdrop-blur-sm text-[10px] font-mono text-[#FBBF24] border border-[#FBBF24]/30">
-                          ★ {Number(movie.vote_average).toFixed(1)}
+                        <div
+                          title="TMDB Community Score"
+                          className="absolute bottom-2 left-2 px-1.5 py-0.5 rounded-md bg-black/80 backdrop-blur-sm text-[10px] font-mono text-[#FBBF24] border border-[#FBBF24]/30"
+                        >
+                          ★ TMDB {Number(movie.vote_average).toFixed(1)}
                         </div>
                       )}
                     </div>

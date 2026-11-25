@@ -11,6 +11,7 @@ import {
   Check,
   Sparkles,
 } from "lucide-react";
+import { getTmdbImageUrl } from "@/lib/image-util";
 import type { Movie, Collection } from "@/types";
 
 interface CreateCollectionDialogProps {
@@ -248,11 +249,7 @@ export function CreateCollectionDialog({
                 filteredMovies.map((movie) => {
                   const mId = movie.tmdb_id || movie.id;
                   const isChecked = selectedMovieIds.includes(mId);
-                  const posterUrl = movie.poster_path
-                    ? movie.poster_path.startsWith("http")
-                      ? movie.poster_path
-                      : `https://image.tmdb.org/t/p/w92${movie.poster_path}`
-                    : null;
+                  const posterUrl = getTmdbImageUrl(movie.poster_path, "w185");
 
                   return (
                     <button

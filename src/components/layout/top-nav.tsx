@@ -50,8 +50,20 @@ export function TopNav({
   const router = useRouter();
   const pathname = usePathname();
   const isDashboard = pathname === "/" || pathname === "/dashboard";
+  const isFullBleed = isDashboard || pathname.startsWith("/movie/");
   const { theme, resolvedTheme, setTheme } = useTheme();
   const { user, isAdmin, isAuthenticated, signOut, openAuthModal } = useUser();
+
+  const [scrolled, setScrolled] = React.useState(false);
+  React.useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 12);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const isLightMode = resolvedTheme === "light";
+  const useLightHeaderChrome = isLightMode && !(isFullBleed && !scrolled);
 
   // Floating tab search states
   const [isSearchOpen, setIsSearchOpen] = React.useState(false);
@@ -218,15 +230,34 @@ export function TopNav({
     .slice(0, 1)
     .toUpperCase();
 
+  const actionButtonIdleClass = useLightHeaderChrome
+    ? "bg-black/[0.06] hover:bg-black/[0.12] text-slate-800 hover:text-slate-950 border border-black/10"
+    : "bg-black/45 hover:bg-white/15 text-white/90 hover:text-white border border-white/10";
+
   return (
-    <header className="sticky top-0 z-40 h-16 flex items-center justify-between gap-4 px-4 sm:px-6 lg:px-8 select-none pointer-events-none bg-transparent">
-      {/* 1. Brand Logo Link — floats independently, no panel behind it */}
+    <header
+      className={cn(
+        "sticky top-0 z-40 h-16 flex items-center justify-between gap-4 px-4 sm:px-6 lg:px-8 select-none pointer-events-none transition-all duration-200",
+        scrolled
+          ? isLightMode
+            ? "bg-[#F8F9FA]/90 backdrop-blur-xl border-b border-black/10 shadow-[0_6px_24px_rgba(0,0,0,0.06)]"
+            : "bg-[#0A0B0F]/85 backdrop-blur-xl border-b border-white/10 shadow-[0_8px_28px_rgba(0,0,0,0.45)]"
+          : isFullBleed
+            ? "bg-gradient-to-b from-black/70 via-black/35 to-transparent"
+            : "bg-background/80 backdrop-blur-md"
+      )}
+    >
+      {/* 1. Brand Logo Link — floats cleanly over scrim */}
       <Link
         href="/dashboard"
         aria-label="Cineaste Home"
         className="shrink-0 flex items-center group cursor-pointer pointer-events-auto"
       >
-        <CineasteLogo size={32} showWordmark={true} />
+        <CineasteLogo
+          size={32}
+          showWordmark={true}
+          forceLightWordmark={isFullBleed && !scrolled}
+        />
       </Link>
 
       {/* Center Spacer */}
@@ -246,8 +277,8 @@ export function TopNav({
             className={cn(
               "h-9 w-9 rounded-full grid place-items-center transition active:scale-95 cursor-pointer backdrop-blur-md",
               isSearchOpen
-                ? "bg-[#00D878]/20 text-[#00D878] shadow-[0_0_12px_rgba(0,216,120,0.25)]"
-                : "bg-black/30 hover:bg-white/15 text-white/80 hover:text-white"
+                ? "bg-[#00D878]/20 text-[#00D878] shadow-[0_0_12px_rgba(0,216,120,0.25)] border border-[#00D878]/35"
+                : actionButtonIdleClass
             )}
           >
             <Search className="w-4 h-4" />
@@ -256,12 +287,12 @@ export function TopNav({
           {/* Compact Tab-like Search Popover */}
           {isSearchOpen && (
             <div className="absolute top-12 right-0 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-              <div className="w-[300px] sm:w-[400px] p-2.5 rounded-2xl bg-[#0E0F15]/95 border border-[#1E1F2A] shadow-2xl backdrop-blur-2xl ring-1 ring-white/10">
+              <div className="w-[300px] sm:w-[400px] p-2.5 rounded-2xl bg-popover/95 text-popover-foreground border border-border shadow-2xl backdrop-blur-2xl">
                 <form
                   onSubmit={handleSearchSubmit}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#08090D] border border-white/10 focus-within:border-[#00D878]/60 transition"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-background/90 border border-border focus-within:border-[#00D878]/60 transition"
                 >
-                  <Search className="w-4 h-4 text-[#9496A1] shrink-0" />
+                  <Search className="w-4 h-4 text-muted-foreground shrink-0" />
                   <input
                     type="text"
                     autoFocus
@@ -272,7 +303,7 @@ export function TopNav({
                         ? "AI Vibe Search (e.g. cozy rainy day noir)..."
                         : "Search films, directors, keywords..."
                     }
-                    className="flex-1 min-w-0 bg-transparent text-xs sm:text-sm text-white placeholder:text-[#9496A1] focus:outline-none"
+                    className="flex-1 min-w-0 bg-transparent text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
                   />
 
                   {/* Clear Button */}
@@ -280,7 +311,7 @@ export function TopNav({
                     <button
                       type="button"
                       onClick={() => setSearchQuery("")}
-                      className="p-1 rounded-md text-[#9496A1] hover:text-white cursor-pointer"
+                      className="p-1 rounded-md text-muted-foreground hover:text-foreground cursor-pointer"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -299,7 +330,7 @@ export function TopNav({
                       "p-1.5 rounded-lg transition-colors cursor-pointer",
                       isListeningVoice
                         ? "bg-rose-500 text-white animate-pulse"
-                        : "text-[#9496A1] hover:text-white hover:bg-white/10"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
                     )}
                   >
                     <Mic className="w-4 h-4" />
@@ -309,7 +340,7 @@ export function TopNav({
                   <button
                     type="button"
                     onClick={() => setIsSearchOpen(false)}
-                    className="p-1 rounded-lg text-[#9496A1] hover:text-white hover:bg-white/10 cursor-pointer"
+                    className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -334,9 +365,13 @@ export function TopNav({
           onClick={handleQuickAddClick}
           aria-label="Quick Add Movie"
           title="Quick Add Movie to Vault (Live TMDB)"
-          className="h-9 w-9 rounded-full grid place-items-center transition active:scale-95 cursor-pointer bg-black/30 hover:bg-white/15 text-white/80 hover:text-[#00D878] backdrop-blur-md group"
+          className={cn(
+            "h-9 w-9 rounded-full grid place-items-center transition active:scale-95 cursor-pointer backdrop-blur-md group",
+            actionButtonIdleClass,
+            "hover:text-[#00D878]"
+          )}
         >
-          <Plus className="w-4 h-4 text-white/80 group-hover:text-[#00D878] transition-colors stroke-[2.5]" />
+          <Plus className="w-4 h-4 transition-colors stroke-[2.5]" />
         </button>
 
         {/* ================================================================= */}
@@ -351,8 +386,8 @@ export function TopNav({
             className={cn(
               "h-9 w-9 rounded-full grid place-items-center transition active:scale-95 cursor-pointer backdrop-blur-md",
               isThemeMenuOpen
-                ? "bg-[#00D878]/20 text-[#00D878] shadow-[0_0_12px_rgba(0,216,120,0.25)]"
-                : "bg-black/30 hover:bg-white/15 text-white/80 hover:text-white"
+                ? "bg-[#00D878]/20 text-[#00D878] shadow-[0_0_12px_rgba(0,216,120,0.25)] border border-[#00D878]/35"
+                : actionButtonIdleClass
             )}
           >
             {theme === "light" ? (
@@ -366,7 +401,7 @@ export function TopNav({
 
           {/* Theme 3-way dropdown menu */}
           {isThemeMenuOpen && (
-            <div className="absolute right-0 mt-2 w-36 rounded-2xl border border-border bg-[#0E0F15]/95 backdrop-blur-2xl shadow-2xl p-1.5 z-50 animate-in fade-in slide-in-from-top-2 text-xs">
+            <div className="absolute right-0 mt-2 w-36 rounded-2xl border border-border bg-popover/95 text-popover-foreground backdrop-blur-2xl shadow-2xl p-1.5 z-50 animate-in fade-in slide-in-from-top-2 text-xs">
               <button
                 type="button"
                 onClick={() => {
@@ -448,8 +483,8 @@ export function TopNav({
             className={cn(
               "h-9 w-9 rounded-full grid place-items-center overflow-hidden transition active:scale-95 cursor-pointer backdrop-blur-md group",
               isAccountMenuOpen
-                ? "bg-[#00D878]/20 text-[#00D878] shadow-[0_0_12px_rgba(0,216,120,0.25)]"
-                : "bg-black/30 hover:bg-white/15 text-white/80 hover:text-white"
+                ? "bg-[#00D878]/20 text-[#00D878] shadow-[0_0_12px_rgba(0,216,120,0.25)] border border-[#00D878]/35"
+                : actionButtonIdleClass
             )}
           >
             {user.avatar_url ? (
@@ -464,7 +499,7 @@ export function TopNav({
                 {userInitials}
               </span>
             ) : (
-              <User className="w-4 h-4 text-white/80 group-hover:text-white" />
+              <User className="w-4 h-4" />
             )}
           </button>
 

@@ -9,9 +9,10 @@ import type {
 } from "@/types";
 import { getBrowserClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { migrateLocalDataToSupabase } from "@/lib/supabase/migration-service";
+import { getUserProfileStorageKey } from "@/lib/library-storage";
 import { AuthModal } from "@/components/auth/auth-modal";
 
-const USER_STORAGE_KEY = "cineaste:user_profile:v1";
+const LEGACY_USER_STORAGE_KEY = "cineaste:user_profile:v1";
 
 const DEFAULT_SETTINGS: UserSettings = {
   theme: "dark",
@@ -150,17 +151,27 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     const loadLocalFallback = () => {
       try {
-        const stored = localStorage.getItem(USER_STORAGE_KEY);
+        const guestKey = getUserProfileStorageKey(null);
+        const stored = localStorage.getItem(guestKey) || localStorage.getItem(LEGACY_USER_STORAGE_KEY);
         if (stored) {
           const parsed = JSON.parse(stored);
-          setUser({
-            ...GUEST_USER,
-            ...parsed,
-            subscription: { ...DEFAULT_SUBSCRIPTION, ...(parsed.subscription || {}) },
-            settings: { ...DEFAULT_SETTINGS, ...(parsed.settings || {}) },
-          });
+          // Guard against leaking an authenticated user's profile from legacy unscoped storage
+          if (!parsed?.id || parsed.id === "guest-cinephile") {
+            setUser({
+              ...GUEST_USER,
+              ...parsed,
+              subscription: { ...DEFAULT_SUBSCRIPTION, ...(parsed.subscription || {}) },
+              settings: { ...DEFAULT_SETTINGS, ...(parsed.settings || {}) },
+            });
+          } else {
+            setUser(GUEST_USER);
+          }
+        } else {
+          setUser(GUEST_USER);
         }
-      } catch {}
+      } catch {
+        setUser(GUEST_USER);
+      }
       setIsLoaded(true);
     };
 
@@ -249,8 +260,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         // Run idempotent local data migration
         migrateLocalDataToSupabase(supabase, uid)
           .then((res) => {
-            if (res.success && !res.skipped && res.moviesCount > 0) {
-              window.dispatchEvent(new Event("cineaste:library-change"));
+            if (res.success && !res.skipped && (res.moviesCount > 0 || res.collectionsCount > 0 || res.activitiesCount > 0)) {
+              window.dispatchEvent(new Event("cineaste:library-refresh"));
             }
           })
           .catch((err) => console.error("Migration error:", err));
@@ -308,7 +319,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const saveUserLocal = (updated: UserProfile) => {
     setUser(updated);
     try {
-      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updated));
+      const uid = isAuthenticated && updated.id && !updated.id.startsWith("guest-") ? updated.id : null;
+      localStorage.setItem(getUserProfileStorageKey(uid), JSON.stringify(updated));
       window.dispatchEvent(new Event("cineaste:user-change"));
     } catch {}
   };
@@ -379,7 +391,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
     setIsAuthenticated(false);
     setUser(GUEST_USER);
-    localStorage.removeItem(USER_STORAGE_KEY);
+    try {
+      localStorage.removeItem(LEGACY_USER_STORAGE_KEY);
+    } catch {}
     window.location.href = "/dashboard";
   };
 

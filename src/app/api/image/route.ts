@@ -1,5 +1,59 @@
 import { NextRequest, NextResponse } from "next/server";
 
+interface CachedImageEntry {
+  bytes: ArrayBuffer;
+  contentType: string;
+  expiresAt: number;
+}
+
+const IMAGE_CACHE_TTL_MS = 1000 * 60 * 30; // 30 minutes
+const MAX_CACHE_ENTRIES = 200;
+
+const imageCache = new Map<string, CachedImageEntry>();
+const inflightFetches = new Map<string, Promise<{ bytes: ArrayBuffer; contentType: string } | null>>();
+
+function getCachedImage(key: string): CachedImageEntry | null {
+  const hit = imageCache.get(key);
+  if (!hit) return null;
+  if (hit.expiresAt <= Date.now()) {
+    imageCache.delete(key);
+    return null;
+  }
+  // Refresh LRU order
+  imageCache.delete(key);
+  imageCache.set(key, hit);
+  return hit;
+}
+
+function setCachedImage(key: string, entry: CachedImageEntry) {
+  if (imageCache.size >= MAX_CACHE_ENTRIES) {
+    const oldestKey = imageCache.keys().next().value;
+    if (oldestKey) imageCache.delete(oldestKey);
+  }
+  imageCache.set(key, entry);
+}
+
+async function fetchUpstreamImage(url: string, timeoutMs: number) {
+  const resp = await fetch(url, {
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+      Accept: "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+    },
+    signal: AbortSignal.timeout(timeoutMs),
+  });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  const contentType = resp.headers.get("content-type") || "image/jpeg";
+  if (!contentType.startsWith("image/")) {
+    throw new Error(`Unexpected content-type: ${contentType}`);
+  }
+  const bytes = await resp.arrayBuffer();
+  if (!bytes || bytes.byteLength === 0) {
+    throw new Error("Empty image response");
+  }
+  return { bytes, contentType };
+}
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -20,80 +74,77 @@ export async function GET(request: NextRequest) {
     }
 
     const primarySize = widthNum;
-    const fallbackSize = widthNum === "w1280" ? "original" : widthNum === "original" ? "w1280" : "w780";
+    const fallbackSize =
+      widthNum === "w1280" ? "original" : widthNum === "original" ? "w1280" : "w500";
+    const cacheKey = `${primarySize}:${cleanPath}`;
 
-    const fetchWithTimeout = async (url: string, timeoutMs: number) => {
-      const resp = await fetch(url, {
+    const cached = getCachedImage(cacheKey);
+    if (cached) {
+      return new NextResponse(cached.bytes, {
         headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-          Accept: "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+          "Content-Type": cached.contentType,
+          "Cache-Control": "public, max-age=31536000, immutable",
         },
-        signal: AbortSignal.timeout(timeoutMs),
       });
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      return resp;
-    };
-
-    let res: Response | null = null;
-
-    // Race direct TMDB with high-availability wsrv proxy
-    try {
-      res = await Promise.any([
-        fetchWithTimeout(`https://image.tmdb.org/t/p/${primarySize}${cleanPath}`, 8000),
-        fetchWithTimeout(`https://wsrv.nl/?url=${encodeURIComponent(`image.tmdb.org/t/p/${primarySize}${cleanPath}`)}`, 15000),
-      ]);
-    } catch {
-      try {
-        res = await fetchWithTimeout(
-          `https://wsrv.nl/?url=${encodeURIComponent(`image.tmdb.org/t/p/${fallbackSize}${cleanPath}`)}`,
-          10000
-        );
-      } catch {
-        res = null;
-      }
     }
 
-    if (res && res.ok) {
-      try {
-        const contentType = res.headers.get("content-type") || "image/jpeg";
-        const arrayBuffer = await res.arrayBuffer();
+    let pending = inflightFetches.get(cacheKey);
+    if (!pending) {
+      pending = (async () => {
+        // 1. Direct TMDB first (single upstream connection when reachable)
+        try {
+          return await fetchUpstreamImage(
+            `https://image.tmdb.org/t/p/${primarySize}${cleanPath}`,
+            4000
+          );
+        } catch {}
 
-        return new NextResponse(arrayBuffer, {
-          headers: {
-            "Content-Type": contentType,
-            "Cache-Control": "public, max-age=31536000, immutable",
-          },
-        });
-      } catch (streamErr) {
-        console.warn("ArrayBuffer stream error:", streamErr);
-      }
+        // 2. Race direct fallback size & wsrv image proxy only if direct failed
+        try {
+          return await Promise.any([
+            fetchUpstreamImage(
+              `https://wsrv.nl/?url=${encodeURIComponent(`image.tmdb.org/t/p/${primarySize}${cleanPath}`)}`,
+              7000
+            ),
+            fetchUpstreamImage(
+              `https://image.tmdb.org/t/p/${fallbackSize}${cleanPath}`,
+              5000
+            ),
+          ]);
+        } catch {
+          return null;
+        }
+      })().finally(() => {
+        inflightFetches.delete(cacheKey);
+      });
+      inflightFetches.set(cacheKey, pending);
     }
 
-    // Clean neutral cinematic SVG placeholder if upstream completely fails
-    const fallbackSvg = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
-        <defs>
-          <radialGradient id="grad" cx="50%" cy="50%" r="70%">
-            <stop offset="0%" stop-color="#141824"/>
-            <stop offset="100%" stop-color="#0A0B0F"/>
-          </radialGradient>
-        </defs>
-        <rect width="1280" height="720" fill="url(#grad)"/>
-      </svg>
-    `.trim();
+    const result = await pending;
+    if (result) {
+      setCachedImage(cacheKey, {
+        bytes: result.bytes,
+        contentType: result.contentType,
+        expiresAt: Date.now() + IMAGE_CACHE_TTL_MS,
+      });
 
-    return new NextResponse(fallbackSvg, {
+      return new NextResponse(result.bytes, {
+        headers: {
+          "Content-Type": result.contentType,
+          "Cache-Control": "public, max-age=31536000, immutable",
+        },
+      });
+    }
+
+    // Return HTTP 404 on upstream failure so client <Image onError> triggers fallback artwork cleanly
+    return new NextResponse("Poster unavailable", {
+      status: 404,
       headers: {
-        "Content-Type": "image/svg+xml",
-        "Cache-Control": "public, max-age=86400",
+        "Cache-Control": "public, max-age=300",
       },
     });
   } catch (err) {
     console.error("Image proxy unexpected error:", err);
-    const fallbackSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720"><rect width="1280" height="720" fill="#0A0B0F"/></svg>`;
-    return new NextResponse(fallbackSvg, {
-      headers: { "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=86400" },
-    });
+    return new NextResponse("Image proxy error", { status: 502 });
   }
 }

@@ -272,7 +272,7 @@ export default function ProfilePage() {
                 )}
               </div>
               <p className="text-xs sm:text-sm text-[#9496A1] mt-0.5">
-                @{handle || "user"} • {user.email}
+                @{handle || "guest"}{user.email ? ` • ${user.email}` : " • Local Session"}
               </p>
               {user.member_since && (
                 <p className="text-[11px] text-[#9496A1]/70 font-mono mt-0.5">

@@ -298,13 +298,25 @@ export function FavoritesSection({
                     <FolderPlus className="w-4 h-4" />
                   </button>
 
-                  {/* Rating Badge */}
-                  {movie.vote_average && Number(movie.vote_average) > 0 && (
-                    <div className="absolute bottom-2.5 left-2.5 px-2 py-0.5 rounded-md bg-black/85 backdrop-blur-md text-[11px] font-mono text-[#FBBF24] font-bold flex items-center gap-1 shadow-md">
+                  {/* Rating Badge (Personal rating prioritized; community score labeled TMDB) */}
+                  {movie.rating ? (
+                    <div
+                      title="Your Personal Cineaste Rating"
+                      className="absolute bottom-2.5 left-2.5 px-2 py-0.5 rounded-md bg-black/85 backdrop-blur-md text-[11px] font-mono text-[#00D878] font-bold flex items-center gap-1 shadow-md"
+                    >
                       <Star className="w-3 h-3 fill-current" />
+                      <span>{movie.rating}/10</span>
+                    </div>
+                  ) : movie.vote_average && Number(movie.vote_average) > 0 ? (
+                    <div
+                      title="TMDB Community Score"
+                      className="absolute bottom-2.5 left-2.5 px-2 py-0.5 rounded-md bg-black/85 backdrop-blur-md text-[11px] font-mono text-[#FBBF24] font-bold flex items-center gap-1 shadow-md"
+                    >
+                      <Star className="w-3 h-3 fill-current" />
+                      <span className="text-[9px] text-white/70">TMDB</span>
                       <span>{Number(movie.vote_average).toFixed(1)}</span>
                     </div>
-                  )}
+                  ) : null}
                 </div>
 
                 {/* Metadata Body */}
@@ -365,12 +377,24 @@ export function FavoritesSection({
                 </div>
 
                 {/* Rating */}
-                {movie.vote_average && (
-                  <div className="px-2.5 py-1 rounded-lg bg-black/50 border border-[#FBBF24]/30 text-xs font-mono text-[#FBBF24] font-bold flex items-center gap-1 shrink-0">
+                {movie.rating ? (
+                  <div
+                    title="Your Personal Cineaste Rating"
+                    className="px-2.5 py-1 rounded-lg bg-[#00D878]/10 border border-[#00D878]/30 text-xs font-mono text-[#00D878] font-bold flex items-center gap-1 shrink-0"
+                  >
                     <Star className="w-3.5 h-3.5 fill-current" />
+                    <span>{movie.rating}/10</span>
+                  </div>
+                ) : movie.vote_average ? (
+                  <div
+                    title="TMDB Community Score"
+                    className="px-2.5 py-1 rounded-lg bg-black/50 border border-[#FBBF24]/30 text-xs font-mono text-[#FBBF24] font-bold flex items-center gap-1 shrink-0"
+                  >
+                    <Star className="w-3.5 h-3.5 fill-current" />
+                    <span className="text-[9px] text-white/70">TMDB</span>
                     <span>{Number(movie.vote_average).toFixed(1)}</span>
                   </div>
-                )}
+                ) : null}
 
                 {/* Actions */}
                 <div className="flex items-center gap-2 shrink-0">

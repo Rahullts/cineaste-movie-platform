@@ -8,6 +8,7 @@ import {
   Compass,
   ArrowRight,
   Flame,
+  ChevronRight,
 } from "lucide-react";
 import { MoviePosterCard } from "@/components/movie-poster-card";
 import { PosterCarousel } from "@/components/dashboard/poster-carousel";
@@ -70,6 +71,20 @@ export function YourNextGreatWatchSection({
   onToggleFavorite,
 }: YourNextGreatWatchSectionProps) {
   const [activeCategory, setActiveCategory] = React.useState<CategoryKey>("trending");
+  const tabsRef = React.useRef<HTMLDivElement>(null);
+  const [canScrollTabsRight, setCanScrollTabsRight] = React.useState(false);
+
+  const checkTabsOverflow = React.useCallback(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    setCanScrollTabsRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 8);
+  }, []);
+
+  React.useEffect(() => {
+    checkTabsOverflow();
+    window.addEventListener("resize", checkTabsOverflow);
+    return () => window.removeEventListener("resize", checkTabsOverflow);
+  }, [checkTabsOverflow]);
 
   const [cache, setCache] = React.useState<Record<CategoryKey, Movie[]>>({
     trending: [],
@@ -167,31 +182,49 @@ export function YourNextGreatWatchSection({
         </Link>
       </div>
 
-      {/* Category Switcher Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
-        {CATEGORIES.map((cat) => {
-          const isActive = cat.key === activeCategory;
-          const Icon = cat.icon;
-          return (
+      {/* Category Switcher Tabs (Wrapped on tablet/desktop, scrollable with cue on narrow mobile) */}
+      <div className="relative">
+        <div
+          ref={tabsRef}
+          onScroll={checkTabsOverflow}
+          className="flex items-center sm:flex-wrap gap-2 overflow-x-auto sm:overflow-visible no-scrollbar py-0.5 pr-8 sm:pr-0"
+        >
+          {CATEGORIES.map((cat) => {
+            const isActive = cat.key === activeCategory;
+            const Icon = cat.icon;
+            return (
+              <button
+                key={cat.key}
+                type="button"
+                onClick={() => setActiveCategory(cat.key)}
+                className={cn(
+                  "h-8 sm:h-9 px-3.5 sm:px-4 rounded-full text-xs tracking-[-0.01em] inline-flex items-center gap-2 transition shrink-0 cursor-pointer border whitespace-nowrap",
+                  isActive
+                    ? "bg-[#00D664]/15 border-[#00D664]/40 text-[#00D664] font-semibold shadow-sm"
+                    : "bg-card/80 hover:bg-muted border-border text-muted-foreground hover:text-foreground font-medium"
+                )}
+              >
+                <Icon
+                  className={cn("w-3.5 h-3.5", isActive ? "text-[#00D664]" : "text-muted-foreground")}
+                  strokeWidth={1.85}
+                />
+                <span>{cat.label}</span>
+              </button>
+            );
+          })}
+        </div>
+        {canScrollTabsRight && (
+          <div className="sm:hidden pointer-events-none absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-background via-background/85 to-transparent flex items-center justify-end">
             <button
-              key={cat.key}
               type="button"
-              onClick={() => setActiveCategory(cat.key)}
-              className={cn(
-                "h-8 sm:h-9 px-3.5 sm:px-4 rounded-full text-xs tracking-[-0.01em] inline-flex items-center gap-2 transition shrink-0 cursor-pointer border",
-                isActive
-                  ? "bg-[#00D664]/15 border-[#00D664]/40 text-[#00D664] font-semibold shadow-sm"
-                  : "bg-white/[0.04] hover:bg-white/[0.08] border-white/10 text-white/75 hover:text-white font-medium"
-              )}
+              aria-label="Scroll discovery categories right"
+              onClick={() => tabsRef.current?.scrollBy({ left: 160, behavior: "smooth" })}
+              className="pointer-events-auto w-7 h-7 rounded-full bg-card border border-border text-foreground grid place-items-center shadow-md cursor-pointer"
             >
-              <Icon
-                className={cn("w-3.5 h-3.5", isActive ? "text-[#00D664]" : "text-white/55")}
-                strokeWidth={1.85}
-              />
-              <span>{cat.label}</span>
+              <ChevronRight className="w-3.5 h-3.5" />
             </button>
-          );
-        })}
+          </div>
+        )}
       </div>
 
       {/* Poster Carousel or Matched Skeletons */}

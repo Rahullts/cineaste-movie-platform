@@ -53,59 +53,61 @@ export function AppShell({ children }: AppShellProps) {
         onOpenQuickAdd={() => setIsQuickAddOpen(true)}
       />
 
-      {/* Dynamic Route Content - Full Viewport Width with generous bottom padding for Floating Dock */}
+      {/* Dynamic Route Content - Full Viewport Width with generous bottom padding for Floating Dock + safe areas */}
       <main
         className={cn(
-          "flex-1 w-full max-w-full min-w-0 pb-32 sm:pb-36",
-          isFullBleed ? "px-0 pt-0 -mt-16 pb-32 sm:pb-36" : "px-4 sm:px-6 lg:px-8 py-3.5 sm:py-4"
+          "flex-1 w-full max-w-full min-w-0 pb-[calc(8.5rem+env(safe-area-inset-bottom,0px))] sm:pb-[calc(9.5rem+env(safe-area-inset-bottom,0px))]",
+          isFullBleed
+            ? "px-0 pt-0 -mt-16"
+            : "px-4 sm:px-6 lg:px-8 pt-3.5 sm:pt-4"
         )}
       >
         {children}
       </main>
 
       {/* Footer */}
-      <footer className="w-full px-4 sm:px-6 lg:px-8 py-5 pb-24 sm:pb-28 text-xs text-muted-foreground bg-card/40">
+      <footer className="w-full px-4 sm:px-6 lg:px-8 py-5 pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))] sm:pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))] text-xs text-muted-foreground bg-card/40 border-t border-border/30">
         <div className="flex flex-wrap items-center justify-between gap-y-3">
           <div className="flex items-center gap-2">
             <span>&copy; {new Date().getFullYear()} Cineaste</span>
-            <span className="text-[#1E1F2A]">•</span>
-            <span className="text-[#00D878] font-semibold">Film Vault</span>
+            <span className="text-border">•</span>
+            <span className="text-primary font-semibold">Film Vault</span>
           </div>
 
           <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
             <Link
               href="/legal/privacy"
-              className="hover:text-[#F3F4F6] transition-colors"
+              className="hover:text-foreground transition-colors"
             >
               Privacy
             </Link>
             <Link
               href="/legal/terms"
-              className="hover:text-[#F3F4F6] transition-colors"
+              className="hover:text-foreground transition-colors"
             >
               Terms
             </Link>
             <Link
               href="/legal/cookies"
-              className="hover:text-[#F3F4F6] transition-colors"
+              className="hover:text-foreground transition-colors"
             >
               Cookies
             </Link>
             <Link
               href="/legal/data"
-              className="hover:text-[#F3F4F6] transition-colors"
+              className="hover:text-foreground transition-colors"
             >
               Data Policy
             </Link>
             <Link
               href="/legal/licensing"
-              className="hover:text-[#F3F4F6] transition-colors"
+              className="hover:text-foreground transition-colors"
             >
               Licensing
             </Link>
             <Link
               href="/legal/opensource"
-              className="hover:text-[#F3F4F6] transition-colors"
+              className="hover:text-foreground transition-colors"
             >
               Open Source
             </Link>

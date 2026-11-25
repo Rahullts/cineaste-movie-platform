@@ -10,6 +10,7 @@ import {
   FolderHeart,
   Sparkles,
 } from "lucide-react";
+import { getTmdbImageUrl } from "@/lib/image-util";
 import type { Movie, Collection } from "@/types";
 
 interface AddToCollectionDialogProps {
@@ -58,11 +59,7 @@ export function AddToCollectionDialog({
 
   if (!isOpen || !movie) return null;
 
-  const posterUrl = movie.poster_path
-    ? movie.poster_path.startsWith("http")
-      ? movie.poster_path
-      : `https://image.tmdb.org/t/p/w185${movie.poster_path}`
-    : null;
+  const posterUrl = getTmdbImageUrl(movie.poster_path, "w185");
 
   const movieId = movie.tmdb_id || movie.id;
 
@@ -131,7 +128,7 @@ export function AddToCollectionDialog({
             <p className="text-xs font-bold text-white truncate">{movie.title}</p>
             <p className="text-[11px] text-[#9496A1]">
               {movie.release_date ? movie.release_date.split("-")[0] : "Cinema"} •{" "}
-              {movie.vote_average ? `★ ${Number(movie.vote_average).toFixed(1)}` : "Unrated"}
+              {movie.vote_average ? `★ TMDB ${Number(movie.vote_average).toFixed(1)}` : "Unrated"}
             </p>
           </div>
         </div>
