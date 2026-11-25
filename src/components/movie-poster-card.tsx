@@ -448,7 +448,7 @@ export function MoviePosterCard({
                   "flex-1 h-8 rounded-lg grid place-items-center transition active:scale-95",
                   isWatchedMovie
                     ? "bg-[#00D664]/20 text-[#00D664]"
-                    : "bg-secondary/90 text-foreground/75 hover:text-foreground"
+                    : "bg-secondary text-foreground hover:bg-accent"
                 )}
               >
                 <Eye className="w-3.5 h-3.5 stroke-[1.9]" />
@@ -464,7 +464,7 @@ export function MoviePosterCard({
                 "flex-1 h-8 rounded-lg grid place-items-center transition active:scale-95",
                 activeWatchlist
                   ? "bg-[#00D664]/20 text-[#00D664]"
-                  : "bg-secondary/90 text-foreground/75 hover:text-foreground"
+                  : "bg-secondary text-foreground hover:bg-accent"
               )}
             >
               <CinematicBookmarkIcon size={13} filled={activeWatchlist} />
@@ -479,7 +479,7 @@ export function MoviePosterCard({
                 "flex-1 h-8 rounded-lg grid place-items-center transition active:scale-95",
                 activeFavorite
                   ? "bg-rose-500/20 text-rose-400"
-                  : "bg-secondary/90 text-foreground/75 hover:text-foreground"
+                  : "bg-secondary text-foreground hover:bg-accent"
               )}
             >
               <CinematicHeartIcon size={13} filled={activeFavorite} />

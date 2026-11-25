@@ -794,111 +794,127 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
       </section>
 
       {/* =================================================================== */}
-      {/* 2. PERSONAL CINEMA LOG (Expressive Movie Journal Composition)       */}
+      {/* 2. PERSONAL CINEMA LOG (Masterclass Two-Panel Film Journal)         */}
       {/* =================================================================== */}
       <section
         aria-label="Your personal cinema log"
-        className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-12 pt-3 sm:pt-5 -mt-3 sm:-mt-5 relative z-10"
+        className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-12 pt-6 sm:pt-8 relative z-10"
       >
-        <div className="rounded-3xl bg-gradient-to-br from-[#101118]/90 via-[#0D0E15]/90 to-[#0A0B10] p-6 sm:p-10 lg:p-12 shadow-2xl relative overflow-hidden">
-          {/* Ambient subtle green glow */}
-          <div className="absolute -top-32 -right-32 w-96 h-96 bg-[#00D878]/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="rounded-3xl bg-gradient-to-br from-[#12141E]/95 via-[#0E1018]/95 to-[#0B0C12] p-5 sm:p-8 lg:p-10 shadow-[0_24px_64px_-16px_rgba(0,0,0,0.7)] relative overflow-hidden">
+          {/* Subtle ambient glow */}
+          <div className="absolute -top-28 -right-28 w-80 h-80 bg-[#00D878]/[0.045] rounded-full blur-3xl pointer-events-none" />
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 relative z-10 items-stretch">
             {/* --------------------------------------------------------------- */}
-            {/* LEFT: YOUR CINEMA LOG                                           */}
+            {/* LEFT: YOUR CINEMA LOG (Rating + Status + Screening Controls)    */}
             {/* --------------------------------------------------------------- */}
-            <div className="lg:col-span-5 flex flex-col justify-between space-y-6">
-              <div>
-                <div className="flex items-center gap-2">
-                  <Bookmark className="w-3.5 h-3.5 text-[#00D878] shrink-0" />
-                  <span className="text-[11px] font-mono uppercase tracking-[0.25em] text-[#00D878] font-bold">
-                    Personal Vault
-                  </span>
+            <div className="lg:col-span-5 flex flex-col justify-between gap-5">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-xs font-medium text-[#00D878]">
+                  <Bookmark className="w-3.5 h-3.5 shrink-0" />
+                  <span>Personal Vault</span>
                 </div>
-                <h2 className="text-xl sm:text-2xl font-semibold font-heading tracking-[-0.015em] text-white mt-1">
+                <h2 className="text-xl sm:text-2xl font-heading font-semibold tracking-tight text-white">
                   Your Cinema Log
                 </h2>
-                <p className="text-xs text-[#8B92A5] mt-1">
-                  Rate, log screening dates, and set reminders for your private vault.
+                <p className="text-xs sm:text-[13px] text-[#9499AC]">
+                  Rate, track your viewing status, and log screening dates.
                 </p>
+              </div>
 
-                {/* Rating Display & 10-Point Score Control */}
-                <div className="mt-6 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-mono uppercase tracking-wider text-[#8B92A5] font-semibold">
-                      Personal Rating
+              {/* Personal Score Card */}
+              <div className="rounded-2xl bg-white/[0.035] p-4 sm:p-5 space-y-3.5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-medium text-[#9499AC]">
+                    Personal Rating
+                  </span>
+                  {personalRating > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleClearRating}
+                      className="text-xs text-[#9499AC] hover:text-rose-400 transition cursor-pointer"
+                    >
+                      Clear Rating
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  {(hoverRating || personalRating) > 0 ? (
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-3xl sm:text-4xl font-heading font-semibold text-white tabular-nums tracking-tight">
+                        {hoverRating || personalRating}
+                      </span>
+                      <span className="text-sm text-[#8B92A5] font-medium tabular-nums">
+                        / 10
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-xl sm:text-2xl font-heading font-medium text-[#8B92A5]">
+                      Not Rated Yet
                     </span>
-                    {personalRating > 0 && (
-                      <button
-                        type="button"
-                        onClick={handleClearRating}
-                        className="text-[11px] text-[#8B92A5] hover:text-rose-400 transition cursor-pointer"
-                      >
-                        Clear Rating
-                      </button>
+                  )}
+
+                  <span
+                    className={cn(
+                      "px-2.5 py-1 rounded-full text-xs font-medium",
+                      (hoverRating || personalRating) > 0
+                        ? "bg-[#00D878]/15 text-[#00D878]"
+                        : "bg-white/[0.05] text-[#9499AC]"
                     )}
-                  </div>
-
-                  <div className="flex items-baseline gap-2.5">
-                    <span className="text-5xl sm:text-6xl font-mono font-black text-white tracking-tight">
-                      {hoverRating || personalRating || "—"}
-                    </span>
-                    <span className="text-lg font-mono text-[#8B92A5]">/ 10</span>
-                    <span className="text-xs text-[#00D878] font-semibold ml-2">
-                      {(hoverRating || personalRating) >= 9
-                        ? "Masterpiece"
-                        : (hoverRating || personalRating) >= 8
-                        ? "Great"
-                        : (hoverRating || personalRating) >= 7
-                        ? "Good"
-                        : (hoverRating || personalRating) >= 5
-                        ? "Average"
-                        : (hoverRating || personalRating) > 0
-                        ? "Poor"
-                        : "Click star to rate"}
-                    </span>
-                  </div>
-
-                  {/* 10-Star Interactive Bar */}
-                  <div
-                    className="flex items-center gap-1 sm:gap-1.5 pt-1"
-                    onMouseLeave={() => setHoverRating(0)}
                   >
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((starVal) => {
-                      const isFilled = (hoverRating || personalRating) >= starVal;
-                      return (
-                        <button
-                          key={starVal}
-                          type="button"
-                          aria-label={`Rate ${starVal} out of 10`}
-                          onMouseEnter={() => setHoverRating(starVal)}
-                          onClick={() => handleRatingSelect(starVal)}
-                          className="p-1 sm:p-1.5 rounded-lg hover:bg-white/10 transition-colors focus:outline-none cursor-pointer"
-                        >
-                          <Star
-                            className={cn(
-                              "w-5 h-5 sm:w-6 sm:h-6 transition-all duration-200",
-                              isFilled
-                                ? "text-[#FBBF24] fill-current drop-shadow-[0_0_8px_rgba(251,191,36,0.35)]"
-                                : "text-[#1E1F2A] hover:text-[#FBBF24]/60"
-                            )}
-                          />
-                        </button>
-                      );
-                    })}
-                  </div>
+                    {(hoverRating || personalRating) >= 9
+                      ? "Masterpiece"
+                      : (hoverRating || personalRating) >= 8
+                      ? "Great"
+                      : (hoverRating || personalRating) >= 7
+                      ? "Good"
+                      : (hoverRating || personalRating) >= 5
+                      ? "Average"
+                      : (hoverRating || personalRating) > 0
+                      ? "Poor"
+                      : "Tap star to rate"}
+                  </span>
+                </div>
+
+                {/* Crisp 10-Star Interactive Track */}
+                <div
+                  className="flex items-center justify-between gap-0.5 sm:gap-1 rounded-xl bg-[#090A0F]/65 px-2.5 py-2"
+                  onMouseLeave={() => setHoverRating(0)}
+                >
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((starVal) => {
+                    const isFilled = (hoverRating || personalRating) >= starVal;
+                    return (
+                      <button
+                        key={starVal}
+                        type="button"
+                        aria-label={`Rate ${starVal} out of 10`}
+                        onMouseEnter={() => setHoverRating(starVal)}
+                        onClick={() => handleRatingSelect(starVal)}
+                        className="p-1 sm:p-1.5 rounded-lg hover:bg-white/[0.07] hover:scale-110 transition-all focus:outline-none cursor-pointer"
+                      >
+                        <Star
+                          className={cn(
+                            "w-4 h-4 sm:w-5 sm:h-5 transition-all duration-150",
+                            isFilled
+                              ? "text-[#FBBF24] fill-current drop-shadow-[0_0_8px_rgba(251,191,36,0.35)]"
+                              : "text-white/25 hover:text-[#FBBF24]/80"
+                          )}
+                        />
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Watch Status Selector */}
-              <div className="space-y-2 pt-2">
-                <span className="text-[11px] font-mono uppercase tracking-wider text-[#8B92A5] font-semibold">
+              {/* Balanced Segmented Watch Status */}
+              <div className="space-y-2">
+                <span className="text-xs font-medium text-[#9499AC] block">
                   Watch Status
                 </span>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {[
-                    { key: "want", label: "In Watchlist", icon: Bookmark },
+                    { key: "want", label: "Watchlist", icon: Bookmark },
                     { key: "watching", label: "Watching", icon: Play },
                     { key: "watched", label: "Watched", icon: CheckCircle2 },
                     { key: "dropped", label: "Dropped", icon: Trash2 },
@@ -911,32 +927,32 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
                         type="button"
                         onClick={() => handleStatusChange(s.key as MovieStatus)}
                         className={cn(
-                          "px-3.5 py-1.5 rounded-full text-xs font-medium inline-flex items-center gap-1.5 transition-all cursor-pointer shadow-sm",
+                          "h-10 px-2.5 rounded-xl text-xs font-medium inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer",
                           isActive
-                            ? "bg-[#00D878]/20 text-[#00D878] font-semibold"
-                            : "bg-[#14151F] text-[#8B92A5] hover:text-white"
+                            ? "bg-[#00D878]/18 text-[#00D878] font-semibold"
+                            : "bg-white/[0.04] text-[#9499AC] hover:bg-white/[0.08] hover:text-white"
                         )}
                       >
-                        <Icon className="w-3.5 h-3.5" />
-                        <span>{s.label}</span>
+                        <Icon className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">{s.label}</span>
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Screening Date & Remind to Watch Controls */}
-              <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-[#8B92A5]" />
-                  <span className="text-xs text-[#8B92A5]">Screening Date:</span>
+              {/* Unified Screening Date & Reminder Row */}
+              <div className="rounded-2xl bg-white/[0.035] px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+                <label className="flex items-center gap-2 text-xs text-[#9499AC]">
+                  <Calendar className="w-3.5 h-3.5 text-[#00D878] shrink-0" />
+                  <span>Screening Date</span>
                   <input
                     type="date"
                     value={watchedDate}
                     onChange={(e) => setWatchedDate(e.target.value)}
-                    className="bg-[#14151F] text-xs text-white rounded-xl px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#00D878] transition"
+                    className="bg-[#090A0F]/80 text-xs text-white rounded-xl px-3 py-1.5 outline-none border-0 focus:bg-[#090A0F] transition [color-scheme:dark]"
                   />
-                </div>
+                </label>
 
                 <button
                   type="button"
@@ -945,10 +961,10 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
                     showToast(!remindToWatch ? "Reminder set for this film" : "Reminder removed");
                   }}
                   className={cn(
-                    "px-3.5 py-1.5 rounded-xl text-xs font-medium inline-flex items-center gap-1.5 transition cursor-pointer self-start sm:self-auto shadow-sm",
+                    "px-3.5 py-2 rounded-xl text-xs font-medium inline-flex items-center gap-1.5 transition cursor-pointer",
                     remindToWatch
-                      ? "bg-[#00D878]/20 text-[#00D878] font-semibold"
-                      : "bg-[#14151F] text-[#8B92A5] hover:text-white"
+                      ? "bg-[#00D878]/18 text-[#00D878] font-semibold"
+                      : "bg-white/[0.05] text-[#B4B9C9] hover:bg-white/[0.09] hover:text-white"
                   )}
                 >
                   <Bell className="w-3.5 h-3.5" />
@@ -958,62 +974,62 @@ export function MovieDetailView({ movie, isLoading }: MovieDetailViewProps) {
             </div>
 
             {/* --------------------------------------------------------------- */}
-            {/* RIGHT: YOUR THOUGHTS                                            */}
+            {/* RIGHT: YOUR THOUGHTS (Unified Journal Card)                     */}
             {/* --------------------------------------------------------------- */}
-            <div className="lg:col-span-7 flex flex-col justify-between space-y-4">
-              <div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <MessageSquare className="w-3.5 h-3.5 text-[#00D878] shrink-0" />
-                    <span className="text-[11px] font-mono uppercase tracking-[0.25em] text-[#00D878] font-bold">
-                      Private Impressions
-                    </span>
+            <div className="lg:col-span-7 flex flex-col justify-between gap-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-xs font-medium text-[#00D878]">
+                    <MessageSquare className="w-3.5 h-3.5 shrink-0" />
+                    <span>Private Impressions</span>
                   </div>
-                  {personalReview && (
-                    <button
-                      type="button"
-                      onClick={handleClearReview}
-                      className="text-[11px] text-[#8B92A5] hover:text-rose-400 transition cursor-pointer"
-                    >
-                      Clear Notes
-                    </button>
-                  )}
+                  <h3 className="text-xl sm:text-2xl font-heading font-semibold tracking-tight text-white">
+                    Your Thoughts
+                  </h3>
                 </div>
-                <h3 className="text-xl sm:text-2xl font-semibold font-heading tracking-[-0.015em] text-white mt-1">
-                  Your Thoughts
-                </h3>
+                {personalReview && (
+                  <button
+                    type="button"
+                    onClick={handleClearReview}
+                    className="text-xs text-[#9499AC] hover:text-rose-400 transition cursor-pointer mt-1"
+                  >
+                    Clear Notes
+                  </button>
+                )}
               </div>
 
-              <textarea
-                value={personalReview}
-                onChange={(e) => setPersonalReview(e.target.value)}
-                rows={5}
-                placeholder="What stayed with you after the credits?"
-                className="w-full rounded-2xl bg-[#08090E]/90 focus:bg-[#06070B] transition-colors p-5 text-sm sm:text-base text-white placeholder:text-[#8B92A5]/50 outline-none focus:ring-1 focus:ring-[#00D878]/40 transition resize-none leading-relaxed shadow-inner"
-              />
+              <div className="flex-1 rounded-2xl bg-[#090A0F]/75 p-4 sm:p-5 flex flex-col justify-between gap-4">
+                <textarea
+                  value={personalReview}
+                  onChange={(e) => setPersonalReview(e.target.value)}
+                  rows={6}
+                  placeholder="Write your reflections, favorite scenes, or who you watched this with..."
+                  className="w-full flex-1 min-h-[160px] bg-transparent text-sm sm:text-[15px] text-white placeholder:text-[#7E8498] outline-none border-0 focus:outline-none focus:ring-0 resize-none leading-relaxed"
+                />
 
-              <div className="flex items-center justify-between pt-1">
-                <span className="text-xs text-[#8B92A5] font-mono">
-                  {personalReview.length > 0
-                    ? `${personalReview.length} characters`
-                    : "Auto-saved with your vault"}
-                </span>
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                  <span className="text-xs text-[#8B92A5]">
+                    {personalReview.length > 0
+                      ? `${personalReview.length} characters • Synced to vault`
+                      : "Saved privately to your personal vault"}
+                  </span>
 
-                <button
-                  type="button"
-                  onClick={handleSaveReview}
-                  disabled={isSavingReview}
-                  className="px-6 py-2.5 rounded-full bg-[#00D878] hover:bg-[#00BF59] text-black text-xs font-bold transition shadow-lg shadow-[#00D878]/25 inline-flex items-center gap-2 disabled:opacity-50 cursor-pointer active:scale-95"
-                >
-                  {isSavingReview ? (
-                    <span>Saving...</span>
-                  ) : (
-                    <>
-                      <Check className="w-3.5 h-3.5 stroke-[2.5]" />
-                      <span>Save Review</span>
-                    </>
-                  )}
-                </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveReview}
+                    disabled={isSavingReview}
+                    className="px-5 py-2.5 rounded-full bg-[#00D878] hover:bg-[#00C26B] text-[#050608] text-xs font-semibold transition shadow-lg shadow-[#00D878]/15 inline-flex items-center gap-2 disabled:opacity-50 cursor-pointer active:scale-95"
+                  >
+                    {isSavingReview ? (
+                      <span>Saving...</span>
+                    ) : (
+                      <>
+                        <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                        <span>Save Review</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>

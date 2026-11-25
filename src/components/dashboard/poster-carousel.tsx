@@ -67,7 +67,7 @@ export function PosterCarousel({ children, className }: PosterCarouselProps) {
           type="button"
           onClick={() => handleScroll(-1)}
           aria-label="Scroll left"
-          className="hidden md:grid absolute -left-3 lg:-left-4 top-[40%] -translate-y-1/2 z-30 w-9 h-9 place-items-center rounded-full bg-[#0E0F15]/90 backdrop-blur-md border border-white/10 shadow-xl hover:scale-105 active:scale-95 text-white hover:border-[#00D664]/60 hover:text-[#00D664] transition-all cursor-pointer opacity-0 group-hover/carousel:opacity-100"
+          className="hidden md:grid absolute -left-3 lg:-left-4 top-[40%] -translate-y-1/2 z-30 w-9 h-9 place-items-center rounded-full bg-[#0E0F15]/90 backdrop-blur-md shadow-xl hover:scale-105 active:scale-95 text-white hover:bg-[#171923] hover:text-[#00D664] transition-all cursor-pointer opacity-0 group-hover/carousel:opacity-100"
         >
           <ChevronLeft className="w-4 h-4 stroke-[2]" />
         </button>
@@ -87,7 +87,7 @@ export function PosterCarousel({ children, className }: PosterCarouselProps) {
           type="button"
           onClick={() => handleScroll(1)}
           aria-label="Scroll right"
-          className="hidden md:grid absolute -right-3 lg:-right-4 top-[40%] -translate-y-1/2 z-30 w-9 h-9 place-items-center rounded-full bg-[#0E0F15]/90 backdrop-blur-md border border-white/10 shadow-xl hover:scale-105 active:scale-95 text-white hover:border-[#00D664]/60 hover:text-[#00D664] transition-all cursor-pointer opacity-0 group-hover/carousel:opacity-100"
+          className="hidden md:grid absolute -right-3 lg:-right-4 top-[40%] -translate-y-1/2 z-30 w-9 h-9 place-items-center rounded-full bg-[#0E0F15]/90 backdrop-blur-md shadow-xl hover:scale-105 active:scale-95 text-white hover:bg-[#171923] hover:text-[#00D664] transition-all cursor-pointer opacity-0 group-hover/carousel:opacity-100"
         >
           <ChevronRight className="w-4 h-4 stroke-[2]" />
         </button>

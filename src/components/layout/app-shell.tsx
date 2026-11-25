@@ -65,13 +65,13 @@ export function AppShell({ children }: AppShellProps) {
         {children}
       </main>
 
-      {/* Footer */}
-      <footer className="w-full px-4 sm:px-6 lg:px-8 py-5 pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))] sm:pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))] text-xs text-muted-foreground bg-card/40 border-t border-border/30">
+      {/* Footer — clean borderless layout with balanced side margins */}
+      <footer className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-12 py-6 pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))] sm:pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))] text-xs text-muted-foreground/80">
         <div className="flex flex-wrap items-center justify-between gap-y-3">
           <div className="flex items-center gap-2">
             <span>&copy; {new Date().getFullYear()} Cineaste</span>
-            <span className="text-border">•</span>
-            <span className="text-primary font-semibold">Film Vault</span>
+            <span className="opacity-40" aria-hidden="true">•</span>
+            <span className="text-[#00D878] font-medium">Film Vault</span>
           </div>
 
           <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">

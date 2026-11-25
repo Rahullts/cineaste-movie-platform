@@ -1,18 +1,21 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
-import {
-  X,
-  Plus,
-  Check,
-  FolderPlus,
-  FolderHeart,
-} from "lucide-react";
+import { X, Check, Plus, FolderPlus, Film, Bookmark, AlertCircle } from "lucide-react";
 import { getTmdbImageUrl } from "@/lib/image-util";
 import type { Movie, Collection } from "@/types";
+import { cn } from "@/lib/utils";
 
-interface AddToCollectionDialogProps {
+const PRESET_COLORS = [
+  { name: "Emerald", value: "#00D878" },
+  { name: "Cobalt", value: "#4E6BFF" },
+  { name: "Amber", value: "#E8A21A" },
+  { name: "Rose", value: "#EC4899" },
+  { name: "Cyan", value: "#06B6D4" },
+  { name: "Violet", value: "#8B5CF6" },
+];
+
+export interface AddToCollectionDialogProps {
   isOpen: boolean;
   onClose: () => void;
   movie: Movie | null;
@@ -20,22 +23,11 @@ interface AddToCollectionDialogProps {
   onToggleInCollection: (collectionId: string, movie: Movie) => void;
   onCreateCollection: (
     title: string,
-    color?: string,
-    description?: string,
-    initialMovies?: Movie[]
-  ) => void;
+    color: string,
+    description: string,
+    initialMovies: Movie[]
+  ) => Collection | void;
 }
-
-const PRESET_COLORS = [
-  "#00D878",
-  "#6366F1",
-  "#F59E0B",
-  "#EC4899",
-  "#06B6D4",
-  "#8B5CF6",
-  "#EF4444",
-  "#10B981",
-];
 
 export function AddToCollectionDialog({
   isOpen,
@@ -45,222 +37,321 @@ export function AddToCollectionDialog({
   onToggleInCollection,
   onCreateCollection,
 }: AddToCollectionDialogProps) {
+  if (!isOpen || !movie) return null;
+  return (
+    <AddToCollectionDialogContent
+      onClose={onClose}
+      movie={movie}
+      collections={collections}
+      onToggleInCollection={onToggleInCollection}
+      onCreateCollection={onCreateCollection}
+    />
+  );
+}
+
+function AddToCollectionDialogContent({
+  onClose,
+  movie,
+  collections,
+  onToggleInCollection,
+  onCreateCollection,
+}: {
+  onClose: () => void;
+  movie: Movie;
+  collections: Collection[];
+  onToggleInCollection: AddToCollectionDialogProps["onToggleInCollection"];
+  onCreateCollection: AddToCollectionDialogProps["onCreateCollection"];
+}) {
+  const dialogRef = React.useRef<HTMLDialogElement>(null);
+  const newInputRef = React.useRef<HTMLInputElement>(null);
+
   const [isCreatingNew, setIsCreatingNew] = React.useState(false);
   const [newTitle, setNewTitle] = React.useState("");
   const [newColor, setNewColor] = React.useState("#00D878");
+  const [createError, setCreateError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    if (!isOpen) {
-      setIsCreatingNew(false);
-      setNewTitle("");
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (!dialog.open) {
+      dialog.showModal();
     }
-  }, [isOpen]);
+    return () => {
+      if (dialog.open) dialog.close();
+    };
+  }, []);
 
-  if (!isOpen || !movie) return null;
-
-  const posterUrl = getTmdbImageUrl(movie.poster_path, "w185");
+  React.useEffect(() => {
+    if (isCreatingNew) {
+      const timer = window.setTimeout(() => {
+        newInputRef.current?.focus();
+      }, 30);
+      return () => window.clearTimeout(timer);
+    }
+  }, [isCreatingNew]);
 
   const movieId = movie.tmdb_id || movie.id;
+  const posterUrl = getTmdbImageUrl(movie.poster_path, "w185");
+  const releaseYear = movie.release_date?.slice(0, 4);
 
-  const handleCreateNew = (e: React.FormEvent) => {
+  const handleQuickCreate = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTitle.trim()) return;
-    onCreateCollection(newTitle.trim(), newColor, "", [movie]);
+    const trimmed = newTitle.trim();
+    if (!trimmed) {
+      setCreateError("Please enter a shelf name.");
+      newInputRef.current?.focus();
+      return;
+    }
+    onCreateCollection(trimmed, newColor, "", [movie]);
     setNewTitle("");
+    setCreateError(null);
     setIsCreatingNew(false);
   };
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="Add to Collection"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn select-none"
-      onClick={onClose}
+    <dialog
+      ref={dialogRef}
+      data-testid="add-to-collection-dialog"
+      aria-labelledby="add-to-collection-title"
+      onCancel={(e) => {
+        e.preventDefault();
+        onClose();
+      }}
+      onClick={(e) => {
+        if (e.target === dialogRef.current) onClose();
+      }}
+      className="fixed inset-0 m-auto w-[min(94vw,460px)] max-h-[84vh] p-0 border-0 bg-transparent text-foreground rounded-3xl overflow-visible backdrop:bg-black/75 backdrop:backdrop-blur-md open:flex open:flex-col animate-in fade-in zoom-in-95 duration-200"
     >
-      <div
-        className="w-full max-w-md overflow-hidden rounded-2xl bg-[#101118] border border-[#1E1F2A] shadow-2xl p-5 animate-slideDown space-y-4"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Modal Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-[#1E1F2A]">
+      <div className="w-full max-h-[84vh] flex flex-col rounded-3xl bg-popover dark:bg-[#11131C] shadow-[0_32px_96px_-16px_rgba(0,0,0,0.9)] overflow-hidden">
+        {/* Top Bar */}
+        <div className="px-6 pt-5 pb-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <span className="w-8 h-8 rounded-xl bg-[#00D878]/15 border border-[#00D878]/30 grid place-items-center text-[#00D878]">
-              <FolderHeart className="w-4 h-4" />
-            </span>
-            <div>
-              <h3 className="font-heading text-sm font-bold text-[#F3F4F6]">
-                Add to Collection
-              </h3>
-              <p className="text-[11px] text-[#9496A1]">
-                Organize this film into your curated shelves
-              </p>
+            <div className="w-8 h-8 rounded-xl bg-[#00D878]/12 text-[#00D878] grid place-items-center shrink-0">
+              <Bookmark className="w-4 h-4" />
             </div>
+            <h2
+              id="add-to-collection-title"
+              className="font-heading text-base font-semibold text-foreground tracking-tight"
+            >
+              Save to Collection
+            </h2>
           </div>
+
           <button
             type="button"
             onClick={onClose}
-            className="p-1 rounded-lg text-[#9496A1] hover:text-[#F3F4F6] hover:bg-[#181820] transition"
+            aria-label="Close save to collection"
+            className="w-8 h-8 rounded-full bg-secondary hover:bg-accent dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-muted-foreground hover:text-foreground grid place-items-center transition cursor-pointer shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Selected Movie Snippet */}
-        <div className="flex items-center gap-3 p-2.5 rounded-xl bg-[#141520] border border-[#1E1F2A]/60">
-          <div className="relative w-10 h-14 rounded-md overflow-hidden bg-[#1E1F2A] shrink-0 border border-white/5">
-            {posterUrl ? (
-              <Image
-                src={posterUrl}
-                alt={movie.title}
-                fill
-                sizes="40px"
-                className="object-cover"
-              />
-            ) : (
-              <div className="w-full h-full grid place-items-center text-[9px] text-[#9496A1]">
-                No Art
-              </div>
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-bold text-white truncate">{movie.title}</p>
-            <p className="text-[11px] text-[#9496A1]">
-              {movie.release_date ? movie.release_date.split("-")[0] : "Cinema"} •{" "}
-              {movie.vote_average ? `★ TMDB ${Number(movie.vote_average).toFixed(1)}` : "Unrated"}
-            </p>
+        {/* Selected Film Preview Card — borderless tonal card */}
+        <div className="px-6 pb-4">
+          <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-secondary dark:bg-[#171A26]">
+            <div className="w-10 h-14 rounded-xl overflow-hidden bg-background shrink-0">
+              {posterUrl ? (
+                <img
+                  src={posterUrl}
+                  alt={movie.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full grid place-items-center text-muted-foreground">
+                  <Film className="w-4 h-4" />
+                </div>
+              )}
+            </div>
+            <div className="min-w-0">
+              <p className="font-heading text-sm font-semibold text-foreground truncate">
+                {movie.title}
+              </p>
+              {releaseYear && (
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {releaseYear}
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Collections List */}
-        <div className="space-y-1.5 max-h-56 overflow-y-auto scrollbar-thin pr-1">
-          {collections.length === 0 ? (
-            <div className="py-6 text-center space-y-1">
-              <p className="text-xs font-semibold text-white">No collections yet</p>
-              <p className="text-[11px] text-[#9496A1]">
-                Create your first curated shelf below.
+        {/* Collections List & Inline Create */}
+        <div className="px-6 pb-5 overflow-y-auto flex-1 space-y-2">
+          {collections.length === 0 && !isCreatingNew ? (
+            <div className="rounded-2xl bg-secondary dark:bg-[#171A26] p-6 text-center space-y-1">
+              <p className="text-sm font-medium text-foreground">
+                No collections yet
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Create a curated shelf below to organize your favorite films.
               </p>
             </div>
           ) : (
             collections.map((col) => {
-              const colMovieIds =
-                col.movie_ids || (col.movies || []).map((m) => m.tmdb_id || m.id);
-              const isIncluded = colMovieIds.includes(movieId);
+              const memberIds =
+                col.movie_ids ||
+                col.movies?.map((m) => m.tmdb_id || m.id) ||
+                [];
+              const isInside = memberIds.includes(movieId);
+              const accent = col.color || "#00D878";
 
               return (
                 <button
                   key={col.id}
                   type="button"
                   onClick={() => onToggleInCollection(col.id, movie)}
-                  className={`w-full flex items-center justify-between p-2.5 rounded-xl border transition select-none ${
-                    isIncluded
-                      ? "bg-[#00D878]/10 border-[#00D878]/40 text-white"
-                      : "bg-[#141520]/60 border-[#1E1F2A] text-[#9496A1] hover:text-white hover:border-[#2A2B3D]"
-                  }`}
+                  className={cn(
+                    "w-full flex items-center justify-between gap-3 p-3 rounded-2xl transition-colors text-left cursor-pointer",
+                    isInside
+                      ? "bg-[#00D878]/15"
+                      : "bg-secondary hover:bg-accent dark:bg-[#171A26] dark:hover:bg-[#1E2232]"
+                  )}
                 >
-                  <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex items-center gap-3 min-w-0">
                     <span
-                      className="w-3 h-3 rounded-full shrink-0 shadow-sm"
-                      style={{ backgroundColor: col.color || "#00D878" }}
+                      className="w-3.5 h-3.5 rounded-full shrink-0"
+                      style={{ backgroundColor: accent }}
                     />
-                    <div className="text-left min-w-0">
-                      <p className="text-xs font-semibold truncate text-white">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-foreground truncate">
                         {col.title}
                       </p>
-                      <p className="text-[10px] text-[#9496A1]">
-                        {colMovieIds.length} {colMovieIds.length === 1 ? "film" : "films"}
+                      <p className="text-[11px] text-muted-foreground">
+                        {memberIds.length}{" "}
+                        {memberIds.length === 1 ? "film" : "films"}
                       </p>
                     </div>
                   </div>
 
                   <span
-                    className={`w-5 h-5 rounded-md grid place-items-center transition ${
-                      isIncluded
-                        ? "bg-[#00D878] text-black"
-                        : "border border-white/20 text-transparent"
-                    }`}
+                    className={cn(
+                      "w-7 h-7 rounded-xl grid place-items-center shrink-0 transition-colors",
+                      isInside
+                        ? "bg-[#00D878] text-[#050608]"
+                        : "bg-background dark:bg-white/[0.07] text-muted-foreground"
+                    )}
                   >
-                    <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    {isInside ? (
+                      <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                    ) : (
+                      <Plus className="w-3.5 h-3.5" />
+                    )}
                   </span>
                 </button>
               );
             })
           )}
+
+          {isCreatingNew && (
+            <form
+              noValidate
+              onSubmit={handleQuickCreate}
+              className="rounded-2xl bg-secondary dark:bg-[#171A26] p-4 space-y-3 mt-2"
+            >
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="inline-collection-name"
+                  className="text-xs font-medium text-muted-foreground block"
+                >
+                  New Shelf Title
+                </label>
+                <input
+                  ref={newInputRef}
+                  id="inline-collection-name"
+                  type="text"
+                  value={newTitle}
+                  onChange={(e) => {
+                    setNewTitle(e.target.value);
+                    if (createError) setCreateError(null);
+                  }}
+                  placeholder="e.g. Weekend Watchlist, Coen Classics..."
+                  className="w-full h-10 px-3.5 rounded-xl bg-background focus:bg-accent dark:bg-[#0E1018] dark:focus:bg-[#121521] text-sm text-foreground placeholder:text-muted-foreground outline-none border-0 focus:outline-none focus:ring-0 transition-colors"
+                />
+                {createError && (
+                  <p
+                    role="alert"
+                    className="text-xs text-rose-400 flex items-center gap-1 pt-0.5"
+                  >
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{createError}</span>
+                  </p>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  {PRESET_COLORS.map((c) => {
+                    const active = newColor === c.value;
+                    return (
+                      <button
+                        key={c.value}
+                        type="button"
+                        onClick={() => setNewColor(c.value)}
+                        aria-label={`Select ${c.name} color`}
+                        className={cn(
+                          "w-6 h-6 rounded-full grid place-items-center transition-transform cursor-pointer border-0",
+                          active ? "scale-110 shadow-md" : "opacity-80 hover:opacity-100"
+                        )}
+                        style={{ backgroundColor: c.value }}
+                      >
+                        {active && (
+                          <Check className="w-3 h-3 text-[#050608] stroke-[2.75]" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsCreatingNew(false);
+                      setCreateError(null);
+                    }}
+                    className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-3.5 py-1.5 rounded-lg bg-[#00D878] hover:bg-[#00C26B] text-[#050608] text-xs font-semibold cursor-pointer"
+                  >
+                    Create
+                  </button>
+                </div>
+              </div>
+            </form>
+          )}
         </div>
 
-        {/* Quick Inline Create New Collection Form */}
-        {isCreatingNew ? (
-          <form
-            onSubmit={handleCreateNew}
-            className="p-3 rounded-xl border border-[#00D878]/30 bg-[#00D878]/5 space-y-2.5"
-          >
-            <p className="text-[11px] font-bold text-[#00D878] uppercase tracking-wider">
-              New Curated Collection
-            </p>
-            <input
-              type="text"
-              autoFocus
-              placeholder="e.g. Masterpiece Cinema, Cyberpunk Vault..."
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-              className="w-full h-8 px-3 rounded-lg bg-[#101118] border border-[#1E1F2A] text-xs text-white placeholder:text-[#9496A1]/60 focus:outline-none focus:border-[#00D878]"
-            />
-            <div className="flex items-center justify-between pt-1">
-              <div className="flex items-center gap-1.5">
-                {PRESET_COLORS.slice(0, 5).map((color) => (
-                  <button
-                    key={color}
-                    type="button"
-                    onClick={() => setNewColor(color)}
-                    className={`w-4 h-4 rounded-full transition ${
-                      newColor === color
-                        ? "ring-2 ring-white ring-offset-1 ring-offset-black scale-110"
-                        : "opacity-70 hover:opacity-100"
-                    }`}
-                    style={{ backgroundColor: color }}
-                  />
-                ))}
-              </div>
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setIsCreatingNew(false)}
-                  className="px-2.5 py-1 text-[11px] text-[#9496A1] hover:text-white"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={!newTitle.trim()}
-                  className="px-3 py-1 rounded-lg bg-[#00D878] text-black font-bold text-[11px] hover:bg-[#00B855] disabled:opacity-40 transition"
-                >
-                  Create & Add
-                </button>
-              </div>
-            </div>
-          </form>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setIsCreatingNew(true)}
-            className="w-full h-9 rounded-xl border border-dashed border-[#1E1F2A] text-[#9496A1] hover:text-[#00D878] hover:border-[#00D878]/40 hover:bg-[#00D878]/5 text-xs font-semibold flex items-center justify-center gap-2 transition"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Create New Collection</span>
-          </button>
-        )}
+        {/* Seamless Footer */}
+        <div className="px-6 py-4 bg-muted dark:bg-[#0C0E15] flex items-center justify-between gap-3">
+          {!isCreatingNew ? (
+            <button
+              type="button"
+              onClick={() => setIsCreatingNew(true)}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#00D878] hover:text-[#00BF6A] transition cursor-pointer"
+            >
+              <FolderPlus className="w-4 h-4" />
+              <span>New Collection</span>
+            </button>
+          ) : (
+            <span className="text-xs text-muted-foreground">
+              Automatically includes {movie.title}
+            </span>
+          )}
 
-        {/* Modal Done Button */}
-        <div className="pt-2 border-t border-[#1E1F2A] flex justify-end">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-1.5 rounded-xl bg-[#1E1F2A] text-white hover:bg-[#2A2B3D] text-xs font-semibold transition"
+            className="h-9 px-4 rounded-xl bg-secondary hover:bg-accent dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-xs font-semibold text-foreground transition cursor-pointer"
           >
             Done
           </button>
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }

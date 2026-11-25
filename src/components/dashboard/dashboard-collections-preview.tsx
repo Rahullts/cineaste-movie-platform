@@ -181,7 +181,7 @@ export function DashboardCollectionsPreview({
                   </p>
                 )}
               </div>
-              <div className="flex items-center justify-between pt-2.5 mt-2 border-t border-[#1E1F2A]/60 text-[10px] font-mono text-[#9496A1]">
+              <div className="flex items-center justify-between pt-2.5 mt-2 text-xs text-[#9496A1]">
                 <span>
                   {count} {count === 1 ? "film" : "films"}
                 </span>

@@ -121,7 +121,7 @@ export function WatchlistDetailSheet({
 
       {/* Slide-Over Drawer Container */}
       <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-        <div className="w-screen max-w-xl bg-[#101118] border-l border-[#1E1F2A] shadow-2xl flex flex-col overflow-y-auto no-scrollbar animate-slideLeft">
+        <div className="w-screen max-w-xl bg-[#101118] shadow-2xl flex flex-col overflow-y-auto no-scrollbar animate-slideLeft">
           {/* Header Backdrop Banner */}
           <div className="relative h-64 sm:h-72 w-full bg-[#14151F] shrink-0 overflow-hidden">
             {backdropUrl ? (
@@ -146,7 +146,7 @@ export function WatchlistDetailSheet({
             <button
               type="button"
               onClick={onClose}
-              className="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/70 hover:bg-black text-[#9496A1] hover:text-white border border-white/10 flex items-center justify-center transition backdrop-blur-md z-10"
+              className="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/70 hover:bg-black text-[#9496A1] hover:text-white flex items-center justify-center transition backdrop-blur-md z-10 cursor-pointer"
               title="Close drawer (Esc)"
             >
               <X className="w-5 h-5" />
@@ -154,7 +154,7 @@ export function WatchlistDetailSheet({
 
             {/* Floating Poster & Title Overlay */}
             <div className="absolute bottom-4 left-5 right-5 flex items-end gap-4">
-              <div className="relative w-20 sm:w-24 aspect-[2/3] rounded-xl overflow-hidden bg-[#14151F] border-2 border-[#1E1F2A] shadow-2xl shrink-0">
+              <div className="relative w-20 sm:w-24 aspect-[2/3] rounded-xl overflow-hidden bg-[#14151F] shadow-2xl shrink-0">
                 {posterUrl ? (
                   <Image
                     src={posterUrl}
@@ -171,19 +171,19 @@ export function WatchlistDetailSheet({
               </div>
 
               <div className="flex-1 min-w-0 pb-1">
-                <span className="text-[10px] font-mono uppercase tracking-widest text-[#00D878] font-semibold">
+                <span className="text-[11px] uppercase tracking-wider text-[#00D878] font-semibold">
                   Archive Record
                 </span>
-                <h2 className="text-xl sm:text-2xl font-heading font-black text-white truncate leading-tight mt-0.5">
+                <h2 className="text-xl sm:text-2xl font-heading font-bold text-white truncate leading-tight mt-0.5">
                   {movie.title}
                 </h2>
-                <div className="flex items-center gap-3 text-xs text-[#9496A1] font-mono mt-1">
+                <div className="flex items-center gap-3 text-xs text-[#9496A1] mt-1">
                   <span>{formatYear(movie.release_date)}</span>
                   {movie.runtime ? <span>• {formatRuntime(movie.runtime)}</span> : null}
                   {(movie.vote_average || 0) > 0 && (
                     <span title="TMDB Community Score" className="flex items-center gap-1 text-[#FBBF24]">
                       <Star className="w-3 h-3 fill-current" />
-                      <span className="text-[10px] text-white/70">TMDB</span>
+                      <span className="text-[11px] text-white/75">TMDB</span>
                       {formatScore(movie.vote_average)}
                     </span>
                   )}
@@ -196,7 +196,7 @@ export function WatchlistDetailSheet({
           <div className="p-5 sm:p-7 space-y-6 flex-1">
             {/* Status Switcher Strip */}
             <div className="space-y-2">
-              <label className="text-xs font-mono uppercase tracking-wider text-[#9496A1] font-semibold">
+              <label className="text-xs uppercase tracking-wider text-[#9496A1] font-semibold">
                 Viewing Status
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -208,10 +208,10 @@ export function WatchlistDetailSheet({
                       key={s.key}
                       type="button"
                       onClick={() => onUpdateStatus(movie.tmdb_id || movie.id, s.key)}
-                      className={`h-10 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 border transition ${
+                      className={`h-10 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer ${
                         isCurrent
-                          ? "bg-[#00D878] text-black border-[#00D878] shadow-md shadow-[#00D878]/20"
-                          : "bg-[#14151F] border-[#1E1F2A] text-[#9496A1] hover:text-white hover:border-white/20"
+                          ? "bg-[#00D878] text-black shadow-md shadow-[#00D878]/15"
+                          : "bg-[#161824] text-[#9496A1] hover:text-white hover:bg-[#1D2030]"
                       }`}
                     >
                       <Icon size={14} className={isCurrent ? "text-black" : "text-[#9496A1]"} />
@@ -223,13 +223,13 @@ export function WatchlistDetailSheet({
             </div>
 
             {/* Personal Rating Strip */}
-            <div className="p-4 rounded-2xl bg-[#14151F] border border-[#1E1F2A] space-y-2">
+            <div className="p-4 rounded-2xl bg-[#161824] space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-mono uppercase tracking-wider text-[#9496A1] font-semibold">
+                <span className="text-xs uppercase tracking-wider text-[#9496A1] font-semibold">
                   Personal Rating
                 </span>
-                <span className="text-xs font-mono font-bold text-[#00D878]">
-                  {userRating > 0 ? `${userRating}/10` : "Not Rated"}
+                <span className="text-xs font-semibold text-[#00D878]">
+                  {userRating > 0 ? `${userRating} / 10` : "Not Rated"}
                 </span>
               </div>
               <div className="flex items-center gap-1 pt-1">
@@ -248,10 +248,10 @@ export function WatchlistDetailSheet({
               <button
                 type="button"
                 onClick={() => onToggleFavorite(movie)}
-                className={`flex-1 h-11 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition ${
+                className={`flex-1 h-11 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer ${
                   movie.is_favorite
-                    ? "bg-rose-500/15 border-rose-500/40 text-rose-400"
-                    : "bg-[#14151F] border-[#1E1F2A] text-[#9496A1] hover:text-rose-400 hover:border-rose-400/30"
+                    ? "bg-rose-500/18 text-rose-400"
+                    : "bg-[#161824] text-[#9496A1] hover:text-rose-400 hover:bg-[#1D2030]"
                 }`}
               >
                 <Heart className={`w-4 h-4 ${movie.is_favorite ? "fill-current" : ""}`} />
@@ -260,7 +260,7 @@ export function WatchlistDetailSheet({
 
               <Link
                 href={`/discover?q=${encodeURIComponent(movie.title)}`}
-                className="h-11 px-4 rounded-xl bg-[#14151F] border border-[#1E1F2A] text-xs font-semibold text-[#9496A1] hover:text-white hover:border-[#00D878]/40 flex items-center gap-1.5 transition"
+                className="h-11 px-4 rounded-xl bg-[#161824] text-xs font-semibold text-[#9496A1] hover:text-white hover:bg-[#1D2030] flex items-center gap-1.5 transition"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
                 <span>Find More</span>
@@ -269,9 +269,9 @@ export function WatchlistDetailSheet({
 
             {/* Review Notes Area */}
             <div className="space-y-2">
-              <label className="text-xs font-mono uppercase tracking-wider text-[#9496A1] font-semibold flex items-center justify-between">
+              <label className="text-xs uppercase tracking-wider text-[#9496A1] font-semibold flex items-center justify-between">
                 <span>Personal Notes & Review</span>
-                <span className="text-[10px] text-[#9496A1]/60 normal-case">
+                <span className="text-[11px] text-[#9496A1]/65 normal-case">
                   Auto-saved on blur
                 </span>
               </label>
@@ -281,17 +281,17 @@ export function WatchlistDetailSheet({
                 onBlur={handleReviewBlur}
                 placeholder="Write your cinematic impressions, thoughts, and memory anchors..."
                 rows={4}
-                className="w-full p-3 rounded-xl bg-[#14151F] border border-[#1E1F2A] text-xs sm:text-sm text-white placeholder:text-[#9496A1]/50 focus:border-[#00D878]/50 focus:ring-1 focus:ring-[#00D878]/20 outline-none resize-none transition"
+                className="w-full p-3.5 rounded-2xl bg-[#161824] focus:bg-[#1B1E2D] text-xs sm:text-sm text-white placeholder:text-[#9496A1]/50 outline-none border-0 resize-none transition"
               />
             </div>
 
             {/* Synopsis Overview */}
             {movie.overview && (
               <div className="space-y-2">
-                <h3 className="text-xs font-mono uppercase tracking-wider text-[#9496A1] font-semibold">
+                <h3 className="text-xs uppercase tracking-wider text-[#9496A1] font-semibold">
                   Synopsis
                 </h3>
-                <p className="text-xs sm:text-sm text-[#F3F4F6]/80 leading-relaxed font-sans">
+                <p className="text-xs sm:text-sm text-[#F3F4F6]/85 leading-relaxed font-sans">
                   {movie.overview}
                 </p>
               </div>
@@ -300,14 +300,14 @@ export function WatchlistDetailSheet({
             {/* Genres */}
             {genreNames.length > 0 && (
               <div className="space-y-2">
-                <h3 className="text-xs font-mono uppercase tracking-wider text-[#9496A1] font-semibold">
+                <h3 className="text-xs uppercase tracking-wider text-[#9496A1] font-semibold">
                   Genres
                 </h3>
                 <div className="flex flex-wrap gap-1.5">
                   {genreNames.map((g) => (
                     <span
                       key={g}
-                      className="px-2.5 py-1 rounded-lg bg-[#14151F] border border-[#1E1F2A] text-xs font-medium text-[#9496A1]"
+                      className="px-3 py-1 rounded-full bg-[#161824] text-xs font-medium text-[#D1D5DB]"
                     >
                       {g}
                     </span>
@@ -319,14 +319,14 @@ export function WatchlistDetailSheet({
             {/* Top Cast List */}
             {cast.length > 0 && (
               <div className="space-y-2">
-                <h3 className="text-xs font-mono uppercase tracking-wider text-[#9496A1] font-semibold">
+                <h3 className="text-xs uppercase tracking-wider text-[#9496A1] font-semibold">
                   Key Cast
                 </h3>
                 <div className="grid grid-cols-2 gap-2">
                   {cast.map((actor: any) => (
                     <div
                       key={actor.id || actor.name}
-                      className="p-2 rounded-xl bg-[#14151F] border border-[#1E1F2A] flex items-center gap-2"
+                      className="p-2.5 rounded-xl bg-[#161824] flex items-center gap-2.5"
                     >
                       <div className="w-8 h-8 rounded-lg overflow-hidden bg-[#101118] relative shrink-0">
                         {actor.profile_path ? (
@@ -337,7 +337,7 @@ export function WatchlistDetailSheet({
                             className="object-cover"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-[10px] text-[#9496A1]">
+                          <div className="w-full h-full flex items-center justify-center text-[11px] text-[#9496A1]">
                             {actor.name.charAt(0)}
                           </div>
                         )}
@@ -346,7 +346,7 @@ export function WatchlistDetailSheet({
                         <p className="text-xs font-semibold text-white truncate">
                           {actor.name}
                         </p>
-                        <p className="text-[10px] text-[#9496A1] truncate">
+                        <p className="text-[11px] text-[#9496A1] truncate">
                           {actor.character || "Cast"}
                         </p>
                       </div>
@@ -357,11 +357,11 @@ export function WatchlistDetailSheet({
             )}
 
             {/* Danger Zone: Remove Film */}
-            <div className="pt-4 border-t border-[#1E1F2A]">
+            <div className="pt-2">
               <button
                 type="button"
                 onClick={() => onRemove(movie.tmdb_id || movie.id)}
-                className="w-full h-10 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs font-semibold flex items-center justify-center gap-2 transition"
+                className="w-full h-10 rounded-xl bg-red-500/12 hover:bg-red-500/20 text-red-400 text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Remove from Personal Archive</span>

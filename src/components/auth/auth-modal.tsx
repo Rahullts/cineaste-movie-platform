@@ -482,7 +482,7 @@ export function AuthModal({
                         if (fullNameError) setFullNameError(null);
                       }}
                       placeholder="Your name or handle"
-                      className="w-full h-11 pl-10 pr-3.5 rounded-xl bg-[#161923] text-sm text-white placeholder:text-[#6B7186] outline-none focus:ring-2 focus:ring-[#00D878]/60 transition disabled:opacity-50"
+                      className="w-full h-11 pl-10 pr-3.5 rounded-xl bg-[#161923] focus:bg-[#1B202D] text-sm text-white placeholder:text-[#6B7186] outline-none focus:ring-1 focus:ring-white/15 transition disabled:opacity-50"
                     />
                   </div>
                   {fullNameError && (
@@ -511,7 +511,7 @@ export function AuthModal({
                       if (emailError) setEmailError(null);
                     }}
                     placeholder="name@example.com"
-                    className="w-full h-11 pl-10 pr-3.5 rounded-xl bg-[#161923] text-sm text-white placeholder:text-[#6B7186] outline-none focus:ring-2 focus:ring-[#00D878]/60 transition disabled:opacity-50"
+                    className="w-full h-11 pl-10 pr-3.5 rounded-xl bg-[#161923] focus:bg-[#1B202D] text-sm text-white placeholder:text-[#6B7186] outline-none focus:ring-1 focus:ring-white/15 transition disabled:opacity-50"
                   />
                 </div>
                 {emailError && (
@@ -555,7 +555,7 @@ export function AuthModal({
                         if (passwordError) setPasswordError(null);
                       }}
                       placeholder="Enter your password"
-                      className="w-full h-11 pl-10 pr-10 rounded-xl bg-[#161923] text-sm text-white placeholder:text-[#6B7186] outline-none focus:ring-2 focus:ring-[#00D878]/60 transition disabled:opacity-50"
+                      className="w-full h-11 pl-10 pr-10 rounded-xl bg-[#161923] focus:bg-[#1B202D] text-sm text-white placeholder:text-[#6B7186] outline-none focus:ring-1 focus:ring-white/15 transition disabled:opacity-50"
                     />
                     <button
                       type="button"
@@ -607,7 +607,7 @@ export function AuthModal({
             </form>
           </div>
 
-          <div className="mt-6 pt-4 border-t border-white/10 text-center text-xs text-[#9FA5B8]">
+          <div className="mt-5 text-center text-xs text-[#9FA5B8]">
             {mode === "signin" ? (
               <p>
                 New to Cineaste?{" "}

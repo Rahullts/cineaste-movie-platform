@@ -199,10 +199,10 @@ export function YourNextGreatWatchSection({
                 type="button"
                 onClick={() => setActiveCategory(cat.key)}
                 className={cn(
-                  "h-8 sm:h-9 px-3.5 sm:px-4 rounded-full text-xs tracking-[-0.01em] inline-flex items-center gap-2 transition shrink-0 cursor-pointer border whitespace-nowrap",
+                  "h-9 px-4 rounded-full text-xs tracking-[-0.01em] inline-flex items-center gap-2 transition shrink-0 cursor-pointer whitespace-nowrap",
                   isActive
-                    ? "bg-[#00D664]/15 border-[#00D664]/40 text-[#00D664] font-semibold shadow-sm"
-                    : "bg-card/80 hover:bg-muted border-border text-muted-foreground hover:text-foreground font-medium"
+                    ? "bg-[#00D664]/18 text-[#00D664] font-semibold"
+                    : "bg-secondary hover:bg-accent dark:bg-[#141722] dark:hover:bg-[#1C2030] text-muted-foreground hover:text-foreground font-medium"
                 )}
               >
                 <Icon
@@ -220,7 +220,7 @@ export function YourNextGreatWatchSection({
               type="button"
               aria-label="Scroll discovery categories right"
               onClick={() => tabsRef.current?.scrollBy({ left: 160, behavior: "smooth" })}
-              className="pointer-events-auto w-7 h-7 rounded-full bg-card border border-border text-foreground grid place-items-center shadow-md cursor-pointer"
+              className="pointer-events-auto w-7 h-7 rounded-full bg-card text-foreground grid place-items-center shadow-md cursor-pointer"
             >
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
@@ -236,7 +236,7 @@ export function YourNextGreatWatchSection({
               key={i}
               className="w-[144px] sm:w-[164px] md:w-[176px] lg:w-[184px] xl:w-[196px] shrink-0 space-y-2.5 animate-pulse"
             >
-              <div className="w-full aspect-[2/3] rounded-2xl bg-white/5 border border-white/5" />
+              <div className="w-full aspect-[2/3] rounded-2xl bg-white/5" />
               <div className="h-3.5 w-4/5 rounded bg-white/5" />
               <div className="h-2.5 w-1/2 rounded bg-white/5" />
             </div>

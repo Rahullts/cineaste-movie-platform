@@ -399,7 +399,7 @@ function ModernTrendingSection({
         </div>
 
         {/* ── RANKED TRENDING RAIL (#2 to #10) (Spans 7 Columns on Desktop) ── */}
-        <div className="lg:col-span-7 flex flex-col justify-center min-w-0">
+        <div className="lg:col-span-7 flex flex-col justify-between min-w-0">
           <div
             ref={containerRef}
             className="flex gap-4 overflow-x-auto pb-4 pt-1 px-1 no-scrollbar snap-x snap-mandatory scroll-smooth"
@@ -587,7 +587,7 @@ function ModernDiscoveryRow({
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
-              className="shrink-0 w-36 sm:w-44 md:w-48 aspect-[2/3] rounded-2xl bg-[#0E0F15] border border-white/5 animate-pulse"
+              className="shrink-0 w-36 sm:w-44 md:w-48 aspect-[2/3] rounded-2xl bg-[#0E0F15] animate-pulse"
             />
           ))}
         </div>
@@ -608,7 +608,7 @@ function ModernDiscoveryRow({
           ))}
         </PosterCarousel>
       ) : (
-        <div className="py-8 text-center text-xs text-[#9496A1] bg-[#0E0F15] rounded-2xl border border-white/5">
+        <div className="py-8 text-center text-xs text-[#9496A1] bg-[#0E0F15] rounded-2xl">
           Curating films for this collection...
         </div>
       )}
@@ -1017,11 +1017,11 @@ function DiscoverContent() {
         </div>
 
         {/* ================================================================= */}
-        {/* COMPACT EDITORIAL DISCOVER CONSOLE (Zero Empty Top Void)          */}
+        {/* OPEN EDITORIAL DISCOVER HEADER (Seamless Canvas, Zero Dividers)   */}
         {/* ================================================================= */}
-        <section
+        <header
           aria-label="Discover Cinema Header"
-          className="relative z-30 rounded-3xl bg-card/70 backdrop-blur-xl px-5 py-5 sm:px-7 sm:py-6 shadow-xl space-y-5"
+          className="relative z-30 space-y-5 pt-1"
         >
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6">
             {/* Left Column: Compact Editorial Identity */}
@@ -1040,14 +1040,14 @@ function DiscoverContent() {
               </p>
             </div>
 
-            {/* Right Column: Integrated Search Bar + Mood Vibe + Filter Console */}
+            {/* Right Column: Seamless Search Pill + Mood Vibe + Filter Console */}
             <div className="flex flex-col items-start lg:items-end gap-2 w-full lg:w-auto shrink-0">
               <div
                 className={cn(
-                  "flex items-center gap-2 px-3.5 py-2 rounded-full bg-background/85 shadow-md transition-all w-full sm:w-[460px] lg:w-[540px]",
+                  "flex items-center gap-2 px-4 py-2 rounded-full transition-colors w-full sm:w-[460px] lg:w-[540px] shadow-[0_12px_36px_-10px_rgba(0,0,0,0.45)]",
                   isAiMode
-                    ? "ring-2 ring-[#00D878]/50"
-                    : "focus-within:ring-2 focus-within:ring-[#00D878]/50"
+                    ? "bg-card dark:bg-[#131622]"
+                    : "bg-card hover:bg-accent focus-within:bg-accent dark:bg-[#12141E] dark:hover:bg-[#161926] dark:focus-within:bg-[#161926]"
                 )}
               >
                 <form
@@ -1079,7 +1079,7 @@ function DiscoverContent() {
                         ? "Describe a vibe... e.g. Rainy neo-noir cyberpunk with a lonely atmosphere"
                         : "Search films, directors, actors, or keywords..."
                     }
-                    className="flex-1 min-w-0 bg-transparent text-xs sm:text-sm text-foreground placeholder:text-muted-foreground outline-none"
+                    className="flex-1 min-w-0 bg-transparent text-xs sm:text-sm text-foreground placeholder:text-muted-foreground outline-none border-0 focus:outline-none focus:ring-0"
                   />
 
                   {searchQuery && (
@@ -1113,9 +1113,9 @@ function DiscoverContent() {
                     }}
                     title={isAiMode ? "Vibe Search active — click for title search" : "Switch to Vibe Search"}
                     className={cn(
-                      "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer shrink-0",
+                      "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer shrink-0",
                       isAiMode
-                        ? "bg-[#00D878] text-black shadow-sm shadow-[#00D878]/30"
+                        ? "bg-[#00D878] text-black shadow-md shadow-[#00D878]/25"
                         : "bg-secondary text-muted-foreground hover:text-[#00D878]"
                     )}
                   >
@@ -1165,7 +1165,7 @@ function DiscoverContent() {
                         setSearchQuery(sample);
                         executeSearch(sample, true);
                       }}
-                      className="text-xs px-3 py-1 rounded-full bg-background/70 text-foreground/80 hover:text-[#00D878] transition cursor-pointer"
+                      className="text-xs px-3 py-1 rounded-full bg-card dark:bg-[#131622] text-foreground hover:text-[#00D878] transition cursor-pointer"
                     >
                       {sample}
                     </button>
@@ -1175,23 +1175,30 @@ function DiscoverContent() {
             </div>
           </div>
 
-          {/* Tightly Integrated Category Strip Inside Console (Zero Gap) */}
-          <div className="pt-1 border-t border-border/50 relative">
+          {/* Floating Borderless Category Rail (Zero Divider Lines, Crisp Fade) */}
+          <div className="relative">
             {catCanScrollLeft && (
-              <button
-                type="button"
-                onClick={() => scrollCategories("left")}
-                aria-label="Scroll categories left"
-                className="hidden sm:grid place-items-center absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-card/95 text-foreground shadow-lg hover:text-[#00D878] transition cursor-pointer"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
+              <>
+                <div className="pointer-events-none absolute left-0 inset-y-0 w-16 bg-gradient-to-r from-background via-background to-transparent z-[5]" />
+                <button
+                  type="button"
+                  onClick={() => scrollCategories("left")}
+                  aria-label="Scroll categories left"
+                  className="hidden sm:grid place-items-center absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-card dark:bg-[#151824] text-foreground shadow-lg hover:bg-secondary hover:text-[#00D878] transition cursor-pointer"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+              </>
             )}
             <div
               ref={categoryRailRef}
               onScroll={updateCategoryScrollButtons}
               aria-label="Cinephile Categories"
-              className="flex items-center gap-2 overflow-x-auto no-scrollbar pt-3 pb-0.5 scroll-smooth"
+              className={cn(
+                "flex items-center gap-2 overflow-x-auto no-scrollbar py-1 scroll-smooth",
+                catCanScrollLeft && "sm:pl-12",
+                catCanScrollRight && "pr-16"
+              )}
             >
               {CINEPHILE_CATEGORIES.map((cat) => {
                 const active = selectedCategory === cat.id;
@@ -1202,10 +1209,10 @@ function DiscoverContent() {
                     type="button"
                     onClick={() => handleSelectCategory(cat.id)}
                     className={cn(
-                      "inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0",
+                      "inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0",
                       active
-                        ? "bg-[#00D878] text-black shadow-md shadow-[#00D878]/20"
-                        : "bg-secondary/80 text-muted-foreground hover:bg-secondary hover:text-foreground active:scale-95"
+                        ? "bg-[#00D878] text-[#050608] shadow-md shadow-[#00D878]/20"
+                        : "bg-card dark:bg-[#141722] text-muted-foreground hover:bg-secondary dark:hover:bg-[#1C2030] hover:text-foreground active:scale-95"
                     )}
                   >
                     <CatIcon className="w-3.5 h-3.5 shrink-0" />
@@ -1216,26 +1223,26 @@ function DiscoverContent() {
             </div>
             {catCanScrollRight && (
               <>
-                <div className="pointer-events-none absolute right-0 top-2 bottom-0 w-10 bg-gradient-to-l from-card to-transparent" />
+                <div className="pointer-events-none absolute right-0 inset-y-0 w-24 bg-gradient-to-l from-background via-background to-transparent z-[5]" />
                 <button
                   type="button"
                   onClick={() => scrollCategories("right")}
                   aria-label="Scroll categories right"
-                  className="grid place-items-center absolute right-0 top-[56%] -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-background/95 text-foreground shadow-lg hover:text-[#00D878] transition cursor-pointer"
+                  className="grid place-items-center absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-card dark:bg-[#151824] text-foreground shadow-lg hover:bg-secondary hover:text-[#00D878] transition cursor-pointer"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </>
             )}
           </div>
-        </section>
+        </header>
 
         {/* ================================================================= */}
         {/* VIEW 1: TEXT / AI SEARCH RESULTS                                  */}
         {/* ================================================================= */}
         {isSearchActive && (
           <section className="space-y-6 animate-fadeIn">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="space-y-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   {isAiMode && (
@@ -1335,9 +1342,9 @@ function DiscoverContent() {
         {/* ================================================================= */}
         {!isSearchActive && hasActiveFilters && (
           <section className="space-y-6 animate-fadeIn">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="space-y-2">
-                <h3 className="font-heading font-black text-xl text-foreground">
+                <h3 className="font-heading font-semibold text-xl text-foreground">
                   Filtered Cinema ({filteredMovies.length})
                 </h3>
                 <div className="flex flex-wrap items-center gap-1.5">
@@ -1348,7 +1355,7 @@ function DiscoverContent() {
                       onClick={() =>
                         setFilters((prev) => ({ ...prev, [chip.key]: "" }))
                       }
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#00D878]/15 border border-[#00D878]/30 text-[#00D878] text-xs font-medium hover:bg-[#00D878]/25 transition cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#00D878]/15 text-[#00D878] text-xs font-medium hover:bg-[#00D878]/25 transition cursor-pointer"
                     >
                       <span>{chip.label}</span>
                       <X className="w-3 h-3" />
@@ -1359,7 +1366,7 @@ function DiscoverContent() {
               <button
                 type="button"
                 onClick={() => setFilters(INITIAL_FILTER_STATE)}
-                className="text-xs font-mono font-bold text-[#00D878] hover:underline cursor-pointer self-start sm:self-auto"
+                className="text-xs font-semibold text-[#00D878] hover:underline cursor-pointer self-start sm:self-auto"
               >
                 Clear All Filters
               </button>
@@ -1370,24 +1377,24 @@ function DiscoverContent() {
                 {Array.from({ length: 12 }).map((_, i) => (
                   <div
                     key={i}
-                    className="aspect-[2/3] rounded-2xl bg-card border border-border/60 animate-pulse"
+                    className="aspect-[2/3] rounded-2xl bg-card animate-pulse"
                   />
                 ))}
               </div>
             ) : filterError ? (
-              <div className="py-16 px-6 text-center space-y-3 bg-card border border-border rounded-3xl">
+              <div className="py-16 px-6 text-center space-y-3 bg-card rounded-3xl">
                 <p className="text-sm text-rose-400">{filterError}</p>
                 <button
                   type="button"
                   onClick={() => executeFilters(filters)}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#00D878] text-black text-xs font-bold cursor-pointer"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#00D878] text-black text-xs font-semibold cursor-pointer"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   <span>Retry</span>
                 </button>
               </div>
             ) : filteredMovies.length === 0 ? (
-              <div className="py-16 px-6 text-center text-sm text-muted-foreground bg-card border border-border rounded-3xl">
+              <div className="py-16 px-6 text-center text-sm text-muted-foreground bg-card rounded-3xl">
                 No films matched your selected filter combination. Try loosening a criterion.
               </div>
             ) : (
@@ -1436,7 +1443,7 @@ function DiscoverContent() {
               <button
                 type="button"
                 onClick={() => handleSelectCategory("all")}
-                className="h-9 px-4 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold inline-flex items-center gap-2 transition active:scale-95 cursor-pointer relative z-10 shrink-0"
+                className="h-9 px-4 rounded-full bg-white/10 hover:bg-white/18 text-white text-xs font-semibold inline-flex items-center gap-2 transition active:scale-95 cursor-pointer relative z-10 shrink-0"
               >
                 <span>← All Curations</span>
               </button>
@@ -1448,12 +1455,12 @@ function DiscoverContent() {
                 {Array.from({ length: 12 }).map((_, i) => (
                   <div
                     key={i}
-                    className="aspect-[2/3] rounded-3xl bg-[#0E0F15] border border-white/5 animate-pulse"
+                    className="aspect-[2/3] rounded-3xl bg-[#0E0F15] animate-pulse"
                   />
                 ))}
               </div>
             ) : categoryMovies.length === 0 ? (
-              <div className="py-20 text-center text-sm text-[#9496A1] bg-[#0E0F15] border border-white/5 rounded-3xl">
+              <div className="py-20 text-center text-sm text-[#9496A1] bg-[#0E0F15] rounded-3xl">
                 Curating films for {activeCategoryDef.label}...
               </div>
             ) : (

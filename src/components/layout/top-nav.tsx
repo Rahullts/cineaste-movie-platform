@@ -511,8 +511,8 @@ export function TopNav({
 
           {/* Account Popover Menu (Authenticated Users) */}
           {isAuthenticated && isAccountMenuOpen && (
-            <div className="absolute right-0 mt-2.5 w-60 rounded-2xl border border-border bg-card/95 backdrop-blur-2xl shadow-2xl p-1 z-50 animate-in fade-in slide-in-from-top-2 text-xs">
-              <div className="px-3 py-2.5 border-b border-border">
+            <div className="absolute right-0 mt-2.5 w-64 rounded-2xl bg-popover dark:bg-[#11131C] shadow-[0_20px_56px_-12px_rgba(0,0,0,0.75)] p-2 z-50 animate-in fade-in slide-in-from-top-2 text-xs">
+              <div className="px-3 py-2.5 rounded-xl bg-secondary dark:bg-white/[0.05] mb-1.5">
                 <div className="flex items-center justify-between gap-2">
                   <p className="font-heading font-semibold text-sm text-foreground truncate">
                     {user.display_name}
@@ -526,11 +526,11 @@ export function TopNav({
                 </p>
               </div>
 
-              <div className="py-1">
+              <div className="space-y-0.5">
                 <Link
                   href="/profile"
                   onClick={() => setIsAccountMenuOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2 text-foreground hover:bg-muted hover:text-primary transition-colors rounded-xl font-medium"
+                  className="flex items-center gap-2.5 px-3 py-2 text-foreground hover:bg-accent hover:text-primary transition-colors rounded-xl font-medium"
                 >
                   <User className="w-4 h-4 text-muted-foreground" />
                   <span>My Profile</span>
@@ -539,7 +539,7 @@ export function TopNav({
                 <Link
                   href="/settings"
                   onClick={() => setIsAccountMenuOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2 text-foreground hover:bg-muted hover:text-primary transition-colors rounded-xl font-medium"
+                  className="flex items-center gap-2.5 px-3 py-2 text-foreground hover:bg-accent hover:text-primary transition-colors rounded-xl font-medium"
                 >
                   <Settings className="w-4 h-4 text-muted-foreground" />
                   <span>Settings</span>
@@ -548,7 +548,7 @@ export function TopNav({
                 <Link
                   href="/billing"
                   onClick={() => setIsAccountMenuOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2 text-foreground hover:bg-muted hover:text-primary transition-colors rounded-xl font-medium"
+                  className="flex items-center gap-2.5 px-3 py-2 text-foreground hover:bg-accent hover:text-primary transition-colors rounded-xl font-medium"
                 >
                   <CreditCard className="w-4 h-4 text-muted-foreground" />
                   <span>Billing & Subscription</span>
@@ -566,7 +566,7 @@ export function TopNav({
                 )}
               </div>
 
-              <div className="border-t border-border pt-1 mt-1">
+              <div className="pt-1.5 mt-1.5">
                 <button
                   type="button"
                   onClick={() => {
@@ -586,75 +586,69 @@ export function TopNav({
     </header>
 
     {/* ===================================================================== */}
-    {/* GUEST LOGIN SIDE PANEL (Shows strictly Log In & Sign Up options)      */}
+    {/* FLOATING GUEST ACCOUNT POPOVER (Strictly Log In & Sign Up)            */}
     {/* ===================================================================== */}
     {!isAuthenticated && isGuestLoginDrawerOpen && (
       <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="Account Access"
-        data-testid="guest-account-panel"
         onClick={() => setIsGuestLoginDrawerOpen(false)}
-        className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-end animate-fadeIn"
+        className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[3px] flex justify-end items-start pt-[4.5rem] sm:pt-[4.75rem] px-4 sm:px-6 lg:px-12 animate-fadeIn"
       >
         <aside
+          role="dialog"
+          aria-modal="true"
+          aria-label="Account Access"
+          data-testid="guest-account-panel"
           onClick={(e) => e.stopPropagation()}
-          className="h-full w-full max-w-[320px] bg-card/95 backdrop-blur-2xl shadow-2xl border-l border-border p-6 flex flex-col justify-between"
+          className="w-full max-w-[300px] rounded-2xl bg-popover dark:bg-[#11131C] shadow-[0_24px_64px_-12px_rgba(0,0,0,0.85)] p-5 flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-200"
         >
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <CineasteLogo size={28} showWordmark={true} />
-              <button
-                type="button"
-                onClick={() => setIsGuestLoginDrawerOpen(false)}
-                aria-label="Close account panel"
-                className="w-8 h-8 rounded-full bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground grid place-items-center transition cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="space-y-1.5">
-              <h2 className="font-heading text-lg font-semibold text-foreground">
-                Cineaste Account
-              </h2>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Sign in or create a free account to sync your cinema library across devices.
-              </p>
-            </div>
-
-            <div className="space-y-2.5 pt-1">
-              <button
-                type="button"
-                data-testid="sidepanel-login-btn"
-                onClick={() => {
-                  setIsGuestLoginDrawerOpen(false);
-                  openAuthModal("signin");
-                }}
-                className="w-full h-11 rounded-xl bg-[#00D878] hover:bg-[#00BF6A] text-black font-heading font-semibold text-sm flex items-center justify-center gap-2 transition active:scale-[0.99] cursor-pointer shadow-md shadow-[#00D878]/15"
-              >
-                <LogIn className="w-4 h-4" />
-                <span>Log In</span>
-              </button>
-
-              <button
-                type="button"
-                data-testid="sidepanel-signup-btn"
-                onClick={() => {
-                  setIsGuestLoginDrawerOpen(false);
-                  openAuthModal("signup");
-                }}
-                className="w-full h-11 rounded-xl bg-muted/70 hover:bg-muted text-foreground font-heading font-semibold text-sm flex items-center justify-center gap-2 transition active:scale-[0.99] cursor-pointer"
-              >
-                <UserPlus className="w-4 h-4" />
-                <span>Sign Up</span>
-              </button>
-            </div>
+          <div className="flex items-center justify-between gap-3">
+            <CineasteLogo size={24} showWordmark={true} />
+            <button
+              type="button"
+              onClick={() => setIsGuestLoginDrawerOpen(false)}
+              aria-label="Close account panel"
+              className="w-8 h-8 rounded-full bg-secondary hover:bg-accent dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-muted-foreground hover:text-foreground grid place-items-center transition cursor-pointer shrink-0"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
 
-          <p className="text-[11px] text-muted-foreground/75">
-            Cineaste Personal Cinema
-          </p>
+          <div className="space-y-1">
+            <h2 className="font-heading text-base font-semibold text-foreground tracking-tight">
+              Your Cinema Account
+            </h2>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Sign in or create an account to sync your library across devices.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              data-testid="sidepanel-login-btn"
+              onClick={() => {
+                setIsGuestLoginDrawerOpen(false);
+                openAuthModal("signin");
+              }}
+              className="w-full h-10 rounded-xl bg-[#00D878] hover:bg-[#00C26B] text-[#050608] font-heading font-semibold text-sm flex items-center justify-center gap-2 transition active:scale-[0.98] cursor-pointer shadow-lg shadow-[#00D878]/15"
+            >
+              <LogIn className="w-4 h-4" />
+              <span>Log In</span>
+            </button>
+
+            <button
+              type="button"
+              data-testid="sidepanel-signup-btn"
+              onClick={() => {
+                setIsGuestLoginDrawerOpen(false);
+                openAuthModal("signup");
+              }}
+              className="w-full h-10 rounded-xl bg-secondary hover:bg-accent dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-foreground font-heading font-semibold text-sm flex items-center justify-center gap-2 transition active:scale-[0.98] cursor-pointer"
+            >
+              <UserPlus className="w-4 h-4" />
+              <span>Sign Up</span>
+            </button>
+          </div>
         </aside>
       </div>
     )}
