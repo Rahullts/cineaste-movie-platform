@@ -125,18 +125,29 @@ export function CinemaSpotlightHero({
         aria-label="Cinema Spotlight Loading"
         className="relative w-full min-h-[430px] sm:min-h-[470px] lg:min-h-[490px] lg:max-h-[550px] flex flex-col justify-end overflow-hidden select-none bg-[#0A0B0F]"
       >
-        <div className="relative z-20 w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-12 pt-20 sm:pt-24 pb-6 sm:pb-8 lg:pb-9 flex flex-col lg:flex-row lg:items-end justify-between gap-6 lg:gap-12 animate-pulse">
+        <div className="relative z-20 w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-12 pt-18 sm:pt-22 pb-6 sm:pb-8 lg:pb-9 flex flex-col lg:flex-row lg:items-end justify-between gap-6 lg:gap-12">
           <div className="flex-1 max-w-2xl space-y-3.5">
-            <div className="h-6 w-36 rounded-full bg-white/10" />
-            <div className="h-12 w-3/4 rounded-xl bg-white/10" />
-            <div className="h-4 w-1/2 rounded bg-white/10" />
-            <div className="h-14 w-full rounded-xl bg-white/5" />
-            <div className="flex gap-3 pt-2">
+            {greeting && (
+              <p
+                data-testid="dashboard-greeting"
+                className="text-sm sm:text-[15px] font-medium text-white/85 tracking-tight"
+              >
+                {greeting},{" "}
+                <span className="text-[#00D664] font-semibold">
+                  {userName || "Cinephile"}
+                </span>
+              </p>
+            )}
+            <div className="h-6 w-36 rounded-full bg-white/10 animate-pulse" />
+            <div className="h-12 w-3/4 rounded-xl bg-white/10 animate-pulse" />
+            <div className="h-4 w-1/2 rounded bg-white/10 animate-pulse" />
+            <div className="h-14 w-full rounded-xl bg-white/5 animate-pulse" />
+            <div className="flex gap-3 pt-2 animate-pulse">
               <div className="h-11 w-44 rounded-full bg-[#00D664]/20" />
               <div className="h-11 w-36 rounded-full bg-white/10" />
             </div>
           </div>
-          <div className="hidden lg:block w-[180px] xl:w-[210px] aspect-[2/3] rounded-2xl bg-white/5 border border-white/10" />
+          <div className="hidden lg:block w-[180px] xl:w-[210px] aspect-[2/3] rounded-2xl bg-white/5 animate-pulse" />
         </div>
       </section>
     );
