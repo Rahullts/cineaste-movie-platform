@@ -76,6 +76,7 @@ const config: Config = {
         sans: ["var(--font-inter)", "ui-sans-serif", "system-ui", "sans-serif"],
         heading: ["var(--font-sora)", "ui-sans-serif", "system-ui", "sans-serif"],
         display: ["var(--font-sora)", "ui-sans-serif", "system-ui", "sans-serif"],
+        brand: ["var(--font-brand)", "var(--font-sora)", "ui-sans-serif", "sans-serif"],
         cinematic: ["var(--font-cinzel)", "Georgia", "Cambria", "Times New Roman", "serif"],
         serif: ["var(--font-cinzel)", "Georgia", "Cambria", "Times New Roman", "serif"],
         editorial: ["var(--font-editorial)", "Georgia", "Cambria", "Times New Roman", "serif"],

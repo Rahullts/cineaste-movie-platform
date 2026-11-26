@@ -1005,198 +1005,228 @@ function DiscoverContent() {
   const isSearchActive = hasSubmittedSearch && searchQuery.trim().length > 0;
   const isCategoryActive = selectedCategory !== "all";
   const activeCategoryDef = CINEPHILE_CATEGORIES.find((c) => c.id === selectedCategory);
+  const canopyBackdrop = trendingMovies[0]?.backdrop_path || null;
+
+  const quickSearchPrompts = isAiMode
+    ? [
+        "Rainy neo-noir cyberpunk with a lonely atmosphere",
+        "Mind-bending sci-fi",
+        "Cozy weekend watch",
+      ]
+    : ["Christopher Nolan", "Dune", "90s Crime Thriller", "Studio Ghibli"];
+
+  const categoryMask =
+    catCanScrollLeft && catCanScrollRight
+      ? "linear-gradient(to right, transparent, black 2.75rem, black calc(100% - 2.75rem), transparent)"
+      : catCanScrollRight
+        ? "linear-gradient(to right, black calc(100% - 3rem), transparent)"
+        : catCanScrollLeft
+          ? "linear-gradient(to right, transparent, black 2.75rem, black 100%)"
+          : undefined;
 
   return (
     <AppShell>
-      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-12 space-y-5 pt-2 sm:pt-3 pb-8 select-none relative">
-        {/* Soft Ambient Cinematic Glows */}
-        <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
-          <div className="absolute -top-32 -left-32 w-[600px] h-[600px] bg-[#00D878]/[0.03] rounded-full blur-[150px]" />
-          <div className="absolute top-1/4 -right-32 w-[600px] h-[600px] bg-[#8B5CF6]/[0.03] rounded-full blur-[160px]" />
+      {/* ================================================================= */}
+      {/* FULL-BLEED ATMOSPHERIC DISCOVER HERO & COMMAND STAGE              */}
+      {/* ================================================================= */}
+      <header
+        aria-label="Discover Cinema Header"
+        className="relative z-30 w-full pt-20 sm:pt-24 pb-5 select-none"
+      >
+        {/* Seamless Atmospheric Backdrop Canopy (Fades cleanly to #0A0B0F, zero hard edges) */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-0 h-[340px] sm:h-[380px] overflow-hidden -z-10"
+        >
+          {canopyBackdrop && (
+            <img
+              src={`/api/image?path=${encodeURIComponent(canopyBackdrop)}&w=1280`}
+              alt=""
+              className="hidden dark:block w-full h-full object-cover object-center opacity-[0.22] blur-[2px] scale-105"
+            />
+          )}
+          <div className="hidden dark:block absolute inset-0 bg-gradient-to-b from-[#0A0B0F]/75 via-[#0A0B0F]/70 to-[#0A0B0F]" />
+          <div className="hidden dark:block absolute inset-0 bg-[radial-gradient(ellipse_65%_55%_at_20%_25%,rgba(0,224,84,0.09),transparent),radial-gradient(ellipse_55%_50%_at_80%_20%,rgba(56,189,248,0.07),transparent)]" />
+          <div className="block dark:hidden absolute inset-0 bg-[radial-gradient(ellipse_75%_65%_at_25%_15%,rgba(0,184,85,0.08),transparent),radial-gradient(ellipse_55%_55%_at_85%_20%,rgba(56,189,248,0.08),transparent)]" />
         </div>
 
-        {/* ================================================================= */}
-        {/* OPEN EDITORIAL DISCOVER HEADER (Seamless Canvas, Zero Dividers)   */}
-        {/* ================================================================= */}
-        <header
-          aria-label="Discover Cinema Header"
-          className="relative z-30 space-y-5 pt-1"
-        >
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6">
-            {/* Left Column: Compact Editorial Identity */}
-            <div className="space-y-1.5 max-w-xl">
-              <div className="flex items-center gap-2 text-xs font-medium text-[#00D878]">
+        <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-12 space-y-5">
+          {/* Editorial Title & Curated Counter Row */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-3">
+            <div className="space-y-2 max-w-2xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00D878]/12 text-[#00D878] text-[11px] font-semibold tracking-[0.14em] uppercase backdrop-blur-md">
                 <Compass className="w-3.5 h-3.5 shrink-0" />
                 <span>Curated Global Cinema Index</span>
               </div>
 
-              <h1 className="font-heading font-bold text-2xl sm:text-3xl lg:text-4xl tracking-tight text-foreground leading-tight">
+              <h1 className="font-brand font-extrabold text-3xl sm:text-4xl lg:text-[2.85rem] tracking-[-0.03em] text-foreground leading-[1.06]">
                 Discover Cinema
               </h1>
 
-              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                Explore global releases, acclaimed masterpieces, and mood-driven selections.
+              <p className="text-sm sm:text-[15px] text-muted-foreground leading-relaxed">
+                Explore global releases, acclaimed masterpieces, and mood-driven cinema curations.
               </p>
-            </div>
-
-            {/* Right Column: Seamless Search Pill + Mood Vibe + Filter Console */}
-            <div className="flex flex-col items-start lg:items-end gap-2 w-full lg:w-auto shrink-0">
-              <div
-                className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-full transition-colors w-full sm:w-[460px] lg:w-[540px] shadow-[0_12px_36px_-10px_rgba(0,0,0,0.45)]",
-                  isAiMode
-                    ? "bg-card dark:bg-[#131622]"
-                    : "bg-card hover:bg-accent focus-within:bg-accent dark:bg-[#12141E] dark:hover:bg-[#161926] dark:focus-within:bg-[#161926]"
-                )}
-              >
-                <form
-                  onSubmit={handleSearchSubmit}
-                  className="flex-1 min-w-0 flex items-center gap-2.5"
-                >
-                  {isAiMode ? (
-                    <SlidersHorizontal className="w-4 h-4 text-[#00D878] shrink-0" />
-                  ) : (
-                    <Search className="w-4 h-4 text-[#00D878] shrink-0" />
-                  )}
-                  <input
-                    ref={searchInputRef}
-                    type="text"
-                    data-testid="discover-search-input"
-                    value={searchQuery}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setSearchQuery(v);
-                      if (!v.trim()) {
-                        setSearchResults([]);
-                        setAiInterpretation(null);
-                        setSearchError(null);
-                        setHasSubmittedSearch(false);
-                      }
-                    }}
-                    placeholder={
-                      isAiMode
-                        ? "Describe a vibe... e.g. Rainy neo-noir cyberpunk with a lonely atmosphere"
-                        : "Search films, directors, actors, or keywords..."
-                    }
-                    className="flex-1 min-w-0 bg-transparent text-xs sm:text-sm text-foreground placeholder:text-muted-foreground outline-none border-0 focus:outline-none focus:ring-0"
-                  />
-
-                  {searchQuery && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSearchQuery("");
-                        setSearchResults([]);
-                        setAiInterpretation(null);
-                        setSearchError(null);
-                        setHasSubmittedSearch(false);
-                      }}
-                      className="p-1 rounded-md text-muted-foreground hover:text-foreground cursor-pointer"
-                      title="Clear query"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-
-                  {/* Vibe Search Mode Toggle (clean tuner icon, no AI sparkles) */}
-                  <button
-                    type="button"
-                    data-testid="discover-ai-toggle"
-                    aria-pressed={isAiMode}
-                    onClick={() => {
-                      const nextAi = !isAiMode;
-                      setIsAiMode(nextAi);
-                      if (searchQuery.trim()) {
-                        executeSearch(searchQuery, nextAi);
-                      }
-                    }}
-                    title={isAiMode ? "Vibe Search active — click for title search" : "Switch to Vibe Search"}
-                    className={cn(
-                      "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer shrink-0",
-                      isAiMode
-                        ? "bg-[#00D878] text-black shadow-md shadow-[#00D878]/25"
-                        : "bg-secondary text-muted-foreground hover:text-[#00D878]"
-                    )}
-                  >
-                    <SlidersHorizontal className="w-3 h-3" />
-                    <span>AI Vibe</span>
-                  </button>
-
-                  {/* Voice Search Button */}
-                  <button
-                    type="button"
-                    onClick={handleVoiceSearch}
-                    title={isListeningVoice ? "Stop voice listening" : "Voice search"}
-                    className={cn(
-                      "p-1.5 rounded-full transition-colors cursor-pointer shrink-0",
-                      isListeningVoice
-                        ? "bg-rose-500 text-white animate-pulse"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                    )}
-                  >
-                    <Mic className="w-4 h-4" />
-                  </button>
-                </form>
-
-                {/* Multi-Criteria Filter Popover — kept outside <form> */}
-                <DiscoverFiltersDialog
-                  compact
-                  filters={filters}
-                  onChange={(updated) => setFilters((prev) => ({ ...prev, ...updated }))}
-                  onClear={() => setFilters(INITIAL_FILTER_STATE)}
-                />
-              </div>
-
-              {isAiMode && !isSearchActive && (
-                <div className="flex flex-wrap items-center gap-1.5 max-w-[540px] justify-start lg:justify-end animate-fadeIn">
-                  <span className="text-xs font-medium text-[#00D878] mr-1">
-                    Try mood:
-                  </span>
-                  {[
-                    "Rainy neo-noir cyberpunk movies with a lonely atmosphere",
-                    "Mind-bending sci-fi",
-                    "Cozy weekend watch",
-                  ].map((sample) => (
-                    <button
-                      key={sample}
-                      type="button"
-                      onClick={() => {
-                        setSearchQuery(sample);
-                        executeSearch(sample, true);
-                      }}
-                      className="text-xs px-3 py-1 rounded-full bg-card dark:bg-[#131622] text-foreground hover:text-[#00D878] transition cursor-pointer"
-                    >
-                      {sample}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
 
-          {/* Floating Borderless Category Rail (Zero Divider Lines, Crisp Fade) */}
-          <div className="relative">
-            {catCanScrollLeft && (
-              <>
-                <div className="pointer-events-none absolute left-0 inset-y-0 w-16 bg-gradient-to-r from-background via-background to-transparent z-[5]" />
+          {/* Signature Command Search Stage + Inline Vibe & Labeled Filters */}
+          <div className="space-y-2.5 max-w-4xl">
+            <div
+              className={cn(
+                "flex items-center gap-2 p-1.5 sm:p-2 rounded-2xl transition-all duration-300 backdrop-blur-2xl border-0",
+                "bg-card/95 dark:bg-[#121522]/92 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.08)]",
+                "focus-within:bg-card dark:focus-within:bg-[#161A2B] focus-within:shadow-[0_24px_70px_-12px_rgba(0,224,84,0.22),inset_0_1px_0_rgba(255,255,255,0.14)]"
+              )}
+            >
+              <form
+                onSubmit={handleSearchSubmit}
+                className="flex-1 min-w-0 flex items-center gap-2.5 pl-2.5"
+              >
+                {isAiMode ? (
+                  <SlidersHorizontal className="w-4 h-4 sm:w-5 sm:h-5 text-[#00D878] shrink-0" />
+                ) : (
+                  <Search className="w-4 h-4 sm:w-5 sm:h-5 text-[#00D878] shrink-0" />
+                )}
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  data-testid="discover-search-input"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setSearchQuery(v);
+                    if (!v.trim()) {
+                      setSearchResults([]);
+                      setAiInterpretation(null);
+                      setSearchError(null);
+                      setHasSubmittedSearch(false);
+                    }
+                  }}
+                  placeholder={
+                    isAiMode
+                      ? "Describe a vibe... e.g. Rainy neo-noir cyberpunk with a lonely atmosphere"
+                      : "Search films, directors, actors, or keywords..."
+                  }
+                  className="flex-1 min-w-0 h-10 sm:h-11 bg-transparent text-sm sm:text-[15px] text-foreground placeholder:text-muted-foreground/80 outline-none border-0 focus:outline-none focus:ring-0"
+                />
+
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setSearchResults([]);
+                      setAiInterpretation(null);
+                      setSearchError(null);
+                      setHasSubmittedSearch(false);
+                    }}
+                    className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/70 transition cursor-pointer"
+                    title="Clear query"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+
+                {/* Vibe Search Mode Toggle */}
                 <button
                   type="button"
-                  onClick={() => scrollCategories("left")}
-                  aria-label="Scroll categories left"
-                  className="hidden sm:grid place-items-center absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-card dark:bg-[#151824] text-foreground shadow-lg hover:bg-secondary hover:text-[#00D878] transition cursor-pointer"
+                  data-testid="discover-ai-toggle"
+                  aria-pressed={isAiMode}
+                  onClick={() => {
+                    const nextAi = !isAiMode;
+                    setIsAiMode(nextAi);
+                    if (searchQuery.trim()) {
+                      executeSearch(searchQuery, nextAi);
+                    }
+                  }}
+                  title={isAiMode ? "Vibe Search active — click for title search" : "Switch to AI Vibe Search"}
+                  className={cn(
+                    "h-9 inline-flex items-center gap-1.5 px-3 rounded-xl text-xs font-semibold transition-all duration-150 active:scale-95 cursor-pointer shrink-0",
+                    isAiMode
+                      ? "bg-[#00D878] text-[#050608] shadow-md shadow-[#00D878]/25"
+                      : "bg-secondary hover:bg-accent dark:bg-white/[0.07] dark:hover:bg-white/[0.13] text-muted-foreground hover:text-foreground"
+                  )}
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <SlidersHorizontal className="w-3.5 h-3.5" />
+                  <span>AI Vibe</span>
                 </button>
-              </>
+
+                {/* Voice Search Button */}
+                <button
+                  type="button"
+                  onClick={handleVoiceSearch}
+                  title={isListeningVoice ? "Stop voice listening" : "Voice search"}
+                  className={cn(
+                    "w-9 h-9 grid place-items-center rounded-xl transition-all active:scale-90 cursor-pointer shrink-0",
+                    isListeningVoice
+                      ? "bg-rose-500 text-white animate-pulse"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-white/[0.08]"
+                  )}
+                >
+                  <Mic className="w-4 h-4" />
+                </button>
+              </form>
+
+              {/* Multi-Criteria Labeled Filter Popover — kept outside <form> */}
+              <DiscoverFiltersDialog
+                pill
+                filters={filters}
+                onChange={(updated) => setFilters((prev) => ({ ...prev, ...updated }))}
+                onClear={() => setFilters(INITIAL_FILTER_STATE)}
+              />
+            </div>
+
+            {/* Quick Discovery Prompt Pills */}
+            {!isSearchActive && (
+              <div className="flex flex-wrap items-center gap-1.5 px-1">
+                <span className="text-[11px] font-medium text-muted-foreground mr-1">
+                  {isAiMode ? "Try mood:" : "Try:"}
+                </span>
+                {quickSearchPrompts.map((sample) => (
+                  <button
+                    key={sample}
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery(sample);
+                      executeSearch(sample, isAiMode);
+                    }}
+                    className="text-xs px-3 py-1 rounded-full bg-card/80 dark:bg-white/[0.05] hover:bg-[#00D878]/14 text-muted-foreground hover:text-[#00D878] transition-colors cursor-pointer"
+                  >
+                    {sample}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Mask-Faded Borderless Category Curation Rail */}
+          <div className="relative pt-1">
+            {catCanScrollLeft && (
+              <button
+                type="button"
+                onClick={() => scrollCategories("left")}
+                aria-label="Scroll categories left"
+                className="hidden sm:grid place-items-center absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-card dark:bg-[#171A28] text-foreground shadow-xl hover:bg-secondary hover:text-[#00D878] transition active:scale-90 cursor-pointer"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
             )}
             <div
               ref={categoryRailRef}
               onScroll={updateCategoryScrollButtons}
               aria-label="Cinephile Categories"
+              style={
+                categoryMask
+                  ? {
+                      maskImage: categoryMask,
+                      WebkitMaskImage: categoryMask,
+                    }
+                  : undefined
+              }
               className={cn(
                 "flex items-center gap-2 overflow-x-auto no-scrollbar py-1 scroll-smooth",
-                catCanScrollLeft && "sm:pl-12",
-                catCanScrollRight && "pr-16"
+                catCanScrollLeft && "sm:pl-10",
+                catCanScrollRight && "pr-10"
               )}
             >
               {CINEPHILE_CATEGORIES.map((cat) => {
@@ -1210,8 +1240,8 @@ function DiscoverContent() {
                     className={cn(
                       "inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0",
                       active
-                        ? "bg-[#00D878] text-[#050608] shadow-md shadow-[#00D878]/20"
-                        : "bg-card dark:bg-[#141722] text-muted-foreground hover:bg-secondary dark:hover:bg-[#1C2030] hover:text-foreground active:scale-95"
+                        ? "bg-[#00D878] text-[#050608] shadow-md shadow-[#00D878]/25"
+                        : "bg-card/90 dark:bg-[#141724]/90 text-muted-foreground hover:bg-secondary dark:hover:bg-[#1D2234] hover:text-foreground active:scale-95"
                     )}
                   >
                     <CatIcon className="w-3.5 h-3.5 shrink-0" />
@@ -1221,20 +1251,20 @@ function DiscoverContent() {
               })}
             </div>
             {catCanScrollRight && (
-              <>
-                <div className="pointer-events-none absolute right-0 inset-y-0 w-24 bg-gradient-to-l from-background via-background to-transparent z-[5]" />
-                <button
-                  type="button"
-                  onClick={() => scrollCategories("right")}
-                  aria-label="Scroll categories right"
-                  className="grid place-items-center absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-card dark:bg-[#151824] text-foreground shadow-lg hover:bg-secondary hover:text-[#00D878] transition cursor-pointer"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </>
+              <button
+                type="button"
+                onClick={() => scrollCategories("right")}
+                aria-label="Scroll categories right"
+                className="grid place-items-center absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-card dark:bg-[#171A28] text-foreground shadow-xl hover:bg-secondary hover:text-[#00D878] transition active:scale-90 cursor-pointer"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
             )}
           </div>
-        </header>
+        </div>
+      </header>
+
+      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-12 space-y-6 pt-2 pb-10 select-none relative">
 
         {/* ================================================================= */}
         {/* VIEW 1: TEXT / AI SEARCH RESULTS                                  */}

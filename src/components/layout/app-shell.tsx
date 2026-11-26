@@ -18,7 +18,8 @@ export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const isDashboard = pathname === "/" || pathname === "/dashboard";
   const isMovieDetail = pathname.startsWith("/movie/");
-  const isFullBleed = isDashboard || isMovieDetail;
+  const isDiscover = pathname.startsWith("/discover");
+  const isFullBleed = isDashboard || isMovieDetail || isDiscover;
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = React.useState(false);
   const [isQuickAddOpen, setIsQuickAddOpen] = React.useState(false);
   const [isKeyboardShortcutsOpen, setIsKeyboardShortcutsOpen] =

@@ -21,6 +21,7 @@ interface DiscoverFiltersDialogProps {
   onChange: (updated: Partial<DiscoverFilterState>) => void;
   onClear: () => void;
   compact?: boolean;
+  pill?: boolean;
 }
 
 /**
@@ -34,6 +35,7 @@ export function DiscoverFiltersDialog({
   onChange,
   onClear,
   compact = false,
+  pill = false,
 }: DiscoverFiltersDialogProps) {
   const { resolvedTheme } = useTheme();
   const isLight = resolvedTheme === "light";
@@ -108,7 +110,7 @@ export function DiscoverFiltersDialog({
 
   return (
     <div className="relative shrink-0" ref={dialogRef}>
-      {/* Circular Filter Trigger */}
+      {/* Filter Trigger */}
       <button
         type="button"
         data-testid="discover-filter-trigger"
@@ -118,30 +120,44 @@ export function DiscoverFiltersDialog({
           setIsOpen((prev) => !prev);
         }}
         className={cn(
-          "relative grid place-items-center transition-all cursor-pointer",
-          compact
-            ? "w-8 h-8 rounded-full text-xs"
-            : "w-12 h-12 sm:h-14 sm:w-14 rounded-full shadow-lg",
+          "relative transition-all duration-150 active:scale-95 cursor-pointer",
+          pill
+            ? "h-9 px-3 rounded-xl inline-flex items-center gap-1.5 text-xs font-semibold shrink-0"
+            : cn(
+                "grid place-items-center",
+                compact
+                  ? "w-8 h-8 rounded-full text-xs"
+                  : "w-12 h-12 sm:h-14 sm:w-14 rounded-full shadow-lg"
+              ),
           isOpen || appliedCount > 0
-            ? "bg-[#00D878] text-black shadow-[#00D878]/30"
-            : compact
+            ? "bg-[#00D878] text-[#050608] shadow-md shadow-[#00D878]/25"
+            : pill
               ? isLight
-                ? "bg-transparent text-slate-600 hover:text-slate-950 hover:bg-black/5"
-                : "bg-transparent text-[#9496A1] hover:text-white hover:bg-white/10"
-              : "bg-card text-foreground hover:bg-accent dark:bg-[#12141F]"
+                ? "bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-950"
+                : "bg-white/[0.07] hover:bg-white/[0.13] text-[#C8CCD8] hover:text-white"
+              : compact
+                ? isLight
+                  ? "bg-transparent text-slate-600 hover:text-slate-950 hover:bg-black/5"
+                  : "bg-transparent text-[#9496A1] hover:text-white hover:bg-white/10"
+                : "bg-card text-foreground hover:bg-accent dark:bg-[#12141F]"
         )}
         aria-label="Filters"
         aria-expanded={isOpen}
         title={appliedCount > 0 ? `${appliedCount} filters active` : "Open filters"}
       >
-        <Filter className={compact ? "w-3.5 h-3.5" : "w-5 h-5"} />
+        <Filter className={pill ? "w-3.5 h-3.5" : compact ? "w-3.5 h-3.5" : "w-5 h-5"} />
+        {pill && <span className="hidden sm:inline">Filters</span>}
         {appliedCount > 0 && (
           <span
             className={cn(
-              "absolute rounded-full bg-[#00D878] text-black font-bold grid place-items-center ring-2 ring-background",
-              compact
-                ? "-top-1 -right-1 w-4 h-4 text-[9px]"
-                : "-top-1 -right-1 min-w-[20px] h-5 px-1 text-[11px]"
+              pill
+                ? "px-1.5 py-0.2 rounded-full bg-black/20 text-[#050608] font-bold text-[10px] tabular-nums"
+                : cn(
+                    "absolute rounded-full bg-[#00D878] text-black font-bold grid place-items-center ring-2 ring-background",
+                    compact
+                      ? "-top-1 -right-1 w-4 h-4 text-[9px]"
+                      : "-top-1 -right-1 min-w-[20px] h-5 px-1 text-[11px]"
+                  )
             )}
           >
             {appliedCount}
