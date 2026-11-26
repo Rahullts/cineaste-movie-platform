@@ -122,7 +122,7 @@ export function DiscoverFiltersDialog({
         className={cn(
           "relative transition-all duration-150 active:scale-95 cursor-pointer",
           pill
-            ? "h-9 px-3 rounded-xl inline-flex items-center gap-1.5 text-xs font-semibold shrink-0"
+            ? "h-7 px-2.5 rounded inline-flex items-center gap-1.5 text-[11px] font-semibold shrink-0"
             : cn(
                 "grid place-items-center",
                 compact
@@ -130,11 +130,11 @@ export function DiscoverFiltersDialog({
                   : "w-12 h-12 sm:h-14 sm:w-14 rounded-full shadow-lg"
               ),
           isOpen || appliedCount > 0
-            ? "bg-[#00D878] text-[#050608] shadow-md shadow-[#00D878]/25"
+            ? "bg-[#00D664] text-[#050608]"
             : pill
               ? isLight
                 ? "bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-950"
-                : "bg-white/[0.07] hover:bg-white/[0.13] text-[#C8CCD8] hover:text-white"
+                : "bg-[#171923] hover:bg-[#1E2130] text-muted-foreground hover:text-white"
               : compact
                 ? isLight
                   ? "bg-transparent text-slate-600 hover:text-slate-950 hover:bg-black/5"

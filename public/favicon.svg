@@ -1,16 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 54 36">
-  <defs>
-    <clipPath id="fav-l">
-      <circle cx="13.5" cy="18" r="10.2" />
-    </clipPath>
-    <clipPath id="fav-r">
-      <circle cx="40.5" cy="18" r="10.2" />
-    </clipPath>
-  </defs>
-  <circle cx="13.5" cy="18" r="10.2" fill="#FB923C" />
-  <circle cx="40.5" cy="18" r="10.2" fill="#38BDF8" />
-  <circle cx="27" cy="18" r="10.6" fill="#00E054" />
-  <circle cx="27" cy="18" r="10.6" fill="#D9F99D" fill-opacity="0.62" clip-path="url(#fav-l)" />
-  <circle cx="27" cy="18" r="10.6" fill="#A5F3FC" fill-opacity="0.58" clip-path="url(#fav-r)" />
-  <circle cx="27" cy="18" r="2.1" fill="#05070A" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <rect x="0.5" y="0.5" width="31" height="31" rx="7.5" fill="#0A0B0F" stroke="#1E1F2A" stroke-width="1" />
+  <path d="M9.2 6.5H23V10.5H10.8V21.5H23V25.5H9.2L6 22.3V9.7L9.2 6.5Z" fill="#F3F4F6" />
+  <path d="M14.2 13.5H26V16.8L24.2 18.5H14.2V13.5Z" fill="#00D664" />
 </svg>

@@ -90,17 +90,9 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
     }
   }, [isOpen, loadRecentSearches]);
 
-  // Global keydown listener for shortcut
+  // Global Escape listener when open (Cmd/Ctrl+K now opens the Movie Command Dock via AppShell)
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        if (isOpen) {
-          onClose();
-        } else {
-          window.dispatchEvent(new Event("open-command-palette"));
-        }
-      }
       if (e.key === "Escape" && isOpen) {
         e.preventDefault();
         onClose();

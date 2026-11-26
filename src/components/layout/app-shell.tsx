@@ -18,23 +18,72 @@ export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const isDashboard = pathname === "/" || pathname === "/dashboard";
   const isMovieDetail = pathname.startsWith("/movie/");
-  const isDiscover = pathname.startsWith("/discover");
-  const isFullBleed = isDashboard || isMovieDetail || isDiscover;
+  const isFullBleed = isDashboard || isMovieDetail;
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = React.useState(false);
   const [isQuickAddOpen, setIsQuickAddOpen] = React.useState(false);
   const [isKeyboardShortcutsOpen, setIsKeyboardShortcutsOpen] =
     React.useState(false);
+  const lastFocusedRef = React.useRef<HTMLElement | null>(null);
 
-  // Listen for custom window events dispatched anywhere in the app
+  const openQuickAdd = React.useCallback(() => {
+    if (typeof document !== "undefined" && document.activeElement instanceof HTMLElement) {
+      lastFocusedRef.current = document.activeElement;
+    }
+    setIsCommandPaletteOpen(false);
+    setIsQuickAddOpen(true);
+  }, []);
+
+  const closeQuickAdd = React.useCallback(() => {
+    setIsQuickAddOpen(false);
+    const prevEl = lastFocusedRef.current;
+    lastFocusedRef.current = null;
+    if (prevEl && typeof prevEl.focus === "function" && document.contains(prevEl)) {
+      window.requestAnimationFrame(() => prevEl.focus());
+    }
+  }, []);
+
+  // Listen for custom window events & global Ctrl/Cmd+K Movie Command Dock shortcut
   React.useEffect(() => {
     const handleOpenPalette = () => setIsCommandPaletteOpen(true);
-    const handleOpenQuickAdd = () => setIsQuickAddOpen(true);
+    const handleOpenQuickAdd = () => openQuickAdd();
     const handleToggleShortcuts = () =>
       setIsKeyboardShortcutsOpen((prev) => !prev);
+
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== "k") return;
+
+      // Never hijack Cmd/Ctrl+K when user is actively typing inside an unrelated input
+      const active = document.activeElement;
+      const inQuickAddDialog = Boolean(active?.closest('[data-testid="quick-add-dialog"]'));
+      const isTypingInUnrelatedInput =
+        !inQuickAddDialog &&
+        active instanceof HTMLElement &&
+        (active.tagName === "INPUT" ||
+          active.tagName === "TEXTAREA" ||
+          active.tagName === "SELECT" ||
+          active.isContentEditable);
+      if (isTypingInUnrelatedInput) return;
+
+      e.preventDefault();
+      if (e.shiftKey) {
+        setIsQuickAddOpen(false);
+        setIsCommandPaletteOpen((prev) => !prev);
+      } else {
+        setIsQuickAddOpen((prev) => {
+          if (prev) {
+            closeQuickAdd();
+            return false;
+          }
+          openQuickAdd();
+          return true;
+        });
+      }
+    };
 
     window.addEventListener("open-command-palette", handleOpenPalette);
     window.addEventListener("open-quick-add", handleOpenQuickAdd);
     window.addEventListener("toggle-keyboard-shortcuts", handleToggleShortcuts);
+    window.addEventListener("keydown", handleGlobalKeyDown);
 
     return () => {
       window.removeEventListener("open-command-palette", handleOpenPalette);
@@ -43,15 +92,16 @@ export function AppShell({ children }: AppShellProps) {
         "toggle-keyboard-shortcuts",
         handleToggleShortcuts
       );
+      window.removeEventListener("keydown", handleGlobalKeyDown);
     };
-  }, []);
+  }, [openQuickAdd, closeQuickAdd]);
 
   return (
     <div className="min-h-screen bg-background text-foreground relative flex flex-col transition-colors duration-200 overflow-x-clip">
       {/* Top Header with Cineaste brand, global search, quick add, notifications, and profile */}
       <TopNav
         onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
-        onOpenQuickAdd={() => setIsQuickAddOpen(true)}
+        onOpenQuickAdd={openQuickAdd}
       />
 
       {/* Dynamic Route Content - Full Viewport Width with generous bottom padding for Floating Dock + safe areas */}
@@ -129,12 +179,12 @@ export function AppShell({ children }: AppShellProps) {
         onClose={() => setIsCommandPaletteOpen(false)}
       />
 
-      {/* Quick Add Movie Dialog */}
+      {/* Quick Add Movie Command Dock */}
       <QuickAddDialog
         isOpen={isQuickAddOpen}
-        onClose={() => setIsQuickAddOpen(false)}
+        onClose={closeQuickAdd}
         onOpenCommandPalette={() => {
-          setIsQuickAddOpen(false);
+          closeQuickAdd();
           setIsCommandPaletteOpen(true);
         }}
       />

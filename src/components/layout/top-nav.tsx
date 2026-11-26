@@ -111,11 +111,6 @@ export function TopNav({
         setIsThemeMenuOpen(false);
         setIsSearchOpen(false);
       }
-      // Ctrl+K / Cmd+K toggle search
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        setIsSearchOpen((prev) => !prev);
-      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -184,10 +179,15 @@ export function TopNav({
         }
       };
 
-      recognition.onerror = () => {
+      recognition.onerror = (event: any) => {
         setIsListeningVoice(false);
-        setVoiceStatus("Could not hear voice. Please try again.");
-        setTimeout(() => setVoiceStatus(null), 3000);
+        const err = event?.error;
+        setVoiceStatus(
+          err === "not-allowed" || err === "service-not-allowed"
+            ? "Microphone permission denied. Allow mic access in browser settings."
+            : "Could not hear voice. Please try again."
+        );
+        setTimeout(() => setVoiceStatus(null), 3500);
       };
 
       recognition.onend = () => {
@@ -252,23 +252,69 @@ export function TopNav({
             : "bg-background/80 backdrop-blur-md"
       )}
     >
-      {/* 1. Brand Logo Link — floats cleanly over scrim */}
-      <Link
-        href="/dashboard"
-        aria-label="Cineaste Home"
-        className="shrink-0 flex items-center group cursor-pointer pointer-events-auto"
-      >
-        <CineasteLogo
-          size={34}
-          showWordmark={true}
-          forceLightWordmark={isFullBleed && !scrolled}
-        />
-      </Link>
+      {/* 1. Brand Logo Link + Compact Editorial Destinations */}
+      <div className="flex items-center gap-5 lg:gap-7 shrink-0 pointer-events-auto">
+        <Link
+          href="/dashboard"
+          aria-label="Cineaste Home"
+          className="shrink-0 flex items-center group cursor-pointer"
+        >
+          <CineasteLogo
+            size={26}
+            showWordmark={true}
+            forceLightWordmark={isFullBleed && !scrolled}
+          />
+        </Link>
+
+        {/* Compact inline navigation routes (Discover, My Library, Journal) */}
+        <nav aria-label="Header Navigation" className="hidden md:flex items-center gap-1">
+          {[
+            {
+              label: "Discover",
+              href: "/discover",
+              active: pathname.startsWith("/discover"),
+            },
+            {
+              label: "My Library",
+              href: "/library",
+              active:
+                pathname.startsWith("/library") ||
+                pathname.startsWith("/watchlist") ||
+                pathname === "/favorites" ||
+                pathname === "/watched" ||
+                pathname === "/collections",
+            },
+            {
+              label: "Journal",
+              href: "/activity",
+              active:
+                pathname.startsWith("/activity") ||
+                pathname === "/timeline" ||
+                pathname === "/import",
+            },
+          ].map((navItem) => (
+            <Link
+              key={navItem.href}
+              href={navItem.href}
+              className={cn(
+                "px-3 py-1.5 rounded-md text-xs font-medium tracking-wide transition-colors",
+                navItem.active
+                  ? "text-[#00D664] bg-[#00D664]/10 font-semibold"
+                  : useLightHeaderChrome
+                    ? "text-slate-700 hover:text-slate-950 hover:bg-slate-900/[0.06]"
+                    : "text-[#C5C8D4] hover:text-white hover:bg-white/[0.06]"
+              )}
+            >
+              {navItem.label}
+            </Link>
+          ))}
+        </nav>
+      </div>
 
       {/* Center Spacer */}
       <div className="flex-1" />
 
-      {/* Right Controls Container — 4 independent floating circular icons, no shared background */}
+      {/* Right Controls Container */}
       <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 relative pointer-events-auto">
         {/* ================================================================= */}
         {/* 1. Compact Search Icon Control (Floating circular, no box borders) */}
@@ -279,7 +325,7 @@ export function TopNav({
             onClick={() => setIsSearchOpen((prev) => !prev)}
             aria-label="Search movies"
             aria-expanded={isSearchOpen}
-            title="Search films, voice mode, AI mode (Ctrl+K)"
+            title="Search films, voice mode, AI mode"
             className={cn(
               "h-9 w-9 rounded-full grid place-items-center transition active:scale-95 cursor-pointer backdrop-blur-md",
               isSearchOpen
