@@ -51,19 +51,21 @@ function DashboardContent() {
     return null;
   }, [isAuthenticated, user?.display_name, user?.handle]);
 
-  // Trending spotlight fallback requiring BOTH backdrop_path AND poster_path for the exact same film
-  const [spotlightGlobalMovie, setSpotlightGlobalMovie] = React.useState<Movie | null>(null);
+  // Trending spotlight candidate pool for interactive multi-film carousel
+  const [spotlightGlobalMovies, setSpotlightGlobalMovies] = React.useState<Movie[]>([]);
+  const [spotlightIndex, setSpotlightIndex] = React.useState(0);
 
   React.useEffect(() => {
     let cancelled = false;
     tmdbFetch({ action: "trending", time_window: "week" })
       .then((res) => {
         if (!cancelled && res.results && res.results.length > 0) {
-          const topValid =
-            res.results.find((m) =>
-              Boolean(m.backdrop_path && m.poster_path && m.title && (m.vote_average || 0) >= 6.5)
-            ) || res.results.find((m) => Boolean(m.backdrop_path && m.poster_path && m.title));
-          if (topValid) setSpotlightGlobalMovie(topValid);
+          const valid = res.results.filter((m: Movie) =>
+            Boolean(m.backdrop_path && m.poster_path && m.title)
+          );
+          if (valid.length > 0) {
+            setSpotlightGlobalMovies(valid.slice(0, 8));
+          }
         }
       })
       .catch(() => {});
@@ -105,36 +107,76 @@ function DashboardContent() {
     return "established";
   }, [savedMovies.length, watchedMovies.length]);
 
-  // Spotlight hero source derived from real state
-  const { spotlightMovie, spotlightMode } = React.useMemo(() => {
-    if (dashboardState === "new_user") {
-      return {
-        spotlightMovie: spotlightGlobalMovie,
-        spotlightMode: "spotlight" as const,
-      };
-    }
-
+  // Curated spotlight candidate pool with multi-film carousel switching
+  const spotlightCandidates = React.useMemo<Movie[]>(() => {
+    const list: Movie[] = [];
     if (savedMovies.length > 0) {
       const watching = savedMovies.find((m) => m?.status === "watching");
       const fav = savedMovies.find((m) => m?.is_favorite);
-      return {
-        spotlightMovie: watching || fav || savedMovies[0],
-        spotlightMode: "watchlist" as const,
-      };
+      const primary = watching || fav || savedMovies[0];
+      if (primary) list.push(primary);
     }
-
-    if (watchedMovies.length > 0) {
-      return {
-        spotlightMovie: watchedMovies[0],
-        spotlightMode: "watched" as const,
-      };
+    if (spotlightGlobalMovies.length > 0) {
+      for (const m of spotlightGlobalMovies) {
+        if (!list.some((existing) => (existing.tmdb_id || existing.id) === (m.tmdb_id || m.id))) {
+          list.push(m);
+        }
+        if (list.length >= 6) break;
+      }
     }
+    // Curated verified fallback classics if API has not responded yet
+    if (list.length === 0) {
+      list.push(
+        {
+          id: 693134,
+          tmdb_id: 693134,
+          title: "Dune: Part Two",
+          release_date: "2024-03-01",
+          vote_average: 8.2,
+          overview:
+            "Follow the mythic journey of Paul Atreides as he unites with Chani and the Fremen while on a warpath of revenge against the conspirators who destroyed his family.",
+          backdrop_path: "/xOMo8BRK7PfcJv9JCnx7s520gh0.jpg",
+          poster_path: "/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg",
+        },
+        {
+          id: 157336,
+          tmdb_id: 157336,
+          title: "Interstellar",
+          release_date: "2014-11-05",
+          vote_average: 8.4,
+          overview:
+            "The adventures of a group of explorers who make use of a newly discovered wormhole to surpass the limitations on human space travel and conquer the vast distances involved in an interstellar voyage.",
+          backdrop_path: "/xJHokMbljvjADYdit5fK5VQsXEG.jpg",
+          poster_path: "/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
+        },
+        {
+          id: 275,
+          tmdb_id: 275,
+          title: "Fargo",
+          release_date: "1996-03-08",
+          vote_average: 7.8,
+          overview:
+            "Jerry, a small-town Minnesota car salesman is bursting at the seams with debt... but he's got a plan. He's going to hire two thugs to kidnap his wife in a scheme to collect a hefty ransom from his wealthy father-in-law.",
+          backdrop_path: "/747dgDfL5d8esobk7h4odaOFhUq.jpg",
+          poster_path: "/rt7cpEr1uP6RTZykBFhBTcRaKvG.jpg",
+        }
+      );
+    }
+    return list;
+  }, [savedMovies, spotlightGlobalMovies]);
 
-    return {
-      spotlightMovie: spotlightGlobalMovie,
-      spotlightMode: "spotlight" as const,
-    };
-  }, [dashboardState, savedMovies, watchedMovies, spotlightGlobalMovie]);
+  const activeIndex = spotlightIndex % (spotlightCandidates.length || 1);
+  const spotlightMovie = spotlightCandidates[activeIndex] || null;
+
+  const spotlightMode = React.useMemo<"spotlight" | "watchlist" | "watched">(() => {
+    if (!spotlightMovie) return "spotlight";
+    const id = spotlightMovie.tmdb_id || spotlightMovie.id;
+    const inSaved = savedMovies.some((m) => (m.tmdb_id || m.id) === id);
+    if (inSaved) return "watchlist";
+    const inWatched = watchedMovies.some((m) => (m.tmdb_id || m.id) === id);
+    if (inWatched) return "watched";
+    return "spotlight";
+  }, [spotlightMovie, savedMovies, watchedMovies]);
 
   // Live library status lookup for featured spotlight movie
   const spotlightLibraryEntry = React.useMemo(() => {
@@ -264,9 +306,20 @@ function DashboardContent() {
 
   return (
     <AppShell>
-      {/* 1. CINEMA SPOTLIGHT HERO */}
+      {/* 1. CINEMA SPOTLIGHT HERO BANNER (Full-Bleed, Multi-Film Carousel) */}
       <CinemaSpotlightHero
         movie={spotlightMovie}
+        movies={spotlightCandidates}
+        currentIndex={activeIndex}
+        onSelectIndex={(idx) => setSpotlightIndex(idx)}
+        onNextMovie={() =>
+          setSpotlightIndex((prev) => (prev + 1) % spotlightCandidates.length)
+        }
+        onPrevMovie={() =>
+          setSpotlightIndex(
+            (prev) => (prev - 1 + spotlightCandidates.length) % spotlightCandidates.length
+          )
+        }
         mode={spotlightMode}
         greeting={timeGreeting}
         userName={greetingName}

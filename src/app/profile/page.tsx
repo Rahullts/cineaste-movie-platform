@@ -359,7 +359,7 @@ export default function ProfilePage() {
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     placeholder="Your display name"
-                    className="w-full h-11 rounded-xl bg-white/[0.05] focus:bg-white/[0.08] px-3.5 text-sm text-white outline-none focus:ring-1 focus:ring-[#00D878] transition"
+                    className="w-full h-11 rounded-xl bg-white/[0.05] focus:bg-white/[0.09] px-3.5 text-sm text-white outline-none border-0 transition"
                   />
                 </div>
 
@@ -367,7 +367,7 @@ export default function ProfilePage() {
                   <label className="text-xs font-bold uppercase tracking-wider text-[#9496A1]">
                     Username / Handle
                   </label>
-                  <div className="flex items-center rounded-xl bg-white/[0.05] focus-within:bg-white/[0.08] px-3.5 focus-within:ring-1 focus-within:ring-[#00D878] transition">
+                  <div className="flex items-center rounded-xl bg-white/[0.05] focus-within:bg-white/[0.09] px-3.5 border-0 transition">
                     <span className="text-[#9496A1] text-sm select-none">@</span>
                     <input
                       type="text"
@@ -376,7 +376,7 @@ export default function ProfilePage() {
                         setHandle(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))
                       }
                       placeholder="username"
-                      className="flex-1 h-11 px-1 bg-transparent text-sm text-white outline-none"
+                      className="flex-1 h-11 px-1 bg-transparent text-sm text-white outline-none border-0"
                     />
                   </div>
                 </div>
@@ -391,7 +391,7 @@ export default function ProfilePage() {
                   onChange={(e) => setBio(e.target.value)}
                   placeholder="A line about your taste, favorite eras, or cinephile obsession…"
                   rows={3}
-                  className="w-full rounded-xl bg-white/[0.05] focus:bg-white/[0.08] p-3.5 text-sm text-white outline-none focus:ring-1 focus:ring-[#00D878] transition resize-y"
+                  className="w-full rounded-xl bg-white/[0.05] focus:bg-white/[0.09] p-3.5 text-sm text-white outline-none border-0 transition resize-y"
                 />
               </div>
 

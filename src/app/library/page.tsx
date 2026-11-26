@@ -414,7 +414,7 @@ function LibraryContent() {
                   className={cn(
                     "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition shrink-0 cursor-pointer whitespace-nowrap",
                     isActive
-                      ? "bg-[#00D878]/15 text-[#00D878] font-bold ring-1 ring-[#00D878]/30"
+                      ? "bg-[#00D878]/18 text-[#00D878] font-semibold"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   )}
                 >
@@ -442,7 +442,7 @@ function LibraryContent() {
                 type="button"
                 aria-label="Scroll library tabs right"
                 onClick={() => tabRailRef.current?.scrollBy({ left: 180, behavior: "smooth" })}
-                className="pointer-events-auto h-7 w-7 rounded-full bg-card border border-border text-foreground grid place-items-center shadow-md cursor-pointer"
+                className="pointer-events-auto h-7 w-7 rounded-full bg-card border-0 text-foreground grid place-items-center shadow-md cursor-pointer"
               >
                 <span className="text-xs font-bold">›</span>
               </button>
@@ -468,7 +468,7 @@ function LibraryContent() {
             </div>
 
             {watchingMovies.length === 0 ? (
-              <div className="rounded-3xl bg-card/40 p-12 text-center space-y-4 shadow-xl border border-border/40">
+              <div className="rounded-3xl bg-card/40 p-12 text-center space-y-4 shadow-xl border-0">
                 <div className="w-14 h-14 rounded-2xl bg-[#00D878]/10 text-[#00D878] mx-auto grid place-items-center">
                   <Tv className="w-7 h-7" />
                 </div>
@@ -538,7 +538,7 @@ function LibraryContent() {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as SortOption)}
-                  className="bg-card text-xs text-foreground rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-[#00D878]"
+                  className="bg-secondary dark:bg-[#171A26] text-xs text-foreground rounded-lg px-2.5 py-1.5 outline-none border-0 focus:bg-accent dark:focus:bg-[#1E2232] transition-colors cursor-pointer"
                 >
                   <option value="recent">Recently Added</option>
                   <option value="title">Title (A-Z)</option>
@@ -617,12 +617,12 @@ function LibraryContent() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Search by title..."
-                    className="w-full h-9 px-3 rounded-lg bg-background text-xs text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-[#00D878]"
+                    className="w-full h-9 px-3 rounded-lg bg-secondary focus:bg-accent dark:bg-[#171A26] dark:focus:bg-[#1E2232] text-xs text-foreground placeholder:text-muted-foreground outline-none border-0 focus:outline-none focus:ring-0 transition-colors"
                   />
                   <select
                     value={filters.runtime}
                     onChange={(e) => setFilters((f) => ({ ...f, runtime: e.target.value }))}
-                    className="w-full h-9 px-3 rounded-lg bg-background text-xs text-foreground outline-none focus:ring-1 focus:ring-[#00D878]"
+                    className="w-full h-9 px-3 rounded-lg bg-secondary focus:bg-accent dark:bg-[#171A26] dark:focus:bg-[#1E2232] text-xs text-foreground outline-none border-0 transition-colors"
                   >
                     <option value="">Any Runtime</option>
                     <option value="<90">&lt; 90 mins</option>
@@ -632,7 +632,7 @@ function LibraryContent() {
                   <select
                     value={filters.minRating}
                     onChange={(e) => setFilters((f) => ({ ...f, minRating: e.target.value }))}
-                    className="w-full h-9 px-3 rounded-lg bg-background text-xs text-foreground outline-none focus:ring-1 focus:ring-[#00D878]"
+                    className="w-full h-9 px-3 rounded-lg bg-secondary focus:bg-accent dark:bg-[#171A26] dark:focus:bg-[#1E2232] text-xs text-foreground outline-none border-0 transition-colors"
                   >
                     <option value="">Any Rating</option>
                     <option value="8.0">8.0+ Rating</option>

@@ -91,6 +91,7 @@ export function TopNav({
       const target = e.target as Node;
       if (accountMenuRef.current && !accountMenuRef.current.contains(target)) {
         setIsAccountMenuOpen(false);
+        setIsGuestLoginDrawerOpen(false);
       }
       if (themeMenuRef.current && !themeMenuRef.current.contains(target)) {
         setIsThemeMenuOpen(false);
@@ -239,7 +240,6 @@ export function TopNav({
     : "bg-[#151722]/85 hover:bg-[#222536] text-white/90 hover:text-white shadow-sm shadow-black/40";
 
   return (
-    <>
     <header
       className={cn(
         "sticky top-0 z-40 h-16 flex items-center justify-between gap-4 px-4 sm:px-6 lg:px-8 select-none pointer-events-none transition-all duration-200",
@@ -278,24 +278,25 @@ export function TopNav({
             type="button"
             onClick={() => setIsSearchOpen((prev) => !prev)}
             aria-label="Search movies"
+            aria-expanded={isSearchOpen}
             title="Search films, voice mode, AI mode (Ctrl+K)"
             className={cn(
               "h-9 w-9 rounded-full grid place-items-center transition active:scale-95 cursor-pointer backdrop-blur-md",
               isSearchOpen
-                ? "bg-[#00D878]/20 text-[#00D878] shadow-[0_0_12px_rgba(0,216,120,0.25)] border border-[#00D878]/35"
+                ? "bg-[#00D878]/20 text-[#00D878] shadow-[0_0_12px_rgba(0,216,120,0.25)]"
                 : actionButtonIdleClass
             )}
           >
             <Search className="w-4 h-4" />
           </button>
 
-          {/* Compact Tab-like Search Popover */}
+          {/* Compact Tab-like Search Popover (Borderless Floating Tonal Surface) */}
           {isSearchOpen && (
-            <div className="absolute top-12 right-0 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-              <div className="w-[300px] sm:w-[400px] p-2.5 rounded-2xl bg-popover/95 text-popover-foreground border border-border shadow-2xl backdrop-blur-2xl">
+            <div className="absolute top-12 right-0 z-50 origin-top-right animate-in fade-in slide-in-from-top-2 zoom-in-95 duration-200">
+              <div className="w-[320px] sm:w-[420px] p-2 rounded-2xl bg-popover dark:bg-[#12141F] text-popover-foreground shadow-[0_24px_64px_-12px_rgba(0,0,0,0.85)] backdrop-blur-2xl border-0">
                 <form
                   onSubmit={handleSearchSubmit}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-background/90 border border-border focus-within:border-[#00D878]/60 transition"
+                  className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-secondary dark:bg-[#1A1D2B] transition-colors border-0 focus-within:bg-accent dark:focus-within:bg-[#202436]"
                 >
                   <Search className="w-4 h-4 text-muted-foreground shrink-0" />
                   <input
@@ -308,7 +309,7 @@ export function TopNav({
                         ? "AI Vibe Search (e.g. cozy rainy day noir)..."
                         : "Search films, directors, keywords..."
                     }
-                    className="flex-1 min-w-0 bg-transparent text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                    className="flex-1 min-w-0 bg-transparent text-xs sm:text-sm text-foreground placeholder:text-muted-foreground outline-none border-0 focus:outline-none focus:ring-0 focus-visible:outline-none"
                   />
 
                   {/* Clear Button */}
@@ -387,11 +388,12 @@ export function TopNav({
             type="button"
             onClick={() => setIsThemeMenuOpen((prev) => !prev)}
             aria-label={`Theme: ${theme}. Click to switch theme.`}
+            aria-expanded={isThemeMenuOpen}
             title={`Current theme: ${theme}. Click to change.`}
             className={cn(
               "h-9 w-9 rounded-full grid place-items-center transition active:scale-95 cursor-pointer backdrop-blur-md",
               isThemeMenuOpen
-                ? "bg-[#00D878]/20 text-[#00D878] shadow-[0_0_12px_rgba(0,216,120,0.25)] border border-[#00D878]/35"
+                ? "bg-[#00D878]/20 text-[#00D878] shadow-[0_0_12px_rgba(0,216,120,0.25)]"
                 : actionButtonIdleClass
             )}
           >
@@ -404,9 +406,9 @@ export function TopNav({
             )}
           </button>
 
-          {/* Theme 3-way dropdown menu */}
+          {/* Theme 3-way dropdown menu (Borderless Floating Tonal Surface) */}
           {isThemeMenuOpen && (
-            <div className="absolute right-0 mt-2 w-36 rounded-2xl border border-border bg-popover/95 text-popover-foreground backdrop-blur-2xl shadow-2xl p-1.5 z-50 animate-in fade-in slide-in-from-top-2 text-xs">
+            <div className="absolute right-0 mt-2 w-36 rounded-2xl border-0 bg-popover dark:bg-[#12141F] text-popover-foreground backdrop-blur-2xl shadow-[0_24px_64px_-12px_rgba(0,0,0,0.85)] p-1.5 z-50 origin-top-right animate-in fade-in slide-in-from-top-2 zoom-in-95 duration-200 text-xs">
               <button
                 type="button"
                 onClick={() => {
@@ -479,12 +481,13 @@ export function TopNav({
             data-testid="topnav-profile-btn"
             onClick={() => {
               if (!isAuthenticated) {
-                setIsGuestLoginDrawerOpen(true);
+                setIsGuestLoginDrawerOpen((prev) => !prev);
               } else {
                 setIsAccountMenuOpen((prev) => !prev);
               }
             }}
             aria-label="User Account"
+            aria-expanded={isAuthenticated ? isAccountMenuOpen : isGuestLoginDrawerOpen}
             title={isAuthenticated ? user.display_name : "Account"}
             className={cn(
               "h-9 w-9 rounded-full grid place-items-center overflow-hidden transition active:scale-95 cursor-pointer backdrop-blur-md group",
@@ -511,7 +514,7 @@ export function TopNav({
 
           {/* Account Popover Menu (Authenticated Users) */}
           {isAuthenticated && isAccountMenuOpen && (
-            <div className="absolute right-0 mt-2.5 w-64 rounded-2xl bg-popover dark:bg-[#11131C] shadow-[0_20px_56px_-12px_rgba(0,0,0,0.75)] p-2 z-50 animate-in fade-in slide-in-from-top-2 text-xs">
+            <div className="absolute right-0 mt-2.5 w-64 rounded-2xl bg-popover dark:bg-[#12141F] border-0 shadow-[0_24px_64px_-12px_rgba(0,0,0,0.85)] p-2 z-50 origin-top-right animate-in fade-in slide-in-from-top-2 zoom-in-95 duration-200 text-xs">
               <div className="px-3 py-2.5 rounded-xl bg-secondary dark:bg-white/[0.05] mb-1.5">
                 <div className="flex items-center justify-between gap-2">
                   <p className="font-heading font-semibold text-sm text-foreground truncate">
@@ -581,77 +584,67 @@ export function TopNav({
               </div>
             </div>
           )}
+
+          {/* Floating Guest Account Menu (Positioned directly under avatar) */}
+          {!isAuthenticated && isGuestLoginDrawerOpen && (
+            <div
+              role="region"
+              aria-label="Account Access"
+              data-testid="guest-account-panel"
+              className="absolute right-0 mt-2.5 w-72 rounded-2xl bg-popover dark:bg-[#12141F] shadow-[0_24px_64px_-12px_rgba(0,0,0,0.85)] p-4 z-50 flex flex-col gap-3.5 origin-top-right animate-in fade-in slide-in-from-top-2 zoom-in-95 duration-200 border-0"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <CineasteLogo size={24} showWordmark={true} />
+                <button
+                  type="button"
+                  onClick={() => setIsGuestLoginDrawerOpen(false)}
+                  aria-label="Close account panel"
+                  className="w-7 h-7 rounded-full bg-secondary hover:bg-accent dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-muted-foreground hover:text-foreground grid place-items-center transition cursor-pointer shrink-0"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <div className="space-y-1">
+                <h2 className="font-heading text-sm font-semibold text-foreground tracking-tight">
+                  Your Cinema Account
+                </h2>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Sign in or create an account to sync your library across devices.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-2 pt-1">
+                <button
+                  type="button"
+                  data-testid="sidepanel-login-btn"
+                  onClick={() => {
+                    setIsGuestLoginDrawerOpen(false);
+                    openAuthModal("signin");
+                  }}
+                  className="w-full h-10 rounded-xl bg-[#00D878] hover:bg-[#00C26B] text-[#050608] font-heading font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition active:scale-[0.98] cursor-pointer shadow-lg shadow-[#00D878]/15"
+                >
+                  <LogIn className="w-4 h-4" />
+                  <span>Log In</span>
+                </button>
+
+                <button
+                  type="button"
+                  data-testid="sidepanel-signup-btn"
+                  onClick={() => {
+                    setIsGuestLoginDrawerOpen(false);
+                    openAuthModal("signup");
+                  }}
+                  className="w-full h-10 rounded-xl bg-secondary hover:bg-accent dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-foreground font-heading font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition active:scale-[0.98] cursor-pointer"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  <span>Sign Up</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </header>
-
-    {/* ===================================================================== */}
-    {/* FLOATING GUEST ACCOUNT POPOVER (Strictly Log In & Sign Up)            */}
-    {/* ===================================================================== */}
-    {!isAuthenticated && isGuestLoginDrawerOpen && (
-      <div
-        onClick={() => setIsGuestLoginDrawerOpen(false)}
-        className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[3px] flex justify-end items-start pt-[4.5rem] sm:pt-[4.75rem] px-4 sm:px-6 lg:px-12 animate-fadeIn"
-      >
-        <aside
-          role="dialog"
-          aria-modal="true"
-          aria-label="Account Access"
-          data-testid="guest-account-panel"
-          onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-[300px] rounded-2xl bg-popover dark:bg-[#11131C] shadow-[0_24px_64px_-12px_rgba(0,0,0,0.85)] p-5 flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-200"
-        >
-          <div className="flex items-center justify-between gap-3">
-            <CineasteLogo size={24} showWordmark={true} />
-            <button
-              type="button"
-              onClick={() => setIsGuestLoginDrawerOpen(false)}
-              aria-label="Close account panel"
-              className="w-8 h-8 rounded-full bg-secondary hover:bg-accent dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-muted-foreground hover:text-foreground grid place-items-center transition cursor-pointer shrink-0"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="space-y-1">
-            <h2 className="font-heading text-base font-semibold text-foreground tracking-tight">
-              Your Cinema Account
-            </h2>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Sign in or create an account to sync your library across devices.
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <button
-              type="button"
-              data-testid="sidepanel-login-btn"
-              onClick={() => {
-                setIsGuestLoginDrawerOpen(false);
-                openAuthModal("signin");
-              }}
-              className="w-full h-10 rounded-xl bg-[#00D878] hover:bg-[#00C26B] text-[#050608] font-heading font-semibold text-sm flex items-center justify-center gap-2 transition active:scale-[0.98] cursor-pointer shadow-lg shadow-[#00D878]/15"
-            >
-              <LogIn className="w-4 h-4" />
-              <span>Log In</span>
-            </button>
-
-            <button
-              type="button"
-              data-testid="sidepanel-signup-btn"
-              onClick={() => {
-                setIsGuestLoginDrawerOpen(false);
-                openAuthModal("signup");
-              }}
-              className="w-full h-10 rounded-xl bg-secondary hover:bg-accent dark:bg-white/[0.08] dark:hover:bg-white/[0.14] text-foreground font-heading font-semibold text-sm flex items-center justify-center gap-2 transition active:scale-[0.98] cursor-pointer"
-            >
-              <UserPlus className="w-4 h-4" />
-              <span>Sign Up</span>
-            </button>
-          </div>
-        </aside>
-      </div>
-    )}
-    </>
   );
 }

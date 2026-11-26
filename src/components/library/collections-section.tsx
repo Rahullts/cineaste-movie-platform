@@ -93,7 +93,7 @@ export function CollectionsSection({
               placeholder="Search collections..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-9 pl-9 pr-3 rounded-xl bg-[#141520] text-xs text-white placeholder:text-[#9496A1]/60 focus:outline-none focus:ring-1 focus:ring-[#00D878]"
+              className="w-full h-9 pl-9 pr-3 rounded-xl bg-[#141520] focus:bg-[#1B1D2C] text-xs text-white placeholder:text-[#9496A1]/60 outline-none border-0 focus:outline-none focus:ring-0 transition-colors"
             />
           </div>
         </div>
@@ -105,7 +105,7 @@ export function CollectionsSection({
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="h-9 px-3 rounded-xl bg-[#141520] text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#00D878] cursor-pointer"
+              className="h-9 px-3 rounded-xl bg-[#141520] focus:bg-[#1B1D2C] text-xs text-white outline-none border-0 cursor-pointer transition-colors"
             >
               <option value="updated">Recently Updated</option>
               <option value="count">Most Films</option>

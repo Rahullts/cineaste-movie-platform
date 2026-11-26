@@ -198,6 +198,7 @@ function QuickAddDialogContent({
       ref={dialogRef}
       data-testid="quick-add-dialog"
       aria-labelledby="quick-add-title"
+      {...({ closedby: "any" } as any)}
       onCancel={(e) => {
         e.preventDefault();
         onClose();

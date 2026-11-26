@@ -123,7 +123,7 @@ export function FavoritesSection({
               placeholder="Search favorites by title or director..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-9 pl-9 pr-3 rounded-xl bg-[#141520] text-xs text-white placeholder:text-[#9496A1]/60 focus:outline-none focus:ring-1 focus:ring-[#00D878]"
+              className="w-full h-9 pl-9 pr-3 rounded-xl bg-[#141520] focus:bg-[#1B1D2C] text-xs text-white placeholder:text-[#9496A1]/60 outline-none border-0 focus:outline-none focus:ring-0 transition-colors"
             />
           </div>
         </div>
@@ -135,7 +135,7 @@ export function FavoritesSection({
             <select
               value={selectedGenre}
               onChange={(e) => setSelectedGenre(e.target.value)}
-              className="h-9 px-3 rounded-xl bg-[#141520] text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#00D878] cursor-pointer"
+              className="h-9 px-3 rounded-xl bg-[#141520] focus:bg-[#1B1D2C] text-xs text-white outline-none border-0 cursor-pointer transition-colors"
             >
               <option value="all">All Genres</option>
               {availableGenres.map((g) => (
@@ -150,7 +150,7 @@ export function FavoritesSection({
           <select
             value={selectedDecade}
             onChange={(e) => setSelectedDecade(e.target.value)}
-            className="h-9 px-3 rounded-xl bg-[#141520] text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#00D878] cursor-pointer"
+            className="h-9 px-3 rounded-xl bg-[#141520] focus:bg-[#1B1D2C] text-xs text-white outline-none border-0 cursor-pointer transition-colors"
           >
             <option value="all">All Eras</option>
             <option value="2020s">2020s</option>
@@ -164,7 +164,7 @@ export function FavoritesSection({
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="h-9 px-3 rounded-xl bg-[#141520] text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#00D878] cursor-pointer"
+            className="h-9 px-3 rounded-xl bg-[#141520] focus:bg-[#1B1D2C] text-xs text-white outline-none border-0 cursor-pointer transition-colors"
           >
             <option value="recent">Recently Added</option>
             <option value="rating">Highest Rated</option>

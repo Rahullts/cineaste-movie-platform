@@ -142,13 +142,13 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-xl overflow-hidden rounded-[1rem] bg-card border border-border shadow-2xl animate-slideDown"
+        className="w-full max-w-xl overflow-hidden rounded-2xl bg-popover dark:bg-[#12141F] border-0 shadow-[0_24px_70px_rgba(0,0,0,0.85)] animate-slideDown"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Input Bar */}
         <form
           onSubmit={handleSearchSubmit}
-          className="flex items-center gap-3 px-4 border-b border-border bg-surface"
+          className="flex items-center gap-3 px-4 border-0 bg-secondary/50 dark:bg-[#171A28]"
         >
           <Search className="w-5 h-5 text-muted-foreground shrink-0" />
           <input

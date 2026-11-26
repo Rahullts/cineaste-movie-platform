@@ -144,7 +144,7 @@ export function DiscoverSearchBar({
               ? "Describe a vibe… e.g. time travel movie"
               : "Search films by title…"
           }
-          className="w-full h-12 sm:h-14 pl-12 pr-28 rounded-2xl bg-[#101118]/80 backdrop-blur border border-[#1E1F2A] focus:border-[#00D878]/50 focus:ring-2 focus:ring-[#00D878]/15 outline-none text-base text-[#F3F4F6] placeholder:text-[#9496A1] transition-shadow shadow-lg"
+          className="w-full h-12 sm:h-14 pl-12 pr-28 rounded-2xl bg-card dark:bg-[#12141F] backdrop-blur border-0 outline-none focus:outline-none focus:ring-0 text-base text-foreground placeholder:text-muted-foreground shadow-[0_12px_36px_-10px_rgba(0,0,0,0.5)] transition-colors"
         />
 
         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
@@ -211,7 +211,7 @@ export function DiscoverSearchBar({
 
       {/* Suggestion Dropdown (when focused and empty) */}
       {showDropdown && (
-        <div className="absolute top-full mt-2 left-0 right-0 rounded-2xl border border-[#1E1F2A] bg-[#101118]/95 backdrop-blur-xl shadow-2xl p-3 z-40 max-h-[60vh] overflow-y-auto no-scrollbar">
+        <div className="absolute top-full mt-2 left-0 right-0 rounded-2xl border-0 bg-popover dark:bg-[#12141F] backdrop-blur-xl shadow-[0_24px_64px_-12px_rgba(0,0,0,0.85)] p-3 z-40 max-h-[60vh] overflow-y-auto no-scrollbar origin-top animate-in fade-in slide-in-from-top-1 duration-150">
           {/* Mood Suggestions */}
           {aiMode && suggestions.length > 0 && (
             <div className="mb-3">
@@ -226,7 +226,7 @@ export function DiscoverSearchBar({
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => handlePickSearch(item)}
-                    className="text-xs sm:text-sm px-2.5 py-1.5 rounded-full border border-[#1E1F2A] bg-[#181820]/60 text-[#9496A1] hover:border-[#00D878]/40 hover:text-[#00D878] transition-colors"
+                    className="text-xs sm:text-sm px-3 py-1.5 rounded-full border-0 bg-secondary dark:bg-[#1A1D2B] text-muted-foreground hover:bg-[#00D878]/15 hover:text-[#00D878] transition-colors cursor-pointer"
                   >
                     {item}
                   </button>
@@ -247,7 +247,7 @@ export function DiscoverSearchBar({
                   type="button"
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={handleClearRecent}
-                  className="text-xs text-[#9496A1] hover:text-[#00D878]"
+                  className="text-xs text-[#9496A1] hover:text-[#00D878] cursor-pointer"
                 >
                   Clear
                 </button>
@@ -259,7 +259,7 @@ export function DiscoverSearchBar({
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => handlePickSearch(item)}
-                    className="text-xs sm:text-sm px-2.5 py-1.5 rounded-full border border-[#1E1F2A] bg-[#181820]/60 text-[#9496A1] hover:border-[#00D878]/40 hover:text-[#00D878] transition-colors"
+                    className="text-xs sm:text-sm px-3 py-1.5 rounded-full border-0 bg-secondary dark:bg-[#1A1D2B] text-muted-foreground hover:bg-[#00D878]/15 hover:text-[#00D878] transition-colors cursor-pointer"
                   >
                     {item}
                   </button>
@@ -282,7 +282,7 @@ export function DiscoverSearchBar({
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => handlePickSearch(item)}
-                    className="text-xs sm:text-sm px-2.5 py-1.5 rounded-full border border-[#1E1F2A] bg-[#181820]/60 text-[#9496A1] hover:border-[#00D878]/40 hover:text-[#00D878] transition-colors"
+                    className="text-xs sm:text-sm px-3 py-1.5 rounded-full border-0 bg-secondary dark:bg-[#1A1D2B] text-muted-foreground hover:bg-[#00D878]/15 hover:text-[#00D878] transition-colors cursor-pointer"
                   >
                     {item}
                   </button>

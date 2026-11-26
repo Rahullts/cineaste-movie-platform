@@ -1,7 +1,28 @@
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'>
-  <circle cx='18' cy='18' r='16' fill='#090B10'/>
-  <path d='M25.6 10.6C23.7 8.4 21 7.2 17.8 7.2C11.8 7.2 7.2 11.9 7.2 18C7.2 24.1 11.8 28.8 17.8 28.8C21 28.8 23.7 27.6 25.6 25.4L22.3 22.3C21.1 23.6 19.6 24.3 17.8 24.3C14.3 24.3 11.7 21.6 11.7 18C11.7 14.4 14.3 11.7 17.8 11.7C19.6 11.7 21.1 12.4 22.3 13.7L25.6 10.6Z' fill='#00D664'/>
-  <path d='M15.8 15.1C15.8 14.6 16.35 14.3 16.78 14.56L21.9 17.46C22.32 17.7 22.32 18.3 21.9 18.54L16.78 21.44C16.35 21.7 15.8 21.4 15.8 20.9V15.1Z' fill='#FFFFFF'/>
-  <circle cx='28.2' cy='14.2' r='1.15' fill='#00D664'/>
-  <circle cx='28.2' cy='21.8' r='1.15' fill='#00D664'/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36">
+  <defs>
+    <radialGradient id="fg-lens" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1C2333" />
+      <stop offset="80%" stop-color="#0B0E15" />
+      <stop offset="100%" stop-color="#05070A" />
+    </radialGradient>
+    <linearGradient id="fg-arc" x1="6" y1="6" x2="30" y2="30" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#00F5A0" />
+      <stop offset="45%" stop-color="#00D878" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <linearGradient id="fg-core" x1="14" y1="14" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#C6F6D5" />
+    </linearGradient>
+  </defs>
+  <circle cx="18" cy="18" r="16.5" fill="url(#fg-lens)" stroke="#2A3245" stroke-width="0.9" />
+  <circle cx="18" cy="18" r="13" stroke="#00D878" stroke-opacity="0.22" stroke-width="0.75" stroke-dasharray="1.5 2.5" fill="none" />
+  <path
+    d="M25.2 11.2C23.3 9.2 20.8 8.1 17.8 8.1C12.3 8.1 7.8 12.5 7.8 18C7.8 23.5 12.3 27.9 17.8 27.9C20.8 27.9 23.3 26.8 25.2 24.8C25.6 24.4 25.6 23.7 25.1 23.3L23.4 21.8C23.0 21.4 22.4 21.5 22.0 21.9C20.9 23.1 19.4 23.8 17.8 23.8C14.6 23.8 12.0 21.2 12.0 18C12.0 14.8 14.6 12.2 17.8 12.2C19.4 12.2 20.9 12.9 22.0 14.1C22.4 14.5 23.0 14.6 23.4 14.2L25.1 12.7C25.6 12.3 25.6 11.6 25.2 11.2Z"
+    fill="url(#fg-arc)"
+  />
+  <path
+    d="M18 14.8L18.7 17.3L21.2 18L18.7 18.7L18 21.2L17.3 18.7L14.8 18L17.3 17.3L18 14.8Z"
+    fill="url(#fg-core)"
+  />
 </svg>

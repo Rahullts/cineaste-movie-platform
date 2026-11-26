@@ -10,6 +10,8 @@ import {
   Eye,
   Heart,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { tmdbFetch } from "@/lib/tmdb-service";
 import { formatYear, formatScore, cn } from "@/lib/utils";
@@ -17,6 +19,11 @@ import type { Movie } from "@/types";
 
 export interface CinemaSpotlightHeroProps {
   movie: Movie | null;
+  movies?: Movie[];
+  currentIndex?: number;
+  onSelectIndex?: (index: number) => void;
+  onNextMovie?: () => void;
+  onPrevMovie?: () => void;
   mode?: "spotlight" | "watchlist" | "watched";
   greeting?: string;
   userName?: string | null;
@@ -45,6 +52,11 @@ function buildImageCandidates(path?: string | null, widths: string[] = ["w780", 
 
 export function CinemaSpotlightHero({
   movie,
+  movies,
+  currentIndex = 0,
+  onSelectIndex,
+  onNextMovie,
+  onPrevMovie,
   mode = "spotlight",
   greeting,
   userName,
@@ -62,6 +74,16 @@ export function CinemaSpotlightHero({
   const [backdropFallbackIdx, setBackdropFallbackIdx] = React.useState(0);
   const [posterFallbackIdx, setPosterFallbackIdx] = React.useState(0);
   const [posterExhausted, setPosterExhausted] = React.useState(false);
+  const [isHovered, setIsHovered] = React.useState(false);
+
+  // Auto-advance spotlight hero movie every 10 seconds (pauses on hover per modern web guidelines)
+  React.useEffect(() => {
+    if (!movies || movies.length <= 1 || isHovered || !onNextMovie) return;
+    const timer = setInterval(() => {
+      onNextMovie();
+    }, 10000);
+    return () => clearInterval(timer);
+  }, [movies, isHovered, onNextMovie]);
 
   const movieTmdbId = movie?.tmdb_id || movie?.id;
 
@@ -202,6 +224,10 @@ export function CinemaSpotlightHero({
     <section
       id="section-cinema-spotlight"
       aria-label="Cinema Spotlight"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onFocusCapture={() => setIsHovered(true)}
+      onBlurCapture={() => setIsHovered(false)}
       className="relative w-full min-h-[430px] sm:min-h-[470px] lg:min-h-[490px] lg:max-h-[550px] flex flex-col justify-end overflow-hidden select-none bg-[#0A0B0F]"
     >
       {/* Full-Width Backdrop Artwork */}
@@ -243,8 +269,8 @@ export function CinemaSpotlightHero({
             </p>
           )}
 
-          {/* Subtle Label Pill */}
-          <div className="inline-flex items-center gap-2">
+          {/* Subtle Label Pill + Multi-Film Carousel Switcher */}
+          <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-2 text-[11px] font-semibold tracking-[0.16em] uppercase text-[#00D664] bg-black/45 px-3 py-1 rounded-full backdrop-blur-md">
               <span className="w-1.5 h-1.5 rounded-full bg-[#00D664]" />
               <span>{spotlightLabel}</span>
@@ -254,6 +280,77 @@ export function CinemaSpotlightHero({
               <span className="inline-flex items-center gap-1 text-[11px] font-medium tracking-wide text-[#00D664] bg-[#00D664]/15 px-2.5 py-0.5 rounded-full">
                 In Watchlist
               </span>
+            )}
+
+            {/* Interactive Carousel Pill (Allows switching directly between featured movies) */}
+            {movies && movies.length > 1 && (
+              <div
+                className="inline-flex items-center gap-1 bg-black/55 px-2 py-0.5 rounded-full backdrop-blur-md border-0"
+                role="region"
+                aria-label="Spotlight carousel navigation"
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowLeft") {
+                    e.preventDefault();
+                    onPrevMovie?.();
+                  } else if (e.key === "ArrowRight") {
+                    e.preventDefault();
+                    onNextMovie?.();
+                  }
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onPrevMovie?.();
+                  }}
+                  aria-label="Previous featured film"
+                  className="w-6 h-6 rounded-full hover:bg-white/15 text-white/80 hover:text-white grid place-items-center transition active:scale-90 cursor-pointer"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </button>
+
+                <div className="flex items-center gap-0.5 px-0.5">
+                  {movies.map((m, idx) => {
+                    const isSelected = idx === currentIndex;
+                    return (
+                      <button
+                        key={m.tmdb_id || m.id || idx}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectIndex?.(idx);
+                        }}
+                        aria-label={`Select ${m.title || `Movie ${idx + 1}`}`}
+                        aria-current={isSelected ? "true" : undefined}
+                        title={m.title}
+                        className="h-6 px-1 grid place-items-center cursor-pointer group"
+                      >
+                        <span
+                          className={cn(
+                            "h-1.5 rounded-full transition-all duration-300 block",
+                            isSelected
+                              ? "w-4 bg-[#00D664]"
+                              : "w-1.5 bg-white/35 group-hover:bg-white/70"
+                          )}
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onNextMovie?.();
+                  }}
+                  aria-label="Next featured film"
+                  className="w-6 h-6 rounded-full hover:bg-white/15 text-white/80 hover:text-white grid place-items-center transition active:scale-90 cursor-pointer"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
             )}
           </div>
 
@@ -274,7 +371,7 @@ export function CinemaSpotlightHero({
             {imdbRating && (
               <span
                 title="Verified IMDb Rating"
-                className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-black/55 border border-white/10 text-[#FBBF24] font-semibold tabular-nums"
+                className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-black/55 border-0 text-[#FBBF24] font-semibold tabular-nums backdrop-blur-md"
               >
                 <Star className="w-3 h-3 fill-[#FBBF24] stroke-none" />
                 <span>IMDb {imdbRating}</span>
@@ -284,7 +381,7 @@ export function CinemaSpotlightHero({
             {letterboxdRating && (
               <span
                 title="Verified Letterboxd Rating"
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/55 border border-white/10 text-white font-semibold tabular-nums"
+                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-black/55 border-0 text-white font-semibold tabular-nums backdrop-blur-md"
               >
                 <span>Letterboxd {letterboxdRating}</span>
               </span>
@@ -322,7 +419,7 @@ export function CinemaSpotlightHero({
                 <span className="hidden sm:inline text-white/30" aria-hidden="true">&bull;</span>
                 <span
                   title="Your Personal Cineaste Rating"
-                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#00D664]/15 border border-[#00D664]/30 text-[#00D664] font-medium text-xs tabular-nums"
+                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#00D664]/18 border-0 text-[#00D664] font-medium text-xs tabular-nums"
                 >
                   <Star className="w-3 h-3 fill-[#00D664] stroke-none" />
                   <span>Your Rating: {resolvedUserRating.toFixed(1)}/10</span>
@@ -333,7 +430,7 @@ export function CinemaSpotlightHero({
 
           {/* Synopsis */}
           {overview && (
-            <p className="text-[13px] sm:text-sm md:text-[15px] text-[#B8BAC7] font-normal leading-[1.6] line-clamp-3 max-w-xl text-pretty">
+            <p className="text-[13px] sm:text-sm md:text-[15px] text-[#C4C7D5] font-normal leading-[1.7] line-clamp-3 max-w-xl text-pretty tracking-[0.01em]">
               {overview}
             </p>
           )}
@@ -421,9 +518,9 @@ export function CinemaSpotlightHero({
           </div>
         </div>
 
-        {/* Right Column (Desktop): Proportionally Framed Borderless Vertical Poster for the SAME Film */}
+        {/* Right Column (Desktop): Proportionally Framed Borderless Vertical Poster + Switcher */}
         {activePosterUrl && (
-          <div className="hidden lg:block shrink-0 pb-1">
+          <div className="hidden lg:flex flex-col items-center shrink-0 pb-1 gap-2.5">
             <button
               type="button"
               onClick={() => onOpenDetail(activeMovie)}
@@ -444,6 +541,33 @@ export function CinemaSpotlightHero({
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-white/5 pointer-events-none" />
             </button>
+
+            {/* Desktop Switcher Affordance */}
+            {movies && movies.length > 1 && (
+              <div className="flex items-center justify-between w-full px-1 text-xs text-white/70">
+                <button
+                  type="button"
+                  onClick={onPrevMovie}
+                  aria-label="Previous featured film"
+                  className="px-2.5 py-1 rounded-lg bg-black/45 hover:bg-black/75 hover:text-white inline-flex items-center gap-1 transition text-[11px] cursor-pointer"
+                >
+                  <ChevronLeft className="w-3 h-3" />
+                  <span>Prev</span>
+                </button>
+                <span className="text-[10px] font-mono tracking-wider opacity-60 tabular-nums">
+                  {String(currentIndex + 1).padStart(2, "0")} / {String(movies.length).padStart(2, "0")}
+                </span>
+                <button
+                  type="button"
+                  onClick={onNextMovie}
+                  aria-label="Next featured film"
+                  className="px-2.5 py-1 rounded-lg bg-black/45 hover:bg-black/75 hover:text-white inline-flex items-center gap-1 transition text-[11px] cursor-pointer"
+                >
+                  <span>Next</span>
+                  <ChevronRight className="w-3 h-3" />
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

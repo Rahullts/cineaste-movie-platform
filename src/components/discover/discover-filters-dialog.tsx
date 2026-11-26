@@ -128,7 +128,7 @@ export function DiscoverFiltersDialog({
               ? isLight
                 ? "bg-transparent text-slate-600 hover:text-slate-950 hover:bg-black/5"
                 : "bg-transparent text-[#9496A1] hover:text-white hover:bg-white/10"
-              : "bg-card border border-border text-foreground hover:border-[#00D878]/40"
+              : "bg-card text-foreground hover:bg-accent dark:bg-[#12141F]"
         )}
         aria-label="Filters"
         aria-expanded={isOpen}
@@ -149,18 +149,18 @@ export function DiscoverFiltersDialog({
         )}
       </button>
 
-      {/* Solid Opaque Flyout Menu — zero underlying content bleed-through */}
+      {/* Solid Opaque Flyout Menu — zero underlying content bleed-through, zero outer borders */}
       {isOpen && (
         <div
-          role="dialog"
+          role="region"
           aria-label="Discover Filters"
           data-testid="discover-filters-popover"
           onClick={(e) => e.stopPropagation()}
           className={cn(
-            "absolute top-full mt-3 right-0 w-[336px] max-w-[calc(100vw-1.5rem)] max-h-[75vh] overflow-y-auto no-scrollbar rounded-2xl border p-4 z-[80] origin-top-right shadow-[0_24px_64px_rgba(0,0,0,0.85)]",
+            "absolute top-full mt-3 right-0 w-[336px] max-w-[calc(100vw-1.5rem)] max-h-[75vh] overflow-y-auto no-scrollbar rounded-2xl border-0 p-4 z-[80] origin-top-right shadow-[0_24px_64px_rgba(0,0,0,0.85)] animate-in fade-in slide-in-from-top-2 zoom-in-95 duration-200",
             isLight
-              ? "bg-white border-slate-200 text-slate-900"
-              : "bg-[#11121B] border-[#262838] text-[#F3F4F6]"
+              ? "bg-white text-slate-900"
+              : "bg-[#12141F] text-[#F3F4F6]"
           )}
         >
           {/* Header */}
@@ -178,7 +178,7 @@ export function DiscoverFiltersDialog({
             )}
           </div>
 
-          {/* 6 Category Buttons Grid */}
+          {/* 6 Category Buttons Grid — tonal surfaces, zero borders */}
           <div className="grid grid-cols-3 gap-2">
             {FILTER_CATEGORIES.map((cat) => {
               const Icon = cat.icon;
@@ -191,12 +191,12 @@ export function DiscoverFiltersDialog({
                   type="button"
                   onClick={() => setActiveTab(cat.key)}
                   className={cn(
-                    "relative flex flex-col items-center gap-1 py-2.5 rounded-xl border transition cursor-pointer",
+                    "relative flex flex-col items-center gap-1 py-2.5 rounded-xl border-0 transition cursor-pointer",
                     isSelected
-                      ? "border-[#00D878]/60 bg-[#00D878]/12 text-[#00D878]"
+                      ? "bg-[#00D878]/16 text-[#00D878] font-semibold"
                       : isLight
-                        ? "border-slate-200 bg-slate-100 text-slate-600 hover:text-slate-950"
-                        : "border-[#232534] bg-[#181A27] text-[#9496A1] hover:text-[#F3F4F6]"
+                        ? "bg-slate-100 text-slate-600 hover:bg-slate-200/70 hover:text-slate-950"
+                        : "bg-[#181A27] text-[#9496A1] hover:bg-[#1E2132] hover:text-[#F3F4F6]"
                   )}
                 >
                   <Icon className="w-4 h-4" />
@@ -209,13 +209,8 @@ export function DiscoverFiltersDialog({
             })}
           </div>
 
-          {/* Sub-options for selected category */}
-          <div
-            className={cn(
-              "mt-3 pt-3 border-t max-h-52 overflow-y-auto no-scrollbar",
-              isLight ? "border-slate-200" : "border-[#232534]"
-            )}
-          >
+          {/* Sub-options for selected category — seamless, zero divider line */}
+          <div className="mt-3.5 pt-1 max-h-52 overflow-y-auto no-scrollbar">
             {activeTab === "genre" && (
               <div className="flex flex-wrap gap-1.5">
                 {TMDB_GENRES.map((g) => {
@@ -228,12 +223,12 @@ export function DiscoverFiltersDialog({
                         setDraftVal("genre", isPicked ? "" : String(g.id))
                       }
                       className={cn(
-                        "text-xs px-2.5 py-1.5 rounded-full border transition cursor-pointer",
+                        "text-xs px-3 py-1.5 rounded-full border-0 transition cursor-pointer",
                         isPicked
-                          ? "border-[#00D878] bg-[#00D878]/18 text-[#00D878] font-semibold"
+                          ? "bg-[#00D878]/18 text-[#00D878] font-semibold"
                           : isLight
-                            ? "border-slate-200 bg-slate-100 text-slate-700 hover:border-slate-300"
-                            : "border-[#262838] bg-[#181A27] text-[#A2A5B4] hover:text-white"
+                            ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                            : "bg-[#181A27] text-[#A2A5B4] hover:bg-[#202334] hover:text-white"
                       )}
                     >
                       {g.name}
@@ -255,12 +250,12 @@ export function DiscoverFiltersDialog({
                         setDraftVal("mood", isPicked ? "" : opt.v)
                       }
                       className={cn(
-                        "text-xs px-2.5 py-1.5 rounded-full border transition cursor-pointer",
+                        "text-xs px-3 py-1.5 rounded-full border-0 transition cursor-pointer",
                         isPicked
-                          ? "border-[#00D878] bg-[#00D878]/18 text-[#00D878] font-semibold"
+                          ? "bg-[#00D878]/18 text-[#00D878] font-semibold"
                           : isLight
-                            ? "border-slate-200 bg-slate-100 text-slate-700 hover:border-slate-300"
-                            : "border-[#262838] bg-[#181A27] text-[#A2A5B4] hover:text-white"
+                            ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                            : "bg-[#181A27] text-[#A2A5B4] hover:bg-[#202334] hover:text-white"
                       )}
                     >
                       {opt.l}
@@ -282,12 +277,12 @@ export function DiscoverFiltersDialog({
                         setDraftVal("language", isPicked ? "" : opt.v)
                       }
                       className={cn(
-                        "text-xs px-2.5 py-1.5 rounded-full border transition cursor-pointer",
+                        "text-xs px-3 py-1.5 rounded-full border-0 transition cursor-pointer",
                         isPicked
-                          ? "border-[#00D878] bg-[#00D878]/18 text-[#00D878] font-semibold"
+                          ? "bg-[#00D878]/18 text-[#00D878] font-semibold"
                           : isLight
-                            ? "border-slate-200 bg-slate-100 text-slate-700 hover:border-slate-300"
-                            : "border-[#262838] bg-[#181A27] text-[#A2A5B4] hover:text-white"
+                            ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                            : "bg-[#181A27] text-[#A2A5B4] hover:bg-[#202334] hover:text-white"
                       )}
                     >
                       {opt.l}
@@ -310,12 +305,12 @@ export function DiscoverFiltersDialog({
                         setDraftVal("year", isPicked ? "" : strVal)
                       }
                       className={cn(
-                        "text-xs px-2.5 py-1.5 rounded-full border transition cursor-pointer",
+                        "text-xs px-3 py-1.5 rounded-full border-0 transition cursor-pointer",
                         isPicked
-                          ? "border-[#00D878] bg-[#00D878]/18 text-[#00D878] font-semibold"
+                          ? "bg-[#00D878]/18 text-[#00D878] font-semibold"
                           : isLight
-                            ? "border-slate-200 bg-slate-100 text-slate-700 hover:border-slate-300"
-                            : "border-[#262838] bg-[#181A27] text-[#A2A5B4] hover:text-white"
+                            ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                            : "bg-[#181A27] text-[#A2A5B4] hover:bg-[#202334] hover:text-white"
                       )}
                     >
                       {yr || "Any"}
@@ -341,12 +336,12 @@ export function DiscoverFiltersDialog({
                         )
                       }
                       className={cn(
-                        "text-xs px-2.5 py-1.5 rounded-full border transition cursor-pointer",
+                        "text-xs px-3 py-1.5 rounded-full border-0 transition cursor-pointer",
                         isPicked
-                          ? "border-[#00D878] bg-[#00D878]/18 text-[#00D878] font-semibold"
+                          ? "bg-[#00D878]/18 text-[#00D878] font-semibold"
                           : isLight
-                            ? "border-slate-200 bg-slate-100 text-slate-700 hover:border-slate-300"
-                            : "border-[#262838] bg-[#181A27] text-[#A2A5B4] hover:text-white"
+                            ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                            : "bg-[#181A27] text-[#A2A5B4] hover:bg-[#202334] hover:text-white"
                       )}
                     >
                       {opt.l}
@@ -368,12 +363,12 @@ export function DiscoverFiltersDialog({
                         setDraftVal("length", isPicked ? "" : opt.v)
                       }
                       className={cn(
-                        "text-xs px-2.5 py-1.5 rounded-full border transition cursor-pointer",
+                        "text-xs px-3 py-1.5 rounded-full border-0 transition cursor-pointer",
                         isPicked
-                          ? "border-[#00D878] bg-[#00D878]/18 text-[#00D878] font-semibold"
+                          ? "bg-[#00D878]/18 text-[#00D878] font-semibold"
                           : isLight
-                            ? "border-slate-200 bg-slate-100 text-slate-700 hover:border-slate-300"
-                            : "border-[#262838] bg-[#181A27] text-[#A2A5B4] hover:text-white"
+                            ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                            : "bg-[#181A27] text-[#A2A5B4] hover:bg-[#202334] hover:text-white"
                       )}
                     >
                       {opt.l}

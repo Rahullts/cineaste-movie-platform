@@ -130,6 +130,7 @@ function CreateCollectionDialogContent({
       ref={dialogRef}
       data-testid="create-collection-dialog"
       aria-labelledby="create-collection-title"
+      {...({ closedby: "any" } as any)}
       onCancel={(e) => {
         e.preventDefault();
         onClose();

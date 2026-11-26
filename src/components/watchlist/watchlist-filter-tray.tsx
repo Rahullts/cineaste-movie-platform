@@ -70,9 +70,9 @@ export function WatchlistFilterTray({
           <select
             value={filters.genre}
             onChange={(e) => onChange({ genre: e.target.value })}
-            className={`h-9 rounded-xl bg-[#14151F] px-3 text-xs outline-none transition cursor-pointer shadow-sm ${
+            className={`h-9 rounded-xl bg-[#14151F] px-3 text-xs outline-none border-0 transition cursor-pointer shadow-sm ${
               filters.genre
-                ? "text-white font-medium ring-1 ring-[#00D878]/50"
+                ? "text-[#00D878] font-medium bg-[#00D878]/15"
                 : "text-[#9496A1] hover:text-white"
             }`}
           >
@@ -95,9 +95,9 @@ export function WatchlistFilterTray({
           <select
             value={filters.year}
             onChange={(e) => onChange({ year: e.target.value })}
-            className={`h-9 rounded-xl bg-[#14151F] px-3 text-xs outline-none transition cursor-pointer shadow-sm ${
+            className={`h-9 rounded-xl bg-[#14151F] px-3 text-xs outline-none border-0 transition cursor-pointer shadow-sm ${
               filters.year
-                ? "text-white font-medium ring-1 ring-[#00D878]/50"
+                ? "text-[#00D878] font-medium bg-[#00D878]/15"
                 : "text-[#9496A1] hover:text-white"
             }`}
           >
@@ -120,9 +120,9 @@ export function WatchlistFilterTray({
           <select
             value={filters.runtime}
             onChange={(e) => onChange({ runtime: e.target.value })}
-            className={`h-9 rounded-xl bg-[#14151F] px-3 text-xs outline-none transition cursor-pointer shadow-sm ${
+            className={`h-9 rounded-xl bg-[#14151F] px-3 text-xs outline-none border-0 transition cursor-pointer shadow-sm ${
               filters.runtime
-                ? "text-white font-medium ring-1 ring-[#00D878]/50"
+                ? "text-[#00D878] font-medium bg-[#00D878]/15"
                 : "text-[#9496A1] hover:text-white"
             }`}
           >
@@ -149,9 +149,9 @@ export function WatchlistFilterTray({
           <select
             value={filters.minRating}
             onChange={(e) => onChange({ minRating: e.target.value })}
-            className={`h-9 rounded-xl bg-[#14151F] px-3 text-xs outline-none transition cursor-pointer shadow-sm ${
+            className={`h-9 rounded-xl bg-[#14151F] px-3 text-xs outline-none border-0 transition cursor-pointer shadow-sm ${
               filters.minRating
-                ? "text-white font-medium ring-1 ring-[#00D878]/50"
+                ? "text-[#00D878] font-medium bg-[#00D878]/15"
                 : "text-[#9496A1] hover:text-white"
             }`}
           >

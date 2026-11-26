@@ -64,7 +64,7 @@ export function WatchlistToolbar({
   onViewModeChange,
 }: WatchlistToolbarProps) {
   return (
-    <div className="rounded-2xl border border-[#1E1F2A] bg-[#101118]/95 backdrop-blur-md p-2 sm:p-2.5 shadow-md">
+    <div className="rounded-2xl border-0 bg-[#101118]/95 backdrop-blur-md p-2 sm:p-2.5 shadow-md">
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
         {/* Scoped Inline Archive Filter (Compact, NOT a duplicate global search) */}
         <div className="relative flex-1 sm:max-w-xs md:max-w-sm">
@@ -74,7 +74,7 @@ export function WatchlistToolbar({
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Filter archive or genre..."
-            className="w-full h-10 pl-9 pr-8 rounded-xl bg-[#14151F] border border-[#1E1F2A] text-xs sm:text-sm text-white placeholder:text-[#9496A1]/60 focus:border-[#00D878]/50 focus:ring-1 focus:ring-[#00D878]/20 outline-none transition"
+            className="w-full h-10 pl-9 pr-8 rounded-xl bg-[#14151F] focus:bg-[#1B1D2C] border-0 text-xs sm:text-sm text-white placeholder:text-[#9496A1]/60 outline-none focus:outline-none focus:ring-0 transition-colors"
           />
           {search && (
             <button
@@ -96,7 +96,7 @@ export function WatchlistToolbar({
               value={sortBy}
               aria-label="Sort Archive By"
               onChange={(e) => onSortChange(e.target.value as SortOption)}
-              className="h-10 rounded-xl bg-[#14151F] border border-[#1E1F2A] px-3 pr-7 text-xs sm:text-sm text-white focus:border-[#00D878]/50 focus:ring-1 focus:ring-[#00D878]/20 outline-none transition cursor-pointer appearance-none"
+              className="h-10 rounded-xl bg-[#14151F] focus:bg-[#1B1D2C] border-0 px-3 pr-7 text-xs sm:text-sm text-white outline-none transition-colors cursor-pointer appearance-none"
             >
               {SORT_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value} className="bg-[#101118]">
@@ -114,7 +114,7 @@ export function WatchlistToolbar({
             type="button"
             onClick={onToggleDirection}
             title={`Sort Direction: ${sortDirection === "asc" ? "Ascending" : "Descending"}`}
-            className="h-10 px-2.5 rounded-xl bg-[#14151F] border border-[#1E1F2A] text-xs sm:text-sm text-[#9496A1] hover:text-white hover:border-white/20 transition flex items-center gap-1 select-none"
+            className="h-10 px-2.5 rounded-xl bg-[#14151F] hover:bg-[#1B1D2C] border-0 text-xs sm:text-sm text-[#9496A1] hover:text-white transition flex items-center gap-1 select-none"
           >
             <ArrowUpDown className="w-3.5 h-3.5 text-[#00D878]" />
             <span className="font-mono text-xs">{sortDirection === "asc" ? "ASC" : "DESC"}</span>
@@ -124,10 +124,10 @@ export function WatchlistToolbar({
           <button
             type="button"
             onClick={onToggleFilters}
-            className={`h-10 px-3.5 rounded-xl border text-xs sm:text-sm inline-flex items-center gap-1.5 transition select-none ${
+            className={`h-10 px-3.5 rounded-xl border-0 text-xs sm:text-sm inline-flex items-center gap-1.5 transition select-none ${
               isFiltersOpen || hasActiveFilters
-                ? "bg-[#00D878]/15 text-[#00D878] border-[#00D878]/40 font-semibold"
-                : "bg-[#14151F] border-[#1E1F2A] text-[#9496A1] hover:text-white hover:border-white/20"
+                ? "bg-[#00D878]/18 text-[#00D878] font-semibold"
+                : "bg-[#14151F] hover:bg-[#1B1D2C] text-[#9496A1] hover:text-white"
             }`}
           >
             <SlidersHorizontal className="w-3.5 h-3.5" />
@@ -138,7 +138,7 @@ export function WatchlistToolbar({
           </button>
 
           {/* 3-Way Presentation Switcher: Grid, List, Compact */}
-          <div className="flex rounded-xl border border-[#1E1F2A] overflow-hidden bg-[#14151F] p-0.5">
+          <div className="flex rounded-xl border-0 overflow-hidden bg-[#14151F] p-0.5">
             <button
               type="button"
               onClick={() => onViewModeChange("grid")}
